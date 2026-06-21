@@ -4,13 +4,11 @@ import '../../../../config/app_theme.dart';
 import 'manage_users_controller.dart';
 import 'widgets/user_form_dialog.dart';
 
-class ManageUsersScreen extends StatelessWidget {
+class ManageUsersScreen extends GetView<ManageUsersController> {
   const ManageUsersScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Inject the controller
-    final controller = Get.put(ManageUsersController());
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -39,7 +37,7 @@ class ManageUsersScreen extends StatelessWidget {
               color: AppTheme.surface,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: AppTheme.textPrimary.withOpacity(0.03),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -51,7 +49,7 @@ class ManageUsersScreen extends StatelessWidget {
                 TextField(
                   controller: controller.searchController,
                   decoration: InputDecoration(
-                    hintText: 'Search users...',
+                    hintText: 'Search users',
                     prefixIcon: const Icon(Icons.search),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -96,19 +94,19 @@ class ManageUsersScreen extends StatelessWidget {
               }
 
               if (controller.filteredUsers.isEmpty) {
-                return const Center(
+                return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.person_off_outlined,
                         size: 64,
                         color: AppTheme.textSecondary,
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       Text(
                         'No users found',
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: AppTheme.textSecondary,
                           fontSize: 16,
                         ),
@@ -155,7 +153,7 @@ class ManageUsersScreen extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: BorderSide(
-            color: isSelected ? AppTheme.primary : Colors.grey.shade300,
+            color: isSelected ? AppTheme.primary : AppTheme.border.withOpacity(0.25),
           ),
         ),
       );
@@ -166,14 +164,24 @@ class ManageUsersScreen extends StatelessWidget {
       Map<String, dynamic> user) {
     final isActive = user['isActive'] == true;
     final role = user['role'] ?? 'Unknown';
-    final name = user['fullName'] ?? 'No Name';
-    final email = user['email'] ?? 'No Email';
+    final name = user['fullName'] ?? 'No name';
+    final email = user['email'] ?? 'No email';
     final id = user['id']; // Should be int
 
-    return Card(
-      elevation: 2,
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.border.withOpacity(0.08)),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.textPrimary.withOpacity(0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       child: InkWell(
         onTap: () {
           Get.dialog(
@@ -216,7 +224,7 @@ class ManageUsersScreen extends StatelessWidget {
                     Text(
                       '$role • $email',
                       style: TextStyle(
-                        color: Colors.grey.shade600,
+                        color: AppTheme.textSecondary,
                         fontSize: 12,
                       ),
                     ),
@@ -228,15 +236,20 @@ class ManageUsersScreen extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
+                    icon: const Icon(Icons.contact_phone, color: AppTheme.primary),
+                    onPressed: () => _showEmergencyContactsDialog(context, controller, id, name),
+                    tooltip: 'Emergency Contacts',
+                  ),
+                  IconButton(
                     icon: Icon(
                       isActive ? Icons.check_circle : Icons.cancel,
-                      color: isActive ? Colors.green : Colors.grey,
+                      color: isActive ? AppTheme.success : AppTheme.textSecondary,
                     ),
                     onPressed: () => controller.toggleUserStatus(id),
                     tooltip: isActive ? 'Deactivate' : 'Activate',
                   ),
                   IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
+                    icon: const Icon(Icons.delete, color: AppTheme.error),
                     onPressed: () => _confirmDelete(controller, id),
                   ),
                 ],
@@ -254,11 +267,78 @@ class ManageUsersScreen extends StatelessWidget {
       middleText: 'Are you sure you want to delete this user?',
       textConfirm: 'Delete',
       textCancel: 'Cancel',
-      confirmTextColor: Colors.white,
+      confirmTextColor: AppTheme.surface,
       onConfirm: () {
         Get.back(); // Close dialog
         controller.deleteUser(id);
       },
     );
   }
+
+  void _showEmergencyContactsDialog(BuildContext context, ManageUsersController controller, int userId, String userName) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('$userName\'s Emergency Contacts', style: const TextStyle(fontSize: 18)),
+          backgroundColor: AppTheme.surface,
+          content: SizedBox(
+            width: double.maxFinite,
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: controller.fetchUserEmergencyContacts(userId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SizedBox(
+                    height: 100,
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const SizedBox(
+                    height: 100,
+                    child: Center(child: Text('No emergency contacts found.')),
+                  );
+                }
+
+                final contacts = snapshot.data!;
+                return ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: contacts.length,
+                  itemBuilder: (context, index) {
+                    final contact = contacts[index];
+                    final name = contact['contactName'] ?? contact['ContactName'] ?? 'Unknown';
+                    final relation = contact['relationship'] ?? contact['Relationship'] ?? 'N/A';
+                    final phone = contact['phoneNumber'] ?? contact['PhoneNumber'] ?? 'N/A';
+                    
+                    return Card(
+                      color: AppTheme.background,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        side: BorderSide(color: AppTheme.border.withOpacity(0.1)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: ListTile(
+                        leading: const Icon(Icons.contact_phone, color: AppTheme.primary),
+                        title: Text('$name ($relation)', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Text(phone),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 }
+

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 // import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 // import 'package:dio_cache_interceptor_hive_store/dio_cache_interceptor_hive_store.dart';
@@ -25,7 +26,7 @@ class ApiService extends GetxService {
         'Accept': 'application/json',
       },
       validateStatus: (status) =>
-          status! < 500, // Accept all status codes < 500
+          status! < 400, // Throw for 4xx and 5xx so interceptors can catch 401
     ));
 
     // Log current Dio configuration for easier debugging
@@ -44,7 +45,7 @@ class ApiService extends GetxService {
     // Add interceptors
     _dio.interceptors.addAll([
       // DioCacheInterceptor(options: cacheOptions),
-      _AuthInterceptor(_storageService, this),
+      _AuthInterceptor(_storageService, _dio),
       _LoggingInterceptor(_logger),
     ]);
 
@@ -72,10 +73,22 @@ class ApiService extends GetxService {
   Future<ApiResponse<T>> post<T>(
     String endpoint, {
     dynamic data,
+    bool requiresAuth = false,
     T Function(dynamic)? fromJson,
   }) async {
     try {
-      final response = await _dio.post(endpoint, data: data);
+      final options = Options();
+
+      if (requiresAuth) {
+        final token = await _storageService.getAccessToken();
+        if (token != null && token.isNotEmpty) {
+          options.headers = {
+            'Authorization': 'Bearer $token',
+          };
+        }
+      }
+
+      final response = await _dio.post(endpoint, data: data, options: options);
       return _handleResponse<T>(response, fromJson);
     } on DioException catch (e) {
       return _handleError<T>(e);
@@ -96,20 +109,6 @@ class ApiService extends GetxService {
     }
   }
 
-  // DELETE Request
-  Future<ApiResponse<T>> delete<T>(
-    String endpoint, {
-    dynamic data,
-    T Function(dynamic)? fromJson,
-  }) async {
-    try {
-      final response = await _dio.delete(endpoint, data: data);
-      return _handleResponse<T>(response, fromJson);
-    } on DioException catch (e) {
-      return _handleError<T>(e);
-    }
-  }
-
   // PATCH Request
   Future<ApiResponse<T>> patch<T>(
     String endpoint, {
@@ -118,6 +117,32 @@ class ApiService extends GetxService {
   }) async {
     try {
       final response = await _dio.patch(endpoint, data: data);
+      return _handleResponse<T>(response, fromJson);
+    } on DioException catch (e) {
+      return _handleError<T>(e);
+    }
+  }
+
+  // DELETE Request
+  Future<ApiResponse<T>> delete<T>(
+    String endpoint, {
+    dynamic data,
+    bool requiresAuth = false,
+    T Function(dynamic)? fromJson,
+  }) async {
+    try {
+      final options = Options();
+
+      if (requiresAuth) {
+        final token = await _storageService.getAccessToken();
+        if (token != null && token.isNotEmpty) {
+          options.headers = {
+            'Authorization': 'Bearer $token',
+          };
+        }
+      }
+
+      final response = await _dio.delete(endpoint, data: data, options: options);
       return _handleResponse<T>(response, fromJson);
     } on DioException catch (e) {
       return _handleError<T>(e);
@@ -197,10 +222,19 @@ class ApiService extends GetxService {
       }
     }
 
-    // Include request URI and error type for debugging
-    final uri = error.requestOptions.uri;
-    _logger.e('API Error: $message | uri=$uri | type=${error.type}',
-        error: error);
+    // Include request URI and error type for debugging (guard if non-Dio error)
+    Uri? uri;
+    String? errType;
+    try {
+      if (error is DioException) {
+        uri = error.requestOptions.uri;
+        errType = error.type.toString();
+      }
+    } catch (_) {
+      // ignore
+    }
+
+    _logger.e('API Error: $message | uri=${uri ?? 'unknown'} | type=${errType ?? 'unknown'}', error: error);
 
     return ApiResponse<T>(
       success: false,
@@ -221,9 +255,10 @@ class ApiService extends GetxService {
         return false;
       }
 
+      final accessToken = await _storageService.getAccessToken();
       final response = await _dio.post(
         '/Auth/refresh-token',
-        data: {'refreshToken': refreshToken},
+        data: {'accessToken': accessToken, 'refreshToken': refreshToken},
       );
 
       if (response.statusCode == 200) {
@@ -248,9 +283,11 @@ class ApiService extends GetxService {
 // Auth Interceptor (Auto token refresh on 401)
 class _AuthInterceptor extends Interceptor {
   final StorageService _storageService;
-  final ApiService _apiService;
+  final Dio _dio;
+  bool _isRefreshing = false;
+  final List<Map<String, dynamic>> _refreshQueue = [];
 
-  _AuthInterceptor(this._storageService, this._apiService);
+  _AuthInterceptor(this._storageService, this._dio);
 
   @override
   Future<void> onRequest(
@@ -270,24 +307,75 @@ class _AuthInterceptor extends Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    // Handle 401 - Unauthorized (token expired)
+    // Handle 401 - Unauthorized with silent refresh
     if (err.response?.statusCode == 401) {
-      final refreshSuccess = await _apiService.refreshToken();
+      final req = err.requestOptions;
 
-      if (refreshSuccess) {
-        // Retry the original request
-        try {
-          final token = await _storageService.getAccessToken();
-          err.requestOptions.headers['Authorization'] = 'Bearer $token';
-          final response = await _apiService.dio.fetch(err.requestOptions);
-          return handler.resolve(response);
-        } catch (e) {
-          return handler.next(err);
-        }
-      } else {
-        // Refresh failed - logout user
+      // Don't attempt refresh if the failing request was the refresh call itself
+      if (req.path.contains('refresh-token') || req.uri.path.contains('refresh-token')) {
         await _storageService.clearAuthData();
         Get.offAllNamed('/login');
+        return;
+      }
+
+      // If already refreshing, queue this request and wait
+      if (_isRefreshing) {
+        final completer = Completer<Response>();
+        _refreshQueue.add({'options': req, 'completer': completer});
+        try {
+          final response = await completer.future;
+          handler.resolve(response);
+          return;
+        } catch (e) {
+          handler.next(err);
+          return;
+        }
+      }
+
+      _isRefreshing = true;
+      try {
+        final didRefresh = await Get.find<ApiService>().refreshToken();
+
+        if (didRefresh) {
+          // Get latest token
+          final newToken = await _storageService.getAccessToken();
+
+          // Retry original request
+          req.headers['Authorization'] = 'Bearer $newToken';
+          final response = await _dio.fetch(req);
+
+          // Drain queue: retry queued requests
+          for (var item in _refreshQueue) {
+            final RequestOptions queuedOptions = item['options'];
+            final Completer<Response> c = item['completer'];
+            try {
+              queuedOptions.headers['Authorization'] = 'Bearer $newToken';
+              final queuedResp = await _dio.fetch(queuedOptions);
+              c.complete(queuedResp);
+            } catch (e) {
+              c.completeError(e);
+            }
+          }
+          _refreshQueue.clear();
+
+          handler.resolve(response);
+          return;
+        } else {
+          // Refresh failed -> clear auth and redirect to login
+          _refreshQueue.clear();
+          await _storageService.clearAuthData();
+          Get.offAllNamed('/login');
+          handler.next(err);
+          return;
+        }
+      } catch (e) {
+        _refreshQueue.clear();
+        await _storageService.clearAuthData();
+        Get.offAllNamed('/login');
+        handler.next(err);
+        return;
+      } finally {
+        _isRefreshing = false;
       }
     }
 

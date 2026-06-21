@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../config/app_theme.dart';
 import 'schedule_controller.dart';
@@ -46,7 +46,7 @@ class ScheduleScreen extends GetView<ScheduleController> {
       appBar: AppBar(
         title: const Text('Set Schedule'),
         backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: AppTheme.surface,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -63,10 +63,13 @@ class ScheduleScreen extends GetView<ScheduleController> {
           return Center(
             child:
                 Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              const Text('No schedule configured yet.'),
+              Text(
+                'No schedule configured',
+                style: TextStyle(color: AppTheme.textSecondary),
+              ),
               const SizedBox(height: 16),
               ElevatedButton(
-                child: const Text('Load Default Week Schedule'),
+                child: const Text('Load default weekly schedule'),
                 onPressed: () => controller.loadSchedule(),
               )
             ]),
@@ -81,15 +84,22 @@ class ScheduleScreen extends GetView<ScheduleController> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppTheme.surface,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppTheme.primary.withOpacity(0.12)),
+                  border: Border.all(color: AppTheme.border.withOpacity(0.08)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.textPrimary.withOpacity(0.03),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
-                child: const Column(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Doctor Working Days',
+                      'Doctor working days',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -98,10 +108,10 @@ class ScheduleScreen extends GetView<ScheduleController> {
                     ),
                     SizedBox(height: 6),
                     Text(
-                      'Set the days and time slots patients can book appointments. You can change these anytime.',
+                      'Set the working hours for each day of the week.',
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.black54,
+                        color: AppTheme.textSecondary,
                       ),
                     ),
                   ],
@@ -118,11 +128,23 @@ class ScheduleScreen extends GetView<ScheduleController> {
                   final start = (item['startTime'] ?? item['StartTime'] ?? '').toString();
                   final end = (item['endTime'] ?? item['EndTime'] ?? '').toString();
                   final available = item['isAvailable'] == true || item['IsAvailable'] == true;
-                  final availabilityLabel = available ? 'Available' : 'Not Available';
-                  final availabilityColor = available ? Colors.green : Colors.grey;
+                  final availabilityLabel = available ? 'Available' : 'Not available';
+                  final availabilityColor = available ? AppTheme.success : AppTheme.textSecondary;
 
-                  return Card(
-                    color: available ? Colors.white : Colors.grey[200],
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: available ? AppTheme.surface : AppTheme.background,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppTheme.border.withOpacity(0.08)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.textPrimary.withOpacity(0.03),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),
                       child: Column(
@@ -137,7 +159,7 @@ class ScheduleScreen extends GetView<ScheduleController> {
                                   controller.updateDayAvailability(index, val ?? false);
                                 },
                               ),
-                              Text(day,
+                              Text(_translateDay(day),
                                   style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16)),
@@ -164,8 +186,8 @@ class ScheduleScreen extends GetView<ScheduleController> {
                             padding: const EdgeInsets.symmetric(horizontal: 16.0),
                             child: Row(
                               children: [
-                                const Icon(Icons.access_time,
-                                    size: 16, color: Colors.grey),
+                                Icon(Icons.access_time,
+                                  size: 16, color: AppTheme.textSecondary),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
@@ -191,12 +213,12 @@ class ScheduleScreen extends GetView<ScheduleController> {
                             ),
                           ),
                           if (!available)
-                            const Padding(
+                            Padding(
                               padding: EdgeInsets.only(left: 16.0, top: 6.0),
                               child: Text(
-                                'Timing saved but currently disabled',
-                                style: TextStyle(
-                                  color: Colors.grey,
+                                'Timing saved while the day is disabled',
+                                  style: TextStyle(
+                                  color: AppTheme.textSecondary,
                                   fontStyle: FontStyle.italic,
                                 ),
                               ),
@@ -217,7 +239,7 @@ class ScheduleScreen extends GetView<ScheduleController> {
                     : () => _saveSchedule(controller),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primary,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppTheme.surface,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: controller.isSaving.value
@@ -225,8 +247,8 @@ class ScheduleScreen extends GetView<ScheduleController> {
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2))
-                    : const Text('Save Changes'),
+                            color: AppTheme.surface, strokeWidth: 2))
+                    : const Text('Save changes'),
               ),
             )
           ],
@@ -235,7 +257,29 @@ class ScheduleScreen extends GetView<ScheduleController> {
     );
   }
 
+  String _translateDay(String day) {
+    switch (day.toLowerCase()) {
+      case 'monday':
+        return 'Monday';
+      case 'tuesday':
+        return 'Tuesday';
+      case 'wednesday':
+        return 'Wednesday';
+      case 'thursday':
+        return 'Thursday';
+      case 'friday':
+        return 'Friday';
+      case 'saturday':
+        return 'Saturday';
+      case 'sunday':
+        return 'Sunday';
+      default:
+        return day;
+    }
+  }
+
   void _saveSchedule(ScheduleController controller) {
     controller.saveSchedule();
   }
 }
+

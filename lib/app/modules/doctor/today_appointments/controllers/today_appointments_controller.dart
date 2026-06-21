@@ -1,4 +1,4 @@
-import 'package:get/get.dart';
+﻿import 'package:get/get.dart';
 import '../../../../data/models/appointment.dart';
 import '../../../../services/doctor_service.dart';
 import '../../../../services/api_service.dart';
@@ -26,7 +26,7 @@ class TodayAppointmentsController extends GetxController {
         appointments.value = response.data!;
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to load appointments: $e');
+      Get.snackbar('Error', 'Failed to load appointments');
     } finally {
       isLoading.value = false;
     }
@@ -44,7 +44,7 @@ class TodayAppointmentsController extends GetxController {
       );
 
       if (response.success) {
-        Get.snackbar('Success', 'Appointment marked as $newStatus');
+        Get.snackbar('Success', 'Appointment status updated');
         loadAppointments(); // Refresh list
 
         // Also refresh dashboard stats if possible
@@ -52,10 +52,13 @@ class TodayAppointmentsController extends GetxController {
           Get.find<DoctorDashboardController>().loadDashboardData();
         }
       } else {
-        Get.snackbar('Error', response.message ?? 'Failed to update status');
+        Get.snackbar('error', response.message);
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to update status: $e');
+      Get.snackbar('Error', 'Failed to update appointment status');
     }
   }
+
+  // NOTE: localized status helper removed — not referenced anywhere.
 }
+

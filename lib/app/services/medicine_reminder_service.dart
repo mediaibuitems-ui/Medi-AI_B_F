@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart';
 import 'notification_service.dart';
 import '../../config/app_config.dart';
@@ -40,8 +42,14 @@ class MedicineReminderService extends GetxService {
           .where((e) => e.isNotEmpty)
           .toList();
 
+      var parsedId = int.tryParse((r['id'] ?? '').toString());
+      // Prevent int32 overflow in C# backend (offline generated IDs are millisecondsSinceEpoch)
+      if (parsedId != null && parsedId > 2147483647) {
+        parsedId = null;
+      }
+
       return {
-        'id': int.tryParse((r['id'] ?? '').toString()),
+        'id': parsedId,
         'medicineName': (r['medicineName'] ?? '').toString(),
         'dosage': (r['dosage'] ?? '').toString(),
         'frequency': (r['frequency'] ?? 'Custom').toString(),
@@ -55,8 +63,91 @@ class MedicineReminderService extends GetxService {
     }).toList();
 
     final response = await _apiService.post<dynamic>(
-      '${AppConfig.baseUrl}/reminders/sync',
+      '${AppConfig.baseUrl}/MedicineReminders/sync',
       data: {'reminders': mapped},
+      requiresAuth: true,
+    );
+
+    if (!response.success) {
+      throw Exception(response.message);
+    }
+  }
+
+  Future<void> syncPendingReminders() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final keys = prefs.getKeys().where((k) => k.startsWith('offline_medicine_reminders_') || k.startsWith('offline_faculty_medicine_reminders_'));
+      
+      for (final key in keys) {
+        final String? remindersJson = prefs.getString(key);
+        if (remindersJson == null || remindersJson.isEmpty) continue;
+
+        final List<dynamic> decoded = jsonDecode(remindersJson);
+        final List<Map<String, dynamic>> reminders = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        
+        // Find unsynced
+        final unsynced = reminders.where((r) => r['isSynced'] != true).toList();
+        if (unsynced.isNotEmpty) {
+          try {
+            await syncReminders(unsynced);
+            // If successful, update local storage
+            for (var r in reminders) {
+              r['isSynced'] = true;
+            }
+            await prefs.setString(key, jsonEncode(reminders));
+          } catch (e) {
+            // Fails silently if offline
+          }
+        }
+      }
+    } catch (e) {
+      // Ignored
+    }
+  }
+
+  Future<void> deleteReminder(int id) async {
+    final response = await _apiService.delete<dynamic>(
+      '${AppConfig.baseUrl}/MedicineReminders/$id',
+      requiresAuth: true,
+    );
+
+    if (!response.success) {
+      throw Exception(response.message);
+    }
+  }
+
+  Future<int> createReminder(Map<String, dynamic> payload) async {
+    final response = await _apiService.post<dynamic>(
+      '${AppConfig.baseUrl}/MedicineReminders',
+      data: payload,
+      requiresAuth: true,
+    );
+
+    if (!response.success) {
+      throw Exception(response.message);
+    }
+
+    final data = response.data;
+    if (data is Map && data['reminderId'] != null) {
+      return data['reminderId'] as int;
+    }
+    throw Exception('Failed to retrieve new reminder ID');
+  }
+
+  Future<void> updateReminder(int id, Map<String, dynamic> payload) async {
+    final response = await _apiService.put<dynamic>(
+      '${AppConfig.baseUrl}/MedicineReminders/$id',
+      data: payload,
+    );
+
+    if (!response.success) {
+      throw Exception(response.message);
+    }
+  }
+
+  Future<void> toggleReminderStatus(int id) async {
+    final response = await _apiService.patch<dynamic>(
+      '${AppConfig.baseUrl}/MedicineReminders/$id/toggle',
     );
 
     if (!response.success) {

@@ -41,7 +41,7 @@ dependencies:
   cached_network_image: ^3.3.1
 
   # Forms & Validation
-  intl: ^0.19.0
+  intl: ^0.20.2
   email_validator: ^2.1.17
 
   # Utilities
@@ -54,6 +54,10 @@ dependencies:
   # Icons
   cupertino_icons: ^1.0.6
   font_awesome_flutter: ^10.6.0
+  file_picker: ^11.0.2
+  url_launcher: ^6.3.2
+  flutter_timezone: ^5.1.0
+  fl_chart: ^1.2.0
 
 dev_dependencies:
   flutter_test:
@@ -68,15 +72,14 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/images/logos/
     - assets/icons/
     - assets/animations/
-    - buitems-logo-png_seeklogo-273407.png
-    - Medi-AI.png
 
 flutter_launcher_icons:
   android: true
   ios: false
-  image_path: "Medi-AI.png"
+  image_path: "assets/images/logos/Medi-AI.png"
   min_sdk_android: 21
   adaptive_icon_background: "#004F8C"
-  adaptive_icon_foreground: "Medi-AI.png"
+  adaptive_icon_foreground: "assets/images/logos/Medi-AI.png"

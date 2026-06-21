@@ -1,20 +1,21 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'register_email_controller.dart';
 import '../../../../config/app_theme.dart';
 import '../../../routes/app_routes.dart';
 
+/// Registration page for creating a new student, faculty, doctor, or admin account.
 class RegisterEmailScreen extends GetView<RegisterEmailController> {
   RegisterEmailScreen({super.key});
-  
+
   // Create a unique form key per screen instance
-  final _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>(); // Unique form key for validation.
 
   @override
   Widget build(BuildContext context) {
     // Pass the local form key to the controller
     Get.find<RegisterEmailController>().formKey = _formKey;
-    
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
@@ -26,11 +27,11 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 20),
-                
-                // Logo
+
+                // Logo section at the top of the page.
                 Center(
                   child: Image.asset(
-                    'buitems-logo-png_seeklogo-273407.png',
+                    'assets/images/logos/buitems-logo-png_seeklogo-273407.png',
                     height: 100,
                     width: 100,
                     errorBuilder: (context, error, stackTrace) {
@@ -43,26 +44,27 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                
-                // Header
+
+                // Main heading.
                 Text(
                   'Create Account',
                   style: AppTheme.h1.copyWith(color: AppTheme.primary),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
+                // Short subtitle explaining the page purpose.
                 Text(
-                  'Join BUITEMS Medical Center',
+                  'Join our healthcare platform today',
                   style: AppTheme.bodyMedium.copyWith(color: Colors.grey[600]),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 40),
 
-                // Role Selection
+                // Role selection section.
                 _buildRoleSelection(),
                 const SizedBox(height: 24),
 
-                // Name Fields
+                // First and last name fields are placed side by side.
                 Row(
                   children: [
                     Expanded(
@@ -72,7 +74,7 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
                         prefixIcon: Icons.person_outline,
                         validator: (value) {
                           if (value?.isEmpty ?? true) {
-                            return 'Required';
+                            return 'This field is required';
                           }
                           return null;
                         },
@@ -86,7 +88,7 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
                         prefixIcon: Icons.person_outline,
                         validator: (value) {
                           if (value?.isEmpty ?? true) {
-                            return 'Required';
+                            return 'This field is required';
                           }
                           return null;
                         },
@@ -96,7 +98,7 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
                 ),
                 const SizedBox(height: 16),
 
-                // Email Field
+                // Email field.
                 _buildTextField(
                   controller: controller.emailController,
                   label: 'Email Address',
@@ -109,14 +111,14 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
                       return 'Email is required';
                     }
                     if (!GetUtils.isEmail(value!)) {
-                      return 'Invalid email format';
+                      return 'Enter a valid email address';
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
 
-                // Phone Field
+                // Phone field.
                 _buildTextField(
                   controller: controller.phoneController,
                   label: 'Mobile Number',
@@ -132,25 +134,25 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
                 ),
                 const SizedBox(height: 16),
 
-                // Date of Birth
+                // Date of birth picker.
                 _buildDateOfBirthField(),
                 const SizedBox(height: 16),
 
-                // Gender Selection
+                // Gender chips.
                 _buildGenderSelection(),
                 const SizedBox(height: 16),
 
-                // Address Field (Optional)
+                // Optional address field.
                 _buildTextField(
                   controller: controller.addressController,
                   label: 'Address (Optional)',
-                  hint: 'Your residential address',
+                  hint: 'Enter your residential address',
                   prefixIcon: Icons.home_outlined,
                   maxLines: 2,
                 ),
                 const SizedBox(height: 16),
 
-                // Department Selection (conditional)
+                // Department dropdown is shown for student and faculty accounts.
                 Obx(() {
                   if (controller.selectedRole.value == 'Student' ||
                       controller.selectedRole.value == 'Faculty') {
@@ -164,7 +166,7 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
                   return const SizedBox.shrink();
                 }),
 
-                // Doctor profile fields (required by doctors table)
+                // Doctor-specific profile fields.
                 Obx(() {
                   if (controller.selectedRole.value == 'Doctor') {
                     return Column(
@@ -172,12 +174,12 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
                         _buildTextField(
                           controller: controller.specializationController,
                           label: 'Specialization',
-                          hint: 'e.g. General Physician',
+                          hint: 'e.g., Cardiology, Orthopedics',
                           prefixIcon: Icons.medical_services_outlined,
                           validator: (value) {
                             if (controller.selectedRole.value == 'Doctor' &&
                                 (value?.trim().isEmpty ?? true)) {
-                              return 'Specialization is required for doctors';
+                              return 'Specialization is required';
                             }
                             return null;
                           },
@@ -191,7 +193,7 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
                           validator: (value) {
                             if (controller.selectedRole.value == 'Doctor' &&
                                 (value?.trim().isEmpty ?? true)) {
-                              return 'License number is required for doctors';
+                              return 'License number is required';
                             }
                             return null;
                           },
@@ -205,7 +207,7 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
                           validator: (value) {
                             if (controller.selectedRole.value == 'Doctor' &&
                                 (value?.trim().isEmpty ?? true)) {
-                              return 'Qualification is required for doctors';
+                              return 'Qualification is required';
                             }
                             return null;
                           },
@@ -216,7 +218,7 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
                             Expanded(
                               child: _buildTextField(
                                 controller: controller.experienceController,
-                                label: 'Experience (Years)',
+                                label: 'Years of Experience',
                                 prefixIcon: Icons.timeline,
                                 keyboardType: TextInputType.number,
                               ),
@@ -233,7 +235,7 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
                         _buildTextField(
                           controller: controller.bioController,
                           label: 'Bio (Optional)',
-                          hint: 'Brief professional introduction',
+                          hint: 'Brief professional bio',
                           prefixIcon: Icons.description_outlined,
                           maxLines: 3,
                         ),
@@ -244,7 +246,7 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
                   return const SizedBox.shrink();
                 }),
 
-                // CMS ID Field
+                // CMS ID field for student and faculty accounts.
                 Obx(() {
                   if (controller.selectedRole.value == 'Student' ||
                       controller.selectedRole.value == 'Faculty') {
@@ -252,12 +254,12 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
                       children: [
                         _buildTextField(
                           controller: controller.cmsIdController,
-                          label: 'Registration Number / CMS ID',
+                          label: 'Registration/CMS ID',
                           prefixIcon: Icons.badge_outlined,
                           validator: (value) {
                             if (controller.selectedRole.value != 'Doctor' &&
                                 (value?.trim().isEmpty ?? true)) {
-                              return 'Registration number is required';
+                              return 'Registration/CMS ID is required';
                             }
                             return null;
                           },
@@ -269,100 +271,101 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
                   return const SizedBox.shrink();
                 }),
 
-                // Password Field
+                // Password field.
                 Obx(() => _buildTextField(
-                  controller: controller.passwordController,
-                  label: 'Password',
-                  prefixIcon: Icons.lock_outline,
-                  obscureText: !controller.showPassword.value,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      controller.showPassword.value
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      color: Colors.grey,
-                    ),
-                    onPressed: controller.togglePasswordVisibility,
-                  ),
-                  validator: (value) {
-                    if (value?.isEmpty ?? true) {
-                      return 'Password is required';
-                    }
-                    if (value!.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
-                    return null;
-                  },
-                )),
+                      controller: controller.passwordController,
+                      label: 'Password',
+                      prefixIcon: Icons.lock_outline,
+                      obscureText: !controller.showPassword.value,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          controller.showPassword.value
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: Colors.grey,
+                        ),
+                        onPressed: controller.togglePasswordVisibility,
+                      ),
+                      validator: (value) {
+                        if (value?.isEmpty ?? true) {
+                          return 'Password is required';
+                        }
+                        if (value!.length < 6) {
+                          return 'Password must be at least 6 characters';
+                        }
+                        return null;
+                      },
+                    )),
                 const SizedBox(height: 16),
 
-                // Confirm Password Field
+                // Confirm-password field.
                 Obx(() => _buildTextField(
-                  controller: controller.confirmPasswordController,
-                  label: 'Confirm Password',
-                  prefixIcon: Icons.lock_outline,
-                  obscureText: !controller.showConfirmPassword.value,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      controller.showConfirmPassword.value
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      color: Colors.grey,
-                    ),
-                    onPressed: controller.toggleConfirmPasswordVisibility,
-                  ),
-                  validator: (value) {
-                    if (value?.isEmpty ?? true) {
-                      return 'Please confirm password';
-                    }
-                    if (value != controller.passwordController.text) {
-                      return 'Passwords do not match';
-                    }
-                    return null;
-                  },
-                )),
+                      controller: controller.confirmPasswordController,
+                      label: 'Confirm Password',
+                      prefixIcon: Icons.lock_outline,
+                      obscureText: !controller.showConfirmPassword.value,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          controller.showConfirmPassword.value
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          color: Colors.grey,
+                        ),
+                        onPressed: controller.toggleConfirmPasswordVisibility,
+                      ),
+                      validator: (value) {
+                        if (value?.isEmpty ?? true) {
+                          return 'Please confirm your password';
+                        }
+                        if (value != controller.passwordController.text) {
+                          return 'Passwords do not match';
+                        }
+                        return null;
+                      },
+                    )),
                 const SizedBox(height: 32),
 
-                // Sign Up Button
+                // Submit button for account creation.
                 Obx(() => ElevatedButton(
-                  onPressed: controller.isLoading.value
-                      ? null
-                      : controller.handleSignup,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 2,
-                  ),
-                  child: controller.isLoading.value
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text(
-                          'Create Account',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      onPressed: controller.isLoading.value
+                          ? null
+                          : controller.handleSignup,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                )),
+                        elevation: 2,
+                      ),
+                      child: controller.isLoading.value
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              'Create Account',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                    )),
                 const SizedBox(height: 24),
 
-                // Login Link
+                // Link back to the login screen.
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Already have an account? ',
-                      style: AppTheme.bodyMedium.copyWith(color: Colors.grey[600]),
+                      'Already have an account?',
+                      style:
+                          AppTheme.bodyMedium.copyWith(color: Colors.grey[600]),
                     ),
                     TextButton(
                       onPressed: () => Get.offNamed(AppRoutes.login),
@@ -385,6 +388,7 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
     );
   }
 
+  /// Builds the role selection chips.
   Widget _buildRoleSelection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -392,8 +396,8 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
         Text(
           'I am a',
           style: AppTheme.bodyLarge.copyWith(
-            fontWeight: FontWeight.w600,
-            color: AppTheme.primary,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textPrimary,
           ),
         ),
         const SizedBox(height: 12),
@@ -411,6 +415,7 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
     );
   }
 
+  /// Builds one selectable role chip.
   Widget _buildRoleChip(String role, IconData icon) {
     return Obx(() {
       final isSelected = controller.selectedRole.value == role;
@@ -418,9 +423,11 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
         label: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: isSelected ? Colors.white : AppTheme.primary),
-            const SizedBox(width: 6),
-            Text(role),
+            Icon(icon,
+                size: 18, color: isSelected ? Colors.white : Colors.grey[600]),
+            const SizedBox(width: 8),
+            Text(_translateRole(role),
+                style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
           ],
         ),
         selected: isSelected,
@@ -430,8 +437,8 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
         backgroundColor: Colors.white,
         selectedColor: AppTheme.primary,
         labelStyle: TextStyle(
-          color: isSelected ? Colors.white : AppTheme.primary,
-          fontWeight: FontWeight.w500,
+          color: isSelected ? Colors.white : Colors.grey[700],
+          fontWeight: FontWeight.w600,
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
@@ -443,6 +450,7 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
     });
   }
 
+  /// Builds the department dropdown for student and faculty accounts.
   Widget _buildDepartmentSelection() {
     final departments = [
       'Computer Science',
@@ -460,47 +468,51 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
         Text(
           'Department',
           style: AppTheme.bodyLarge.copyWith(
-            fontWeight: FontWeight.w600,
-            color: AppTheme.primary,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textPrimary,
           ),
         ),
         const SizedBox(height: 12),
         Obx(() => Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[300]!),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: controller.selectedDepartment.value.isEmpty
-                  ? null
-                  : controller.selectedDepartment.value,
-              hint: Text(
-                'Select your department',
-                style: TextStyle(color: Colors.grey[600]),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey[300]!),
               ),
-              isExpanded: true,
-              icon: const Icon(Icons.arrow_drop_down, color: AppTheme.primary),
-              items: departments.map((dept) {
-                return DropdownMenuItem(
-                  value: dept,
-                  child: Text(dept),
-                );
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  controller.selectDepartment(value);
-                }
-              },
-            ),
-          ),
-        )),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: controller.selectedDepartment.value.isEmpty
+                      ? null
+                      : controller.selectedDepartment.value,
+                  hint: Text(
+                    'Select Department',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 14),
+                  ),
+                  isExpanded: true,
+                  icon: Icon(Icons.arrow_drop_down,
+                      color: Colors.grey[500]),
+                  items: departments.map((dept) {
+                    return DropdownMenuItem(
+                      value: dept,
+                      child: Text(_translateDepartment(dept),
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      controller.selectDepartment(value);
+                    }
+                  },
+                ),
+              ),
+            )),
       ],
     );
   }
 
+  /// Builds the gender selector.
   Widget _buildGenderSelection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -508,8 +520,8 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
         Text(
           'Gender',
           style: AppTheme.bodyLarge.copyWith(
-            fontWeight: FontWeight.w600,
-            color: AppTheme.primary,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textPrimary,
           ),
         ),
         const SizedBox(height: 12),
@@ -528,6 +540,7 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
     );
   }
 
+  /// Builds one gender chip.
   Widget _buildGenderChip(String gender, IconData icon) {
     return Obx(() {
       final isSelected = controller.selectedGender.value == gender;
@@ -536,9 +549,11 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 16, color: isSelected ? Colors.white : AppTheme.primary),
-            const SizedBox(width: 4),
-            Text(gender, style: const TextStyle(fontSize: 13)),
+            Icon(icon,
+                size: 16, color: isSelected ? Colors.white : Colors.grey[600]),
+            const SizedBox(width: 6),
+            Text(_translateGender(gender),
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
           ],
         ),
         selected: isSelected,
@@ -548,8 +563,8 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
         backgroundColor: Colors.white,
         selectedColor: AppTheme.primary,
         labelStyle: TextStyle(
-          color: isSelected ? Colors.white : AppTheme.primary,
-          fontWeight: FontWeight.w500,
+          color: isSelected ? Colors.white : Colors.grey[700],
+          fontWeight: FontWeight.w600,
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
@@ -561,71 +576,76 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
     });
   }
 
+  /// Builds the date-of-birth picker card.
   Widget _buildDateOfBirthField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Date of Birth',
-          style: AppTheme.bodyMedium.copyWith(
-            fontWeight: FontWeight.w600,
-            color: AppTheme.primary,
+          style: AppTheme.bodyLarge.copyWith(
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textPrimary,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Obx(() => InkWell(
-          onTap: () async {
-            final date = await showDatePicker(
-              context: Get.context!,
-              initialDate: DateTime.now().subtract(const Duration(days: 365 * 18)),
-              firstDate: DateTime(1950),
-              lastDate: DateTime.now(),
-              builder: (context, child) {
-                return Theme(
-                  data: ThemeData.light().copyWith(
-                    primaryColor: AppTheme.primary,
-                    colorScheme: const ColorScheme.light(primary: AppTheme.primary),
-                  ),
-                  child: child!,
+              onTap: () async {
+                final date = await showDatePicker(
+                  context: Get.context!,
+                  initialDate:
+                      DateTime.now().subtract(const Duration(days: 365 * 18)),
+                  firstDate: DateTime(1950),
+                  lastDate: DateTime.now(),
+                  builder: (context, child) {
+                    return Theme(
+                      data: ThemeData.light().copyWith(
+                        primaryColor: AppTheme.primary,
+                        colorScheme:
+                            const ColorScheme.light(primary: AppTheme.primary),
+                      ),
+                      child: child!,
+                    );
+                  },
                 );
+                if (date != null) {
+                  controller.setDateOfBirth(date);
+                }
               },
-            );
-            if (date != null) {
-              controller.setDateOfBirth(date);
-            }
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey[300]!),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.calendar_today, color: AppTheme.primary),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    controller.dateOfBirth.value.isEmpty
-                        ? 'Select date of birth'
-                        : controller.dateOfBirth.value,
-                    style: TextStyle(
-                      color: controller.dateOfBirth.value.isEmpty
-                          ? Colors.grey[600]
-                          : AppTheme.textPrimary,
-                      fontSize: 14,
-                    ),
-                  ),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey[300]!),
                 ),
-              ],
-            ),
-          ),
-        )),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_today, color: AppTheme.primary),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        controller.dateOfBirth.value.isEmpty
+                            ? 'Select Date of Birth'
+                            : controller.dateOfBirth.value,
+                        style: TextStyle(
+                          color: controller.dateOfBirth.value.isEmpty
+                              ? Colors.grey[600]
+                              : AppTheme.textPrimary,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )),
       ],
     );
   }
 
+  /// Reusable labeled text field used throughout the registration form.
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -643,12 +663,12 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
       children: [
         Text(
           label,
-          style: AppTheme.bodyMedium.copyWith(
-            fontWeight: FontWeight.w600,
-            color: AppTheme.primary,
+          style: AppTheme.bodyLarge.copyWith(
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textPrimary,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         TextFormField(
           controller: controller,
           keyboardType: keyboardType,
@@ -658,8 +678,8 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
           maxLength: maxLength,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(color: Colors.grey[400]),
-            prefixIcon: Icon(prefixIcon, color: AppTheme.primary),
+            hintStyle: TextStyle(color: Colors.grey[500]),
+            prefixIcon: Icon(prefixIcon, color: Colors.grey[500]),
             suffixIcon: suffixIcon,
             filled: true,
             fillColor: Colors.white,
@@ -687,5 +707,55 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
         ),
       ],
     );
+  }
+
+  /// Converts a role label into the shorter display key used in the UI.
+  String _translateRole(String role) {
+    switch (role) {
+      case 'Student':
+        return 'Student';
+      case 'Faculty':
+        return 'Faculty';
+      case 'Doctor':
+        return 'Doctor';
+      case 'Admin':
+        return 'Admin';
+      default:
+        return role;
+    }
+  }
+
+  /// Converts a gender label into the shorter display key used in the UI.
+  String _translateGender(String gender) {
+    switch (gender) {
+      case 'Male':
+        return 'Male';
+      case 'Female':
+        return 'Female';
+      default:
+        return gender;
+    }
+  }
+
+  /// Converts a department name into the shorter display key used in the UI.
+  String _translateDepartment(String department) {
+    switch (department) {
+      case 'Computer Science':
+        return 'Computer Science';
+      case 'Software Engineering':
+        return 'Software Engineering';
+      case 'Electrical Engineering':
+        return 'Electrical Engineering';
+      case 'Telecommunication Engineering':
+        return 'Telecommunication Engineering';
+      case 'Electronic Engineering':
+        return 'Electronic Engineering';
+      case 'Information Technology':
+        return 'Information Technology';
+      case 'Computer Engineering':
+        return 'Computer Engineering';
+      default:
+        return department;
+    }
   }
 }

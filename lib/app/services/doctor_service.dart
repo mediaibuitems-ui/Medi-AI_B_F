@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import '../data/models/api_response.dart';
 import '../data/models/appointment.dart';
+import '../data/models/medical_history.dart';
 import '../services/api_service.dart';
 import '../../config/app_config.dart';
 
@@ -126,6 +127,18 @@ class DoctorService extends GetxService {
     );
   }
 
+  // Update appointment status (e.g., Confirmed, Cancelled, Completed)
+  Future<ApiResponse<Object>> updateAppointmentStatus(String appointmentId, String status, [String? reason]) async {
+    final Map<String, dynamic> data = {'status': status};
+    if (reason != null && reason.isNotEmpty) {
+      data['cancellationReason'] = reason;
+    }
+    return await _apiService.put<Object>(
+      '${AppConfig.baseUrl}/Appointments/$appointmentId/status',
+      data: data,
+    );
+  }
+
   // Get current doctor profile
   Future<ApiResponse<Map<String, dynamic>>> getMyProfile() async {
     return await _apiService.get<Map<String, dynamic>>(
@@ -153,6 +166,41 @@ class DoctorService extends GetxService {
     );
   }
 
+  // Get a specific patient's medical history for doctor view
+  Future<ApiResponse<List<MedicalHistory>>> getPatientMedicalHistory(int patientId) async {
+    return await _apiService.get<List<MedicalHistory>>(
+      '${AppConfig.baseUrl}/MedicalHistory/patient/$patientId',
+      fromJson: (json) {
+        if (json is List) {
+          return json
+              .map((item) => MedicalHistory.fromJson(
+                  item is Map<String, dynamic>
+                      ? item
+                      : Map<String, dynamic>.from(item as Map)))
+              .toList();
+        }
+        return [];
+      },
+    );
+  }
+
+  // Get a specific patient's emergency contacts for doctor view
+  Future<ApiResponse<List<Map<String, dynamic>>>> getPatientEmergencyContacts(int patientId) async {
+    return await _apiService.get<List<Map<String, dynamic>>>(
+      '${AppConfig.baseUrl}/EmergencyContacts/user/$patientId',
+      fromJson: (json) {
+        if (json is List) {
+          return json
+              .map((item) => item is Map<String, dynamic>
+                  ? item
+                  : Map<String, dynamic>.from(item as Map))
+              .toList();
+        }
+        return [];
+      },
+    );
+  }
+
   Future<ApiResponse<List<Map<String, dynamic>>>> getUnreadNotifications() async {
     return await _apiService.get<List<Map<String, dynamic>>>(
       '${AppConfig.baseUrl}/Notifications/unread',
@@ -175,6 +223,44 @@ class DoctorService extends GetxService {
       data: const {},
     );
   }
+
+  // Get doctor's leaves
+  Future<ApiResponse<List<Map<String, dynamic>>>> getMyLeaves() async {
+    return await _apiService.get<List<Map<String, dynamic>>>(
+      '${AppConfig.baseUrl}/Doctors/leaves',
+      fromJson: (json) {
+        if (json is List) {
+          return json
+              .map((item) => item is Map<String, dynamic>
+                  ? item
+                  : Map<String, dynamic>.from(item as Map))
+              .toList();
+        }
+        return [];
+      },
+    );
+  }
+
+  // Add doctor's leave
+  Future<ApiResponse<Object>> addLeave(Map<String, dynamic> data) async {
+    return await _apiService.post<Object>(
+      '${AppConfig.baseUrl}/Doctors/leaves',
+      data: data,
+    );
+  }
+
+  // Update doctor's leave
+  Future<ApiResponse<Object>> updateLeave(int id, Map<String, dynamic> data) async {
+    return await _apiService.put<Object>(
+      '${AppConfig.baseUrl}/Doctors/leaves/$id',
+      data: data,
+    );
+  }
+
+  // Delete doctor's leave
+  Future<ApiResponse<Object>> deleteLeave(int id) async {
+    return await _apiService.delete<Object>(
+      '${AppConfig.baseUrl}/Doctors/leaves/$id',
+    );
+  }
 }
-
-

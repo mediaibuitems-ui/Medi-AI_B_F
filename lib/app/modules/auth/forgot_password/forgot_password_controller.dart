@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../services/auth_service.dart';
 import '../../../routes/app_routes.dart';
+import '../../../widgets/app_feedback.dart';
 
 class ForgotPasswordController extends GetxController {
   final _authService = Get.find<AuthService>();
@@ -36,45 +37,30 @@ class ForgotPasswordController extends GetxController {
       isLoading.value = false;
 
       if (response.success) {
-        final resetToken = response.data?['resetToken'] as String? ?? '';
+        AppFeedback.success(
+          'Success',
+          response.message ?? 'OTP sent to your email.',
+        );
 
-        if (resetToken.isEmpty) {
-          Get.snackbar(
-            'Error',
-            'Could not retrieve reset token. Please try again.',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-          );
-          return;
-        }
-
-        // Navigate directly to SetPassword — no OTP screen
+        // Navigate to OTP Verification Screen
         Get.toNamed(
-          AppRoutes.setPassword,
+          AppRoutes.otpVerification,
           arguments: {
             'email': emailController.text.trim(),
-            'token': resetToken,
+            'isPasswordReset': true,
           },
         );
       } else {
-        Get.snackbar(
+        AppFeedback.error(
           'Verification Failed',
           response.message,
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 4),
         );
       }
     } catch (e) {
       isLoading.value = false;
-      Get.snackbar(
+      AppFeedback.error(
         'Error',
         'Something went wrong. Please try again.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
       );
     }
   }

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../../config/app_theme.dart';
 
@@ -73,17 +73,29 @@ class _UserFormDialogState extends State<UserFormDialog> {
     final isEdit = widget.user != null;
 
     return Dialog(
-       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-       child: Container(
-         width: 500,
-         padding: const EdgeInsets.all(24),
-         child: SingleChildScrollView(
-           child: Form(
-             key: _formKey,
-             child: Column(
-               mainAxisSize: MainAxisSize.min,
-               crossAxisAlignment: CrossAxisAlignment.start,
-               children: [
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: Container(
+        width: 500,
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppTheme.border.withOpacity(0.08)),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.textPrimary.withOpacity(0.03),
+              blurRadius: 18,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(24),
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                  Text(
                    isEdit ? 'Edit User' : 'Add New User',
                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -99,7 +111,7 @@ class _UserFormDialogState extends State<UserFormDialog> {
                      value: _role,
                      decoration: _inputDecoration('Role'),
                      items: ['Student', 'Faculty', 'Doctor', 'Admin']
-                         .map((r) => DropdownMenuItem(value: r, child: Text(r)))
+                       .map((r) => DropdownMenuItem(value: r, child: Text(r)))
                          .toList(),
                      onChanged: (val) => setState(() => _role = val!),
                    ),
@@ -109,7 +121,7 @@ class _UserFormDialogState extends State<UserFormDialog> {
                  // Common Fields
                  TextFormField(
                    controller: _fullNameController,
-                   decoration: _inputDecoration('Full Name'),
+                   decoration: _inputDecoration('Full name'),
                    validator: (v) => v!.isEmpty ? 'Required' : null,
                  ),
                  const SizedBox(height: 16),
@@ -126,14 +138,14 @@ class _UserFormDialogState extends State<UserFormDialog> {
                      controller: _passwordController,
                      decoration: _inputDecoration('Password'),
                      obscureText: true,
-                     validator: (v) => v!.isEmpty || v.length < 6 ? 'Min 6 chars' : null,
+                     validator: (v) => v!.isEmpty || v.length < 6 ? 'Minimum 6 characters' : null,
                    ),
                    const SizedBox(height: 16),
                  ],
 
                  TextFormField(
                    controller: _phoneController,
-                   decoration: _inputDecoration('Phone Number'),
+                   decoration: _inputDecoration('Phone number'),
                  ),
                  const SizedBox(height: 16),
                  
@@ -147,7 +159,7 @@ class _UserFormDialogState extends State<UserFormDialog> {
                  if (_role == 'Student' || _role == 'Faculty') ...[
                     TextFormField(
                       controller: _regNumController,
-                      decoration: _inputDecoration(_role == 'Student' ? 'Registration Number' : 'Employee ID'),
+                      decoration: _inputDecoration(_role == 'Student' ? 'Registration number' : 'Employee ID'),
                     ),
                     const SizedBox(height: 16),
                  ],
@@ -160,7 +172,7 @@ class _UserFormDialogState extends State<UserFormDialog> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _licenseController,
-                      decoration: _inputDecoration('License Number'),
+                      decoration: _inputDecoration('License number'),
                     ),
                     const SizedBox(height: 16),
                     Row(
@@ -168,7 +180,7 @@ class _UserFormDialogState extends State<UserFormDialog> {
                         Expanded(
                           child: TextFormField(
                             controller: _experienceController,
-                            decoration: _inputDecoration('Experience (Yrs)'),
+                            decoration: _inputDecoration('Experience years'),
                             keyboardType: TextInputType.number,
                           ),
                         ),
@@ -189,7 +201,7 @@ class _UserFormDialogState extends State<UserFormDialog> {
                      ElevatedButton(
                        style: ElevatedButton.styleFrom(
                          backgroundColor: AppTheme.primary,
-                         foregroundColor: Colors.white,
+                         foregroundColor: AppTheme.surface,
                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                        ),
                        onPressed: () {
@@ -234,8 +246,23 @@ class _UserFormDialogState extends State<UserFormDialog> {
   InputDecoration _inputDecoration(String label) {
     return InputDecoration(
       labelText: label,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      filled: true,
+      fillColor: AppTheme.background,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: AppTheme.border.withOpacity(0.08)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: AppTheme.primary.withOpacity(0.45)),
+      ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
   }
+
 }
+

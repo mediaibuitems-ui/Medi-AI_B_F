@@ -15,7 +15,7 @@ class BookingSettingsScreen extends GetView<BookingSettingsController> {
       appBar: AppBar(
         title: const Text('Appointment Booking Settings'),
         backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: AppTheme.surface,
         elevation: 0,
       ),
       body: Obx(() {
@@ -111,12 +111,6 @@ class BookingSettingsScreen extends GetView<BookingSettingsController> {
                     '${controller.reminderNotificationMinutes.value} minutes before',
                     divisions: 23,
                   ),
-                  const SizedBox(height: 16),
-                  _buildSwitchSetting(
-                    'Enable Medicine Reminders',
-                    controller.enableMedicineReminders,
-                    'Allow patients to set medicine reminders from prescriptions',
-                  ),
                 ],
               ),
               const SizedBox(height: 32),
@@ -132,9 +126,9 @@ class BookingSettingsScreen extends GetView<BookingSettingsController> {
                         : () => controller.saveSettings(),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primary,
-                      foregroundColor: Colors.white,
+                      foregroundColor: AppTheme.surface,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      disabledBackgroundColor: Colors.grey[400],
+                      disabledBackgroundColor: AppTheme.border.withOpacity(0.35),
                     ),
                     child: controller.isSaving.value
                         ? const SizedBox(
@@ -142,7 +136,7 @@ class BookingSettingsScreen extends GetView<BookingSettingsController> {
                             width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Colors.white,
+                              color: AppTheme.surface,
                             ),
                           )
                         : const Text(
@@ -164,14 +158,14 @@ class BookingSettingsScreen extends GetView<BookingSettingsController> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.red[50],
+                      color: AppTheme.error.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red[200]!),
+                      border: Border.all(color: AppTheme.error.withOpacity(0.2)),
                     ),
                     child: Text(
                       controller.errorMessage.value,
                       style: TextStyle(
-                        color: Colors.red[700],
+                        color: AppTheme.error,
                         fontSize: 13,
                       ),
                     ),
@@ -188,14 +182,21 @@ class BookingSettingsScreen extends GetView<BookingSettingsController> {
   Widget _buildSectionCard(String title, IconData icon, List<Widget> children) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Container(
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.border.withOpacity(0.08)),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.textPrimary.withOpacity(0.03),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Padding(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.white,
-          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -301,7 +302,7 @@ class BookingSettingsScreen extends GetView<BookingSettingsController> {
                 description,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey[600],
+                  color: AppTheme.textSecondary,
                 ),
               ),
             ],
@@ -342,7 +343,8 @@ class BookingSettingsScreen extends GetView<BookingSettingsController> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[300]!),
+          color: AppTheme.surface,
+          border: Border.all(color: AppTheme.border.withOpacity(0.08)),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -355,7 +357,7 @@ class BookingSettingsScreen extends GetView<BookingSettingsController> {
                   label,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[600],
+                    color: AppTheme.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -369,7 +371,7 @@ class BookingSettingsScreen extends GetView<BookingSettingsController> {
                 ),
               ],
             ),
-            Icon(Icons.access_time, color: Colors.grey[400]),
+            Icon(Icons.access_time, color: AppTheme.textSecondary.withOpacity(0.5)),
           ],
         ),
       ),

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../../../../config/app_theme.dart';
@@ -36,20 +36,22 @@ class BookAppointmentScreen extends GetView<BookAppointmentController> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Filter by Specialization',
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold)),
+                        const Text(
+                          'Filter by specialization',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String>(
                           value: controller.selectedSpecialization.value,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             border: OutlineInputBorder(),
-                            hintText: 'All Specializations',
+                            hintText: 'All specializations',
                           ),
                           items: [
-                            const DropdownMenuItem<String>(
+                            DropdownMenuItem<String>(
                               value: null,
-                              child: Text('All Specializations'),
+                              child: Text('All specializations'),
                             ),
                             ...controller.specializations.map((spec) {
                               return DropdownMenuItem(
@@ -74,52 +76,31 @@ class BookAppointmentScreen extends GetView<BookAppointmentController> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Select Doctor',
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Select doctor',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
+                        isExpanded: true,
                         value: controller.selectedDoctorId.value,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           border: OutlineInputBorder(),
                           hintText: 'Choose a doctor',
                         ),
                         items: controller.filteredDoctors.map((doctor) {
                           final name =
-                              doctor['user']?['fullName'] ?? 'Unknown Doctor';
+                              doctor['user']?['fullName'] ?? 'Unknown doctor';
                           final spec = doctor['specialization'] ?? '';
 
                           return DropdownMenuItem(
                             value: doctor['id'].toString(),
-                            child: SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.7,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      name,
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                      style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500),
-                                    ),
-                                  ),
-                                  Flexible(
-                                    child: Text(
-                                      spec.isNotEmpty ? spec : 'Available',
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                      style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey[600]),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            child: Text(
+                              '$name - $spec',
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              style: const TextStyle(fontSize: 14),
                             ),
                           );
                         }).toList(),
@@ -140,9 +121,11 @@ class BookAppointmentScreen extends GetView<BookAppointmentController> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Select Date',
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Select date',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
                       const SizedBox(height: 12),
                       OutlinedButton.icon(
                         onPressed: () async {
@@ -161,7 +144,7 @@ class BookAppointmentScreen extends GetView<BookAppointmentController> {
                         icon: const Icon(Icons.calendar_today),
                         label: Text(
                           controller.selectedDate.value == null
-                              ? 'Select Date'
+                              ? 'Select date'
                               : DateFormat('MMM dd, yyyy')
                                   .format(controller.selectedDate.value!),
                         ),
@@ -181,15 +164,19 @@ class BookAppointmentScreen extends GetView<BookAppointmentController> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Select Time Slot',
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold)),
+                        const Text(
+                          'Select time slot',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
                         const SizedBox(height: 12),
                         if (controller.isLoadingSlots.value)
                           const Center(child: CircularProgressIndicator())
                         else if (controller.availableSlots.isEmpty)
-                          const Text('No slots available on this date',
-                              style: TextStyle(color: Colors.red))
+                          const Text(
+                            'No available slots on this date',
+                            style: TextStyle(color: Colors.red),
+                          )
                         else
                           Wrap(
                             spacing: 8,
@@ -237,27 +224,29 @@ class BookAppointmentScreen extends GetView<BookAppointmentController> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Details',
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Details',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: controller.symptomsController,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Symptoms',
                           border: OutlineInputBorder(),
                           hintText: 'Describe your symptoms',
                         ),
                         maxLines: 2,
                         validator: (value) => value?.isEmpty ?? true
-                            ? 'Please describe symptoms'
+                            ? 'Please describe your symptoms'
                             : null,
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: controller.notesController,
-                        decoration: const InputDecoration(
-                          labelText: 'Additional Notes',
+                        decoration: InputDecoration(
+                          labelText: 'Additional notes',
                           border: OutlineInputBorder(),
                           hintText: 'Any specific requirements',
                         ),
@@ -287,8 +276,10 @@ class BookAppointmentScreen extends GetView<BookAppointmentController> {
                           child: CircularProgressIndicator(
                               color: Colors.white, strokeWidth: 2),
                         )
-                      : const Text('Book Appointment',
-                          style: TextStyle(fontSize: 16)),
+                      : const Text(
+                          'Book appointment',
+                          style: TextStyle(fontSize: 16),
+                        ),
                 ),
               ),
             ],

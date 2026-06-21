@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../services/api_service.dart';
 
@@ -55,7 +55,7 @@ class ManageDoctorsController extends GetxController {
       }
     } catch (e) {
       print('Error loading doctors: $e');
-      Get.snackbar('Error', 'Network error occurred');
+      Get.snackbar('Error', 'A network error occurred');
     } finally {
       isLoading.value = false;
     }
@@ -101,14 +101,14 @@ class ManageDoctorsController extends GetxController {
       
       if (response.success) {
         Get.snackbar(
-          'Success', 'Doctor deleted successfully',
+          'success', 'doctor_deleted_successfully',
           backgroundColor: Colors.green,
           colorText: Colors.white,
           snackPosition: SnackPosition.BOTTOM
         );
         loadDoctors(); // Reload list
       } else {
-        Get.snackbar('Error', response.message);
+        Get.snackbar('error', response.message);
       }
     } catch (e) {
       Get.snackbar('Error', 'Failed to delete doctor');
@@ -119,3 +119,4 @@ class ManageDoctorsController extends GetxController {
     return (isAvailable == true) ? Colors.green : Colors.red;
   }
 }
+

@@ -54,7 +54,7 @@ class MyAppointmentsController extends GetxController {
         // Assume Student
         // If StudentService exists use it, otherwise call API directly
         final response = await _apiService.get<List<Appointment>>(
-          '${AppConfig.baseUrl}/Appointments/student/${user.id}/history',
+          '${AppConfig.baseUrl}/Appointments/my-appointments',
           fromJson: (json) {
             if (json is List) {
               return json.map((item) => Appointment.fromJson(item)).toList();

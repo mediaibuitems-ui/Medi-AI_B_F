@@ -3,7 +3,10 @@ import 'package:get/get.dart';
 import 'faculty_dashboard_controller.dart';
 import '../../../../config/app_theme.dart';
 import '../../../data/models/appointment.dart';
+import '../../../routes/app_routes.dart';
 import 'package:intl/intl.dart';
+import '../../../widgets/dashboard_stat_card.dart';
+import '../../../widgets/dashboard_quick_action.dart';
 
 export 'faculty_dashboard_binding.dart';
 
@@ -16,34 +19,35 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
       backgroundColor: AppTheme.background,
       appBar: _buildAppBar(),
       drawer: _buildDrawer(),
-      body: Obx(() {
-        if (controller.isLoading.value &&
-            controller.currentUser.value == null) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        return RefreshIndicator(
-          onRefresh: controller.refresh,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildWelcomeCard(),
-                const SizedBox(height: 20),
-                _buildStatisticsCards(),
-                const SizedBox(height: 24),
-                _buildQuickActions(),
-                const SizedBox(height: 24),
-                _buildUpcomingAppointments(),
-                const SizedBox(height: 24),
-                _buildRecentAppointments(),
-              ],
-            ),
+      body: RefreshIndicator(
+        onRefresh: controller.refresh,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Obx(() {
+                if (controller.isLoading.value &&
+                    controller.currentUser.value == null) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 40),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                return const SizedBox.shrink();
+              }),
+              _buildWelcomeCard(),
+              const SizedBox(height: 20),
+              _buildStatisticsCards(),
+              const SizedBox(height: 24),
+              _buildQuickActions(),
+              const SizedBox(height: 24),
+              _buildUpcomingAppointments(),
+            ],
           ),
-        );
-      }),
+        ),
+      ),
     );
   }
 
@@ -52,7 +56,7 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
       leading: Builder(
         builder: (context) => IconButton(
           icon: Image.asset(
-            'buitems-logo-png_seeklogo-273407.png',
+            'assets/images/logos/buitems-logo-png_seeklogo-273407.png',
             width: 32,
             height: 32,
             errorBuilder: (context, error, stackTrace) {
@@ -64,13 +68,19 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
       ),
       title: const Text('Faculty Dashboard'),
       backgroundColor: AppTheme.primary,
-      foregroundColor: Colors.white,
+      foregroundColor: AppTheme.surface,
       elevation: 0,
       actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          onPressed: () {},
-        ),
+        Obx(() {
+          return IconButton(
+            icon: Badge(
+              isLabelVisible: controller.unreadNotifications.value > 0,
+              label: Text(controller.unreadNotifications.value.toString()),
+              child: const Icon(Icons.notifications_outlined),
+            ),
+            onPressed: () => Get.toNamed(AppRoutes.notifications),
+          );
+        }),
       ],
     );
   }
@@ -81,21 +91,30 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
         children: [
           Obx(() {
             final user = controller.currentUser.value;
+            final profileImage = user?.profileImage;
+            final hasImage = profileImage != null && profileImage.trim().isNotEmpty;
             return UserAccountsDrawerHeader(
-              decoration: const BoxDecoration(color: AppTheme.primary),
-              accountName: Text(
-                user?.name ?? 'Faculty Member',
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppTheme.primary, AppTheme.primaryDark],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
               ),
-              accountEmail: Text(user?.email ?? ''),
+              accountName: Text(
+                user?.name ?? 'Faculty',
+                style: AppTheme.dashboardDrawerName,
+              ),
+              accountEmail: Text(
+                user?.email ?? '',
+                style: AppTheme.dashboardDrawerEmail,
+              ),
               currentAccountPicture: CircleAvatar(
-                backgroundColor: Colors.white,
-                child: user?.profileImage != null
-                    ? ClipOval(
-                        child: Image.network(user!.profileImage!,
-                            fit: BoxFit.cover))
-                    : const Icon(Icons.person,
+              backgroundColor: AppTheme.surface,
+                backgroundImage: hasImage ? NetworkImage(profileImage) : null,
+                child: hasImage
+                    ? null
+                    : const Icon(Icons.work_rounded,
                         size: 32, color: AppTheme.primary),
               ),
             );
@@ -129,18 +148,10 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.psychology_outlined),
-                  title: const Text('AI Symptom Checker'),
+                  title: const Text('AI Symptom Analyzer'),
                   onTap: () {
                     Get.back();
                     controller.aiSymptomChecker();
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.tips_and_updates_outlined),
-                  title: const Text('Health Tips'),
-                  onTap: () {
-                    Get.back();
-                    controller.viewHealthTips();
                   },
                 ),
                 ListTile(
@@ -176,13 +187,29 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
                     controller.viewProfile();
                   },
                 ),
+                ListTile(
+                  leading: const Icon(Icons.feedback_outlined),
+                  title: const Text('Feedback'),
+                  onTap: () {
+                    Get.back();
+                    controller.goToFeedback();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.settings_outlined),
+                  title: const Text('Settings'),
+                  onTap: () {
+                    Get.back();
+                    controller.goToSettings();
+                  },
+                ),
               ],
             ),
           ),
           const Divider(height: 1),
           ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('Logout', style: TextStyle(color: Colors.red)),
+            leading: const Icon(Icons.logout, color: AppTheme.error),
+            title: const Text('Logout', style: TextStyle(color: AppTheme.error)),
             onTap: controller.logout,
           ),
           const SizedBox(height: 8),
@@ -194,242 +221,212 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
   Widget _buildWelcomeCard() {
     return Obx(() {
       final user = controller.currentUser.value;
-      return Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppTheme.primary, Color(0xFF003D6E)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      final profileImage = user?.profileImage;
+      final hasImage = profileImage != null && profileImage.trim().isNotEmpty;
+      return InkWell(
+        onTap: controller.viewProfile,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [AppTheme.primary, AppTheme.primaryDark],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
           ),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 30,
-              backgroundColor: Colors.white,
-              child: user?.profileImage != null
-                  ? ClipOval(
-                      child:
-                          Image.network(user!.profileImage!, fit: BoxFit.cover))
-                  : const Icon(
-                      Icons.person,
-                      size: 32,
-                      color: AppTheme.primary,
-                    ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    controller.getGreeting(),
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    user?.name ?? 'Faculty Member',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    user?.department ?? 'BUITEMS Faculty',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
+          child: Stack(
+            children: [
+              Positioned(
+                right: -20,
+                top: -20,
+                child: Icon(
+                  Icons.work_rounded,
+                  size: 132,
+                  color: AppTheme.surface.withOpacity(0.12),
+                ),
               ),
-            ),
-          ],
+              Positioned(
+                left: 18,
+                bottom: 18,
+                child: Container(
+                  width: 86,
+                  height: 86,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppTheme.surface.withOpacity(0.08),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: AppTheme.surface.withOpacity(0.2),
+                      backgroundImage:
+                        hasImage ? NetworkImage(profileImage) : null,
+                      child: hasImage
+                          ? null
+                          : const Icon(
+                              Icons.work_rounded,
+                              size: 32,
+                              color: AppTheme.surface,
+                            ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            controller.getGreeting(),
+                            style: AppTheme.dashboardWelcomeGreeting,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            user?.name ?? 'Faculty Member',
+                            style: AppTheme.dashboardWelcomeName,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            user?.department ?? 'BUITEMS Faculty',
+                            style: AppTheme.dashboardWelcomeSubtitle,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       );
     });
   }
 
   Widget _buildStatisticsCards() {
-    return Obx(() {
-      return Row(
-        children: [
-          Expanded(
-            child: _buildStatCard(
-              'Total Appointments',
-              controller.totalAppointments.value.toString(),
-              Icons.calendar_today,
-              const Color(0xFF2196F3),
+    return Obx(() => Row(
+          children: [
+            Expanded(
+              child: DashboardStatCard(
+                title: 'Total Appointments',
+                value: controller.totalAppointments.value.toString(),
+                icon: Icons.calendar_today,
+                color: AppTheme.info,
+                onTap: () {
+                  Get.toNamed(AppRoutes.myAppointments, arguments: {'filter': 'All'});
+                },
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildStatCard(
-              'Completed',
-              controller.completedAppointments.value.toString(),
-              Icons.check_circle,
-              const Color(0xFF4CAF50),
+            const SizedBox(width: 12),
+            Expanded(
+              child: DashboardStatCard(
+                title: 'Completed',
+                value: controller.completedAppointments.value.toString(),
+                icon: Icons.check_circle,
+                color: AppTheme.success,
+                onTap: () {
+                  Get.toNamed(AppRoutes.myAppointments, arguments: {'filter': 'Completed'});
+                },
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildStatCard(
-              'Upcoming',
-              controller.upcomingCount.value.toString(),
-              Icons.pending,
-              const Color(0xFFFF9800),
+            const SizedBox(width: 12),
+            Expanded(
+              child: DashboardStatCard(
+                title: 'Upcoming',
+                value: controller.upcomingCount.value.toString(),
+                icon: Icons.pending,
+                color: AppTheme.warning,
+                onTap: () {
+                  Get.toNamed(AppRoutes.myAppointments, arguments: {'filter': 'Upcoming'});
+                },
+              ),
             ),
-          ),
-        ],
-      );
-    });
+          ],
+        ));
   }
 
-  Widget _buildStatCard(
-      String title, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey[600],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildQuickActions() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Quick Actions',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: AppTheme.textPrimary,
-          ),
+          style: AppTheme.dashboardSectionTitle,
         ),
         const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildActionButton(
-                'Book Appointment',
-                Icons.add_circle,
-                const Color(0xFF2196F3),
-                controller.bookAppointment,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionButton(
-                'AI Symptom Checker',
-                Icons.psychology,
-                const Color(0xFF4CAF50),
-                controller.aiSymptomChecker,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildActionButton(
-                'My Appointments',
-                Icons.list_alt,
-                const Color(0xFFFF9800),
-                controller.viewAppointments,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionButton(
-                'Medicine Reminders',
-                Icons.alarm,
-                const Color(0xFF9C27B0),
-                controller.medicineReminders,
-              ),
-            ),
-          ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final cardWidth = (constraints.maxWidth - 12) / 2;
+            return Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                SizedBox(
+                  width: cardWidth,
+                  child: DashboardQuickAction(
+                    label: 'Book Appointment',
+                    icon: Icons.add_circle,
+                    color: AppTheme.info,
+                    onTap: controller.bookAppointment,
+                    index: 0,
+                  ),
+                ),
+                SizedBox(
+                  width: cardWidth,
+                  child: DashboardQuickAction(
+                    label: 'AI Symptom Analyzer',
+                    icon: Icons.psychology,
+                    color: AppTheme.success,
+                    onTap: controller.aiSymptomChecker,
+                    index: 1,
+                  ),
+                ),
+                SizedBox(
+                  width: cardWidth,
+                  child: DashboardQuickAction(
+                    label: 'My Appointments',
+                    icon: Icons.list_alt,
+                    color: AppTheme.warning,
+                    onTap: controller.viewAppointments,
+                    index: 2,
+                  ),
+                ),
+                SizedBox(
+                  width: cardWidth,
+                  child: DashboardQuickAction(
+                    label: 'Medicine Reminders',
+                    icon: Icons.alarm,
+                    color: AppTheme.secondary,
+                    onTap: controller.medicineReminders,
+                    index: 3,
+                  ),
+                ),
+                SizedBox(
+                  width: cardWidth,
+                  child: DashboardQuickAction(
+                    label: 'My Prescriptions',
+                    icon: Icons.receipt_long,
+                    color: AppTheme.primary,
+                    onTap: controller.goToPrescriptionHistory,
+                    index: 4,
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ],
     );
   }
 
-  Widget _buildActionButton(
-      String label, IconData icon, Color color, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 32),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildUpcomingAppointments() {
     return Obx(() {
@@ -439,12 +436,12 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Upcoming Appointments',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
+              Expanded(
+                child: Text(
+                  'Upcoming Appointments',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTheme.dashboardSectionTitle,
                 ),
               ),
               if (controller.upcomingAppointments.isNotEmpty)
@@ -453,6 +450,11 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
                   child: const Text('View All'),
                 ),
             ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Current appointments you can review, edit, or cancel when needed.',
+            style: AppTheme.bodySmall,
           ),
           const SizedBox(height: 12),
           if (controller.upcomingAppointments.isEmpty)
@@ -467,7 +469,10 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final appointment = controller.upcomingAppointments[index];
-                return _buildAppointmentCard(appointment);
+                return _buildAppointmentCard(
+                  appointment,
+                  sectionLabel: 'Upcoming',
+                );
               },
             ),
         ],
@@ -475,43 +480,15 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
     });
   }
 
-  Widget _buildRecentAppointments() {
-    return Obx(() {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Recent (Last 30 Days)',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (controller.recentAppointments.isEmpty)
-            _buildEmptyState()
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: controller.recentAppointments.length > 3
-                  ? 3
-                  : controller.recentAppointments.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final appointment = controller.recentAppointments[index];
-                return _buildAppointmentCard(appointment);
-              },
-            ),
-        ],
-      );
-    });
-  }
 
-  Widget _buildAppointmentCard(Appointment appointment) {
+
+  Widget _buildAppointmentCard(
+    Appointment appointment, {
+    required String sectionLabel,
+  }) {
     final dateFormat = DateFormat('MMM dd, yyyy');
     final timeFormat = DateFormat('hh:mm a');
+    final statusColor = _getStatusColor(appointment.status);
 
     return InkWell(
       onTap: () => controller.viewAppointment(appointment),
@@ -519,11 +496,11 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: AppTheme.textPrimary.withOpacity(0.03),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -562,12 +539,51 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
                       const SizedBox(height: 4),
                       Text(
                         appointment.reason,
-                        style: TextStyle(
+                          style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey[600],
+                          color: AppTheme.textSecondary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: AppTheme.info.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              sectionLabel,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.info,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: statusColor.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              'Status: ${appointment.status}',
+                              style: TextStyle(
+                                color: statusColor,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -575,36 +591,21 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(appointment.status)
-                            .withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        appointment.status,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: _getStatusColor(appointment.status),
-                        ),
-                      ),
-                    ),
                     if (controller.canEditAppointment(appointment))
                       Padding(
                         padding: const EdgeInsets.only(top: 8.0),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            InkWell(
-                              onTap: () => _showEditDialog(appointment),
-                              child: const Padding(
-                                padding: EdgeInsets.all(4.0),
-                                child: Icon(Icons.edit,
-                                    size: 20, color: Colors.blue),
-                              ),
+                            TextButton.icon(
+                              onPressed: () => _showEditDialog(appointment),
+                              icon: const Icon(Icons.edit,
+                                    size: 18, color: AppTheme.primary),
+                                label: const Text('Edit'),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: AppTheme.primary,
+                                  visualDensity: VisualDensity.compact,
+                                ),
                             ),
                             const SizedBox(width: 8),
                             InkWell(
@@ -612,7 +613,7 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
                               child: const Padding(
                                 padding: EdgeInsets.all(4.0),
                                 child: Icon(Icons.cancel,
-                                    size: 20, color: Colors.red),
+                                    size: 20, color: AppTheme.error),
                               ),
                             ),
                           ],
@@ -625,20 +626,32 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
             const SizedBox(height: 12),
             const Divider(height: 1),
             const SizedBox(height: 12),
-            Row(
+            Wrap(
+              spacing: 20,
+              runSpacing: 8,
               children: [
-                Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
-                const SizedBox(width: 8),
-                Text(
-                  dateFormat.format(appointment.appointmentDate),
-                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.calendar_today,
+                      size: 16, color: AppTheme.textSecondary),
+                    const SizedBox(width: 8),
+                    Text(
+                      dateFormat.format(appointment.appointmentDate),
+                      style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 20),
-                Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
-                const SizedBox(width: 8),
-                Text(
-                  timeFormat.format(appointment.appointmentDate),
-                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.access_time, size: 16, color: AppTheme.textSecondary),
+                    const SizedBox(width: 8),
+                    Text(
+                      timeFormat.format(appointment.appointmentDate),
+                      style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -649,11 +662,11 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
   }
 
   Color _getStatusColor(String status) {
-    if (status == 'Confirmed') return Colors.green;
-    if (status == 'Pending') return Colors.orange;
-    if (status == 'Cancelled') return Colors.red;
-    if (status == 'Completed') return Colors.blue;
-    return Colors.grey;
+    if (status == 'Confirmed') return AppTheme.success;
+    if (status == 'Pending') return AppTheme.warning;
+    if (status == 'Cancelled') return AppTheme.error;
+    if (status == 'Completed') return AppTheme.primary;
+    return AppTheme.textSecondary;
   }
 
   void _confirmCancel(Appointment appointment) {
@@ -662,7 +675,7 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
       middleText: 'Are you sure you want to cancel this appointment?',
       textConfirm: 'Yes',
       textCancel: 'No',
-      confirmTextColor: Colors.white,
+      confirmTextColor: AppTheme.surface,
       onConfirm: () {
         Get.back();
         controller.cancelAppointment(appointment.id);
@@ -691,8 +704,9 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
             children: [
               TextField(
                 controller: dateController,
-                decoration: const InputDecoration(
-                    labelText: 'Date', suffixIcon: Icon(Icons.calendar_today)),
+                decoration: InputDecoration(
+                    labelText: 'Date',
+                    suffixIcon: const Icon(Icons.calendar_today)),
                 readOnly: true,
                 onTap: () async {
                   final date = await showDatePicker(
@@ -710,8 +724,9 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
               const SizedBox(height: 16),
               TextField(
                 controller: timeController,
-                decoration: const InputDecoration(
-                    labelText: 'Time', suffixIcon: Icon(Icons.access_time)),
+                decoration: InputDecoration(
+                    labelText: 'Time',
+                    suffixIcon: const Icon(Icons.access_time)),
                 readOnly: true,
                 onTap: () async {
                   final currentT =
@@ -761,19 +776,19 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
   Widget _buildEmptyState() {
     return Container(
       padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: Colors.white,
+        decoration: BoxDecoration(
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Center(
         child: Column(
           children: [
             Icon(Icons.calendar_today_outlined,
-                size: 64, color: Colors.grey[300]),
+              size: 64, color: AppTheme.textSecondary.withOpacity(0.18)),
             const SizedBox(height: 16),
             Text(
-              'No upcoming appointments',
-              style: TextStyle(color: Colors.grey[600]),
+              'No appointments yet',
+              style: TextStyle(color: AppTheme.textSecondary),
             ),
             const SizedBox(height: 8),
             TextButton.icon(
@@ -787,3 +802,4 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
     );
   }
 }
+

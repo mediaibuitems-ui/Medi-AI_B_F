@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../../../services/auth_service.dart';
@@ -69,7 +71,7 @@ class BookAppointmentController extends GetxController {
         specializations.value = specs.cast<String>();
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to load doctors: $e');
+      Get.snackbar('Error', 'Failed to load doctors');
     } finally {
       isLoading.value = false;
     }
@@ -123,7 +125,20 @@ class BookAppointmentController extends GetxController {
       } else {
         availableSlots.clear();
         if (response.message != "Doctor is not available on this day") {
-          Get.snackbar('Info', response.message);
+          if (response.message?.toLowerCase().contains('leave') == true) {
+            Get.defaultDialog(
+              title: 'Doctor Unavailable',
+              middleText: 'The selected doctor is on leave during this date. Please select another date.',
+              textConfirm: 'Okay',
+              confirmTextColor: Colors.white,
+              buttonColor: const Color(0xFF2563EB), // AppTheme.primary
+              onConfirm: () {
+                Get.back();
+              },
+            );
+          } else {
+            Get.snackbar('Notice', response.message ?? 'No slots available');
+          }
         }
       }
     } catch (e) {
@@ -182,10 +197,50 @@ class BookAppointmentController extends GetxController {
             colorText: Colors.white,
             snackPosition: SnackPosition.BOTTOM);
       } else {
-        Get.snackbar('Error', response.message);
+        Get.snackbar(
+          'Booking Failed', 
+          response.message ?? 'Failed to book appointment',
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+          duration: const Duration(seconds: 4),
+        );
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to book appointment: $e');
+      // Save locally for offline sync
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final offlineKey = 'offline_appointments';
+        final String? existingJson = prefs.getString(offlineKey);
+        List<dynamic> offlineList = [];
+        if (existingJson != null) {
+          offlineList = jsonDecode(existingJson);
+        }
+        
+        final currentUser = await _authService.getCurrentUser();
+        final dateStr = DateFormat('yyyy-MM-dd').format(selectedDate.value!);
+        final timeStr = selectedSlot.value!['time'];
+        final dateTimeStr = '${dateStr}T$timeStr:00';
+        
+        offlineList.add({
+          'patientId': currentUser?.id.toString(),
+          'doctorId': selectedDoctorId.value,
+          'dateTime': dateTimeStr,
+          'symptoms': symptomsController.text,
+          'notes': notesController.text,
+          'status': 'Pending',
+          'offlineId': DateTime.now().millisecondsSinceEpoch.toString(),
+        });
+        
+        await prefs.setString(offlineKey, jsonEncode(offlineList));
+        
+        Get.back();
+        Get.snackbar('Offline Mode', 'Appointment saved locally. Will sync when online.',
+            backgroundColor: Colors.orange,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.BOTTOM);
+      } catch (innerErr) {
+        Get.snackbar('Error', 'Failed to book appointment and failed to save offline');
+      }
     } finally {
       isLoading.value = false;
     }

@@ -9,6 +9,7 @@ import '../../config/app_config.dart';
 class StorageService extends GetxService {
   FlutterSecureStorage? _secureStorage;
   late final SharedPreferences _prefs;
+  static const String _notificationsMutedKey = 'isNotificationsMuted';
 
   Future<StorageService> init() async {
     // On web, use SharedPreferences for everything. On mobile, use secure storage.
@@ -108,6 +109,28 @@ class StorageService extends GetxService {
 
   String? getFcmToken() {
     return _prefs.getString('fcm_token');
+  }
+
+  // Remember Me
+  Future<void> saveRememberMeEmail(String email) async {
+    await _prefs.setString('remember_me_email', email);
+  }
+
+  String? getRememberMeEmail() {
+    return _prefs.getString('remember_me_email');
+  }
+
+  Future<void> removeRememberMeEmail() async {
+    await _prefs.remove('remember_me_email');
+  }
+
+  // Local notification preferences
+  bool get isNotificationsMuted {
+    return _prefs.getBool(_notificationsMutedKey) ?? false;
+  }
+
+  Future<void> setNotificationsMuted(bool muted) async {
+    await _prefs.setBool(_notificationsMutedKey, muted);
   }
 
   // Check if user is logged in

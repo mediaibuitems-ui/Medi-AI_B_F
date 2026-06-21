@@ -18,7 +18,8 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
       appBar: _buildAppBar(),
       drawer: _buildDrawer(),
       body: Obx(() {
-        if (controller.isLoading.value && controller.currentUser.value == null) {
+        if (controller.isLoading.value &&
+            controller.currentUser.value == null) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -52,7 +53,7 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
       leading: Builder(
         builder: (context) => IconButton(
           icon: Image.asset(
-            'buitems-logo-png_seeklogo-273407.png',
+            'assets/images/logos/buitems-logo-png_seeklogo-273407.png',
             width: 32,
             height: 32,
             errorBuilder: (context, error, stackTrace) {
@@ -64,13 +65,46 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
       ),
       title: const Text('Doctor Dashboard'),
       backgroundColor: AppTheme.primary,
-      foregroundColor: Colors.white,
+      foregroundColor: AppTheme.surface,
       elevation: 0,
       actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          onPressed: () {},
-        ),
+        Obx(() {
+          final unreadCount = controller.unreadNotifications.length;
+          return Stack(
+            alignment: Alignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications_outlined),
+                onPressed: controller.viewNotifications,
+              ),
+              if (unreadCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: AppTheme.error,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      unreadCount > 99 ? '99+' : unreadCount.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          );
+        }),
       ],
     );
   }
@@ -82,36 +116,42 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
           Obx(() {
             final user = controller.currentUser.value;
             final imageUrl = user?.profileImage;
-            final hasValidImageUrl = imageUrl != null && imageUrl.trim().isNotEmpty;
-            final userName = user == null ? '' : user.name.trim();
-            final displayInitial = userName.isNotEmpty ? userName.substring(0, 1).toUpperCase() : 'D';
+            final hasValidImageUrl =
+              imageUrl != null && imageUrl.trim().isNotEmpty;
 
             return UserAccountsDrawerHeader(
-              decoration: const BoxDecoration(color: AppTheme.primary),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppTheme.primary, AppTheme.secondary],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: AppTheme.border.withOpacity(0.08)),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.textPrimary.withOpacity(0.04),
+                    blurRadius: 16,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
               accountName: Text(
                 user?.name ?? 'Doctor',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                style: AppTheme.dashboardDrawerName,
               ),
-              accountEmail: Text(user?.email ?? ''),
+              accountEmail: Text(
+                user?.email ?? '',
+                style: AppTheme.dashboardDrawerEmail,
+              ),
               currentAccountPicture: CircleAvatar(
-                backgroundColor: Colors.white,
+                backgroundColor: AppTheme.surface,
+                backgroundImage:
+                  hasValidImageUrl ? NetworkImage(imageUrl) : null,
                 child: hasValidImageUrl
-                    ? ClipOval(
-                        child: Image.network(
-                          imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Text(
-                              displayInitial,
-                              style: const TextStyle(fontSize: 32, color: AppTheme.primary),
-                            );
-                          },
-                        ),
-                      )
-                    : Text(
-                        displayInitial,
-                        style: const TextStyle(fontSize: 32, color: AppTheme.primary),
-                      ),
+                    ? null
+                    : const Icon(Icons.medical_services,
+                        size: 32, color: AppTheme.primary),
               ),
             );
           }),
@@ -150,6 +190,14 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
                     controller.viewSchedule();
                   },
                 ),
+                ListTile(
+                  leading: const Icon(Icons.event_busy_outlined),
+                  title: const Text('Manage Leaves'),
+                  onTap: () {
+                    Get.back();
+                    Get.toNamed('/doctor/leaves');
+                  },
+                ),
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.person_outline),
@@ -161,10 +209,26 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.settings_outlined),
+                  title: const Text('Settings'),
+                  onTap: () {
+                    Get.back();
+                    controller.viewSettings();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.build_circle_outlined),
                   title: const Text('Booking Settings'),
                   onTap: () {
                     Get.back();
                     controller.viewBookingSettings();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.feedback_outlined),
+                  title: const Text('Submit Feedback'),
+                  onTap: () {
+                    Get.back();
+                    controller.viewFeedback();
                   },
                 ),
               ],
@@ -172,8 +236,9 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
           ),
           const Divider(height: 1),
           ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('Logout', style: TextStyle(color: Colors.red)),
+            leading: const Icon(Icons.logout, color: AppTheme.error),
+            title:
+                const Text('Logout', style: TextStyle(color: AppTheme.error)),
             onTap: controller.logout,
           ),
           const SizedBox(height: 8),
@@ -188,150 +253,175 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
       final imageUrl = user?.profileImage;
       final hasValidImageUrl = imageUrl != null && imageUrl.trim().isNotEmpty;
 
-      return Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppTheme.primary, Color(0xFF003D6E)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+      return InkWell(
+        onTap: controller.viewProfile,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF0891B2), Color(0xFF10B981)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
           ),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 30,
-              backgroundColor: Colors.white,
-              child: hasValidImageUrl
-                  ? ClipOval(
-                      child: Image.network(
-                        imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Icon(
-                            Icons.medical_services,
-                            size: 32,
-                            color: AppTheme.primary,
-                          );
-                        },
-                      ),
-                    )
-                  : Icon(
-                      Icons.medical_services,
-                      size: 32,
-                      color: AppTheme.primary,
-                    ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    controller.getGreeting(),
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Dr. ${user?.name ?? 'Doctor'}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    user?.department ?? 'Medical Department',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
+          child: Stack(
+            children: [
+              Positioned(
+                right: -18,
+                top: -18,
+                child: Icon(
+                  Icons.medical_services,
+                  size: 132,
+                  color: AppTheme.surface.withOpacity(0.12),
+                ),
               ),
-            ),
-          ],
+              Positioned(
+                left: 18,
+                bottom: 18,
+                child: Container(
+                  width: 84,
+                  height: 84,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppTheme.surface.withOpacity(0.08),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: AppTheme.surface.withOpacity(0.2),
+                      backgroundImage:
+                        hasValidImageUrl ? NetworkImage(imageUrl) : null,
+                      child: hasValidImageUrl
+                          ? null
+                          : const Icon(
+                              Icons.medical_services,
+                              size: 32,
+                              color: AppTheme.surface,
+                            ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            controller.getGreeting(),
+                            style: AppTheme.dashboardWelcomeGreeting,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Dr. ${user?.name ?? 'Doctor'}',
+                            style: AppTheme.dashboardWelcomeName,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            user?.department ?? 'Medical Department',
+                            style: AppTheme.dashboardWelcomeSubtitle,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       );
     });
   }
 
   Widget _buildStatisticsCards() {
-    return Obx(() {
-      return Row(
-        children: [
-          Expanded(
-            child: _buildStatCard(
-              'Today\'s Patients',
-              controller.totalPatientsToday.value.toString(),
-              Icons.people_outline,
-              const Color(0xFF2196F3),
+    return Obx(() => Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                'Total Patients',
+                controller.totalPatients.value.toString(),
+                Icons.people_outline,
+                AppTheme.info,
+                () => controller.viewPatients(),
+                false,
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildStatCard(
-              'Completed',
-              controller.completedToday.value.toString(),
-              Icons.check_circle_outline,
-              const Color(0xFF4CAF50),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildStatCard(
+                'Completed',
+                controller.completedToday.value.toString(),
+                Icons.check_circle_outline,
+                AppTheme.success,
+                () => controller.toggleFilter('completed'),
+                controller.activeFilter.value == 'completed',
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildStatCard(
-              'Pending',
-              controller.pendingToday.value.toString(),
-              Icons.pending_outlined,
-              const Color(0xFFFF9800),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildStatCard(
+                'Pending',
+                controller.pendingToday.value.toString(),
+                Icons.pending_outlined,
+                AppTheme.warning,
+                () => controller.toggleFilter('pending'),
+                controller.activeFilter.value == 'pending',
+              ),
             ),
-          ),
-        ],
-      );
-    });
+          ],
+        ));
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+  Widget _buildStatCard(
+      String title, String value, IconData icon, Color color, VoidCallback onTap, bool isSelected) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isSelected ? [color.withOpacity(0.8), color] : [
+              AppTheme.surface.withOpacity(0.96),
+              AppTheme.surface.withOpacity(0.84),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: color,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: color.withOpacity(isSelected ? 0.8 : 0.18), width: isSelected ? 2 : 1),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(isSelected ? 0.3 : 0.12),
+              blurRadius: isSelected ? 20 : 18,
+              offset: const Offset(0, 10),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey[600],
+          ],
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: isSelected ? Colors.white : color, size: 28),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: AppTheme.dashboardStatValue(isSelected ? Colors.white : color).copyWith(fontSize: 20),
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: AppTheme.dashboardStatLabel.copyWith(
+                color: isSelected ? Colors.white.withOpacity(0.9) : AppTheme.textSecondary,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -340,13 +430,9 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Quick Actions',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: AppTheme.textPrimary,
-          ),
+          style: AppTheme.dashboardSectionTitle,
         ),
         const SizedBox(height: 12),
         Row(
@@ -355,7 +441,7 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
               child: _buildActionButton(
                 'Set Schedule',
                 Icons.schedule_outlined,
-                const Color(0xFF2196F3),
+                AppTheme.info,
                 controller.viewSchedule,
               ),
             ),
@@ -364,7 +450,7 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
               child: _buildActionButton(
                 'Patients',
                 Icons.people,
-                const Color(0xFF4CAF50),
+                AppTheme.success,
                 controller.viewPatients,
               ),
             ),
@@ -375,9 +461,26 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
           children: [
             Expanded(
               child: _buildActionButton(
+                'Manage Leaves',
+                Icons.event_busy,
+                AppTheme.primary,
+                () => Get.toNamed('/doctor/leaves'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: const SizedBox(), // Empty spacer for alignment
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildActionButton(
                 'All Appointments',
                 Icons.list_alt,
-                const Color(0xFFFF9800),
+                AppTheme.warning,
                 controller.viewAllAppointments,
               ),
             ),
@@ -386,7 +489,7 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
               child: _buildActionButton(
                 'Booking Settings',
                 Icons.settings_outlined,
-                const Color(0xFF673AB7),
+                AppTheme.secondary,
                 controller.viewBookingSettings,
               ),
             ),
@@ -396,21 +499,29 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
     );
   }
 
-  Widget _buildActionButton(String label, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildActionButton(
+      String label, IconData icon, Color color, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(18),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3)),
+          gradient: LinearGradient(
+            colors: [
+              AppTheme.surface.withOpacity(0.96),
+              AppTheme.surface.withOpacity(0.84),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: color.withOpacity(0.18)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: color.withOpacity(0.12),
+              blurRadius: 18,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
@@ -421,11 +532,7 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
             Text(
               label,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
+              style: AppTheme.dashboardActionLabel(color),
             ),
           ],
         ),
@@ -441,13 +548,9 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Today\'s Appointments',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
-                ),
+              Text(
+                "Today's Appointments",
+                style: AppTheme.dashboardSectionTitle,
               ),
               if (controller.todayAppointments.isNotEmpty)
                 TextButton(
@@ -463,7 +566,9 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: controller.todayAppointments.length > 3 ? 3 : controller.todayAppointments.length,
+              itemCount: controller.todayAppointments.length > 3
+                  ? 3
+                  : controller.todayAppointments.length,
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final appointment = controller.todayAppointments[index];
@@ -477,30 +582,36 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
 
   Widget _buildUpcomingAppointments() {
     return Obx(() {
-      if (controller.upcomingAppointments.isEmpty) return const SizedBox.shrink();
-
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Upcoming Appointments',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.textPrimary,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  'Upcoming Appointments',
+                  style: AppTheme.dashboardSectionTitle,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: controller.upcomingAppointments.length > 2 ? 2 : controller.upcomingAppointments.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final appointment = controller.upcomingAppointments[index];
-              return _buildAppointmentCard(appointment);
-            },
-          ),
+          if (controller.upcomingAppointments.isEmpty)
+            _buildEmptyState('No upcoming appointments yet')
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: controller.upcomingAppointments.length > 2
+                  ? 2
+                  : controller.upcomingAppointments.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final appointment = controller.upcomingAppointments[index];
+                return _buildAppointmentCard(appointment);
+              },
+            ),
         ],
       );
     });
@@ -516,11 +627,11 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: AppTheme.textPrimary.withOpacity(0.03),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -554,7 +665,7 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
                         appointment.reason,
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey[600],
+                          color: AppTheme.textSecondary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -563,9 +674,12 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: controller.getStatusColor(appointment.status).withOpacity(0.1),
+                    color: controller
+                        .getStatusColor(appointment.status)
+                        .withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -584,21 +698,145 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
+                Icon(Icons.calendar_today, size: 16, color: AppTheme.textSecondary),
                 const SizedBox(width: 8),
                 Text(
                   dateFormat.format(appointment.appointmentDate),
-                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                  style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
                 ),
                 const SizedBox(width: 20),
-                Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
+                Icon(Icons.access_time, size: 16, color: AppTheme.textSecondary),
                 const SizedBox(width: 8),
                 Text(
                   timeFormat.format(appointment.appointmentDate),
-                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                  style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            // Actions for doctor: confirm or decline pending/scheduled appointments
+            if (appointment.isPending ||
+                appointment.status.toLowerCase() == 'scheduled')
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton.icon(
+                    onPressed: () async {
+                      Get.defaultDialog(
+                        title: 'Confirm Appointment',
+                        middleText: 'Mark this appointment as confirmed?',
+                        textConfirm: 'Yes',
+                        textCancel: 'No',
+                        confirmTextColor: AppTheme.surface,
+                        onConfirm: () {
+                          Get.back();
+                          controller.confirmAppointment(appointment.id);
+                        },
+                      );
+                    },
+                    icon: const Icon(Icons.check_circle, color: AppTheme.success),
+                    label: const Text('Confirm'),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton.icon(
+                    onPressed: () async {
+                      final reasonController = TextEditingController();
+                      Get.defaultDialog(
+                        title: 'Decline Appointment',
+                        content: Column(
+                          children: [
+                            const Text('Please provide a reason for declining:'),
+                            const SizedBox(height: 12),
+                            TextField(
+                              controller: reasonController,
+                              decoration: const InputDecoration(
+                                hintText: 'Reason...',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ],
+                        ),
+                        textConfirm: 'Decline',
+                        textCancel: 'Close',
+                        confirmTextColor: AppTheme.surface,
+                        onConfirm: () {
+                          if (reasonController.text.trim().isEmpty) {
+                            Get.snackbar('Error', 'Reason is required',
+                                backgroundColor: AppTheme.error.withOpacity(0.1),
+                                colorText: AppTheme.error);
+                            return;
+                          }
+                          Get.back();
+                          controller.declineAppointment(appointment.id, reasonController.text.trim());
+                        },
+                      );
+                    },
+                    icon: const Icon(Icons.cancel, color: AppTheme.error),
+                    label: const Text('Decline'),
+                  ),
+                ],
+              )
+            // Actions for doctor: Mark Confirmed appointment as Checked (Completed)
+            else if (appointment.status.toLowerCase() == 'confirmed')
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton.icon(
+                    onPressed: () async {
+                      Get.defaultDialog(
+                        title: 'Mark as Checked',
+                        middleText: 'Mark this appointment as Checked (Completed)?',
+                        textConfirm: 'Yes',
+                        textCancel: 'No',
+                        confirmTextColor: AppTheme.surface,
+                        onConfirm: () {
+                          Get.back();
+                          controller.markAsChecked(appointment.id);
+                        },
+                      );
+                    },
+                    icon: const Icon(Icons.done_all, color: AppTheme.success),
+                    label: const Text('Mark as Checked'),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton.icon(
+                    onPressed: () async {
+                      final reasonController = TextEditingController();
+                      Get.defaultDialog(
+                        title: 'Cancel Appointment',
+                        content: Column(
+                          children: [
+                            const Text('Please provide a reason for cancelling:'),
+                            const SizedBox(height: 12),
+                            TextField(
+                              controller: reasonController,
+                              decoration: const InputDecoration(
+                                hintText: 'Reason...',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ],
+                        ),
+                        textConfirm: 'Cancel Appointment',
+                        textCancel: 'Close',
+                        confirmTextColor: AppTheme.surface,
+                        onConfirm: () {
+                          if (reasonController.text.trim().isEmpty) {
+                            Get.snackbar('Error', 'Reason is required',
+                                backgroundColor: AppTheme.error.withOpacity(0.1),
+                                colorText: AppTheme.error);
+                            return;
+                          }
+                          Get.back();
+                          controller.declineAppointment(appointment.id, reasonController.text.trim());
+                        },
+                      );
+                    },
+                    icon: const Icon(Icons.cancel, color: AppTheme.error),
+                    label: const Text('Cancel'),
+                  ),
+                ],
+              ),
           ],
         ),
       ),
@@ -609,17 +847,26 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppTheme.border),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.textPrimary.withOpacity(0.03),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Center(
         child: Column(
           children: [
-            Icon(Icons.calendar_today_outlined, size: 64, color: Colors.grey[300]),
+            Icon(Icons.medical_services_outlined,
+              size: 64, color: AppTheme.textSecondary.withOpacity(0.18)),
             const SizedBox(height: 16),
             Text(
               message,
-              style: TextStyle(color: Colors.grey[600]),
+              style: TextStyle(color: AppTheme.textSecondary),
               textAlign: TextAlign.center,
             ),
           ],

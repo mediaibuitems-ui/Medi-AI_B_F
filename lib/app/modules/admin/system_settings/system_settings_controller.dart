@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/models/system_settings_model.dart';
 import '../../../services/api_service.dart';
+import 'package:medi_ai/app/widgets/app_feedback.dart';
 
 class SystemSettingsController extends GetxController {
   final ApiService _apiService = Get.find<ApiService>();
@@ -64,8 +65,7 @@ class SystemSettingsController extends GetxController {
         supportEmailController.text = settings.supportEmail;
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to load settings: $e',
-          backgroundColor: Colors.red, colorText: Colors.white);
+        AppFeedback.error('Error', 'Failed to load settings: $e');
     } finally {
       isLoading.value = false;
     }
@@ -95,25 +95,12 @@ class SystemSettingsController extends GetxController {
       );
 
       if (response.success) {
-        Get.snackbar(
-          'Success',
-          'System settings saved successfully',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
+          AppFeedback.success('Success', 'System settings saved successfully');
       } else {
-        Get.snackbar(
-          'Error',
-          response.message ?? 'Failed to save settings',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
+          AppFeedback.error('Error', response.message);
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to save settings: $e',
-          backgroundColor: Colors.red, colorText: Colors.white);
+        AppFeedback.error('Error', 'Failed to save settings: $e');
     } finally {
       isLoading.value = false;
     }
@@ -125,25 +112,12 @@ class SystemSettingsController extends GetxController {
       final response = await _apiService.post<dynamic>('/admin/backup-database');
       
       if (response.success) {
-        Get.snackbar(
-          'Backup Started',
-          response.message,
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.blue,
-          colorText: Colors.white,
-        );
+          AppFeedback.success('Backup Started', response.message);
       } else {
-        Get.snackbar(
-          'Error',
-          response.message,
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
+          AppFeedback.error('Error', response.message);
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to contact backup service: $e',
-          backgroundColor: Colors.red, colorText: Colors.white);
+        AppFeedback.error('Error', 'Failed to contact backup service: $e');
     } finally {
       isLoading.value = false;
     }
@@ -152,14 +126,14 @@ class SystemSettingsController extends GetxController {
   Future<void> clearCache() async {
     Get.dialog(
       AlertDialog(
-        title: const Text('Clear Cache'),
-        content: const Text(
-          'This will clear all system caches. This action cannot be undone. Continue?',
+          title: const Text('Clear cache'),
+        content: Text(
+            'This will clear all cached data. Continue?',
         ),
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: const Text('Cancel'),
+             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -169,34 +143,22 @@ class SystemSettingsController extends GetxController {
                 final response = await _apiService.post<dynamic>('/admin/clear-cache');
                 
                 if (response.success) {
-                  Get.snackbar(
-                    'Success',
-                    response.message,
-                    snackPosition: SnackPosition.BOTTOM,
-                    backgroundColor: Colors.green,
-                    colorText: Colors.white,
-                  );
+                    AppFeedback.success('Success', response.message);
                 } else {
-                  Get.snackbar(
-                    'Error',
-                    response.message,
-                    snackPosition: SnackPosition.BOTTOM,
-                    backgroundColor: Colors.red,
-                    colorText: Colors.white,
-                  );
+                    AppFeedback.error('Error', response.message);
                 }
               } catch (e) {
-                Get.snackbar('Error', 'Failed to clear cache: $e',
-                    backgroundColor: Colors.red, colorText: Colors.white);
+                  AppFeedback.error('Error', 'Failed to clear cache: $e');
               } finally {
                 isLoading.value = false;
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-            child: const Text('Clear'),
+             child: const Text('Clear'),
           ),
         ],
       ),
     );
   }
 }
+

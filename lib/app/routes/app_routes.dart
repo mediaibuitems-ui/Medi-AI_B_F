@@ -12,12 +12,14 @@ class AppRoutes {
   static const studentDashboard = '/student-dashboard';
   static const bookAppointment = '/book-appointment';
   static const myAppointments = '/my-appointments';
+
   static const aiSymptomChecker = '/ai-symptom-checker';
   static const medicineReminders = '/medicine-reminders';
-  static const healthTips = '/health-tips';
   static const medicalHistory = '/medical-history';
   static const emergencyContacts = '/emergency-contacts';
   static const profile = '/profile';
+  static const prescriptionHistory = '/prescription-history';
+  static const feedback = '/feedback';
 
   // Doctor Routes
   static const doctorDashboard = '/doctor-dashboard';
@@ -28,17 +30,24 @@ class AppRoutes {
   static const patients = '/patients';
   static const schedule = '/schedule';
   static const bookingSettings = '/booking-settings';
+  static const doctorProfile = '/doctor-profile';
+  static const doctorSettings = '/doctor-settings';
+  static const doctorLeaves = '/doctor/leaves';
 
   // Faculty Routes
-  static const facultyDashboard = studentDashboard;
+  static const facultyDashboard = '/faculty-dashboard';
   static const facultyMedicineReminders = medicineReminders;
 
   // Admin Routes
   static const adminDashboard = '/admin-dashboard';
+  static const adminAppointments = '/admin-appointments';
   static const manageUsers = '/manage-users';
   static const manageDoctors = '/manage-doctors';
+  static const manageFeedback = '/manage-feedback';
   static const systemSettings = '/system-settings';
   static const reports = '/reports';
+  static const adminDoctorLeaves = '/admin/doctor-leaves';
+  static const adminVerifications = '/admin/verifications';
 
   // Common Routes
   static const notifications = '/notifications';

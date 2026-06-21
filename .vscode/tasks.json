@@ -7,7 +7,7 @@
 			"type": "process",
 			"args": [
 				"build",
-				"${workspaceFolder}/Backend/Medi-AI_backend-main/Backend-APIs/Backend-APIs.csproj",
+				"${workspaceFolder}/Medi_AI_Backend_railway/Backend-APIs/Backend-APIs.csproj",
 				"/property:GenerateFullPaths=true",
 				"/consoleloggerparameters:NoSummary"
 			],
@@ -23,25 +23,7 @@
 				"--launch-profile",
 				"http",
 				"--project",
-				"Backend/Medi-AI_backend-main/Backend-APIs/Backend-APIs.csproj"
-			],
-			"isBackground": true,
-			"problemMatcher": [
-				"$msCompile"
-			],
-			"group": "build"
-		},
-		{
-			"label": "Run Backend (Hot Reload)",
-			"type": "shell",
-			"command": "dotnet",
-			"args": [
-				"watch",
-				"run",
-				"--launch-profile",
-				"http",
-				"--project",
-				"Backend/Medi-AI_backend-main/Backend-APIs/Backend-APIs.csproj"
+				"Medi_AI_Backend_railway/Backend-APIs/Backend-APIs.csproj"
 			],
 			"isBackground": true,
 			"problemMatcher": [
@@ -59,7 +41,7 @@
 				"--launch-profile",
 				"http",
 				"--project",
-				"Backend/Medi-AI_backend-main/Backend-APIs/Backend-APIs.csproj"
+				"Medi_AI_Backend_railway/Backend-APIs/Backend-APIs.csproj"
 			],
 			"isBackground": true,
 			"problemMatcher": [

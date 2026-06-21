@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+import '../../../data/models/medical_history.dart';
+import '../../../services/doctor_service.dart';
 import '../../../../config/app_theme.dart';
 
 export 'patient_detail_binding.dart';
@@ -13,15 +16,47 @@ class PatientDetailScreen extends StatelessWidget {
     final args = Get.arguments is Map
         ? Map<String, dynamic>.from(Get.arguments as Map)
         : <String, dynamic>{};
-    final patientName = args['patientName'] ?? 'Patient';
-    final patientId = args['patientId'] ?? 'N/A';
+
+    final patientName = (args['fullName'] ??
+            args['FullName'] ??
+            args['patientName'] ??
+            'Patient')
+        .toString();
+    final patientId =
+        (args['id'] ?? args['Id'] ?? args['patientId'] ?? 'N/A').toString();
+    final patientIdInt = int.tryParse(patientId);
+    final registrationNumber = (args['registrationNumber'] ??
+            args['RegistrationNumber'] ??
+            args['cmsNumber'] ??
+            args['CmsNumber'] ??
+            'N/A')
+        .toString();
+    final gender = (args['gender'] ?? args['Gender'] ?? 'N/A').toString();
+    final phone =
+        (args['phoneNumber'] ?? args['PhoneNumber'] ?? 'N/A').toString();
+    final email = (args['email'] ?? args['Email'] ?? 'N/A').toString();
+    final dobRaw = (args['dateOfBirth'] ?? args['DateOfBirth'] ?? '')
+        .toString()
+        .split('T')[0];
+    final exactAge = _calculateExactAge(dobRaw);
+    final dobDisplay = _formatDate(dobRaw);
+    final lastVisitRaw =
+        (args['lastVisit'] ?? args['LastVisit'] ?? '').toString().split('T')[0];
+    final lastVisitDisplay =
+        lastVisitRaw.isEmpty ? 'N/A' : _formatDate(lastVisitRaw);
+    final department = (args['department'] ?? args['Department'] ?? 'Patient').toString();
+    final subtitleInfo = [
+      if (registrationNumber.isNotEmpty && registrationNumber != 'N/A') registrationNumber,
+      if (department.isNotEmpty && department != 'Patient') department
+    ].join(' • ');
+    final displaySubtitle = subtitleInfo.isEmpty ? 'Active Patient' : subtitleInfo;
 
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
         leading: IconButton(
           icon: Image.asset(
-            'buitems-logo-png_seeklogo-273407.png',
+            'assets/images/logos/buitems-logo-png_seeklogo-273407.png',
             width: 32,
             height: 32,
             errorBuilder: (context, error, stackTrace) {
@@ -32,48 +67,237 @@ class PatientDetailScreen extends StatelessWidget {
         ),
         title: const Text('Patient Details'),
         backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              Get.snackbar(
-                'Edit Patient',
-                'Edit functionality coming in next update',
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: AppTheme.primary,
-                colorText: Colors.white,
-              );
-            },
-          ),
-        ],
+        foregroundColor: AppTheme.surface,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            _buildPatientHeader(patientName, patientId),
+            _buildPatientHeader(patientName, displaySubtitle),
             const SizedBox(height: 16),
             _buildInfoCard('Personal Information', [
-              _buildInfoRow('Age', '22 years'),
-              _buildInfoRow('Gender', 'Male'),
-              _buildInfoRow('Blood Group', 'O+'),
-              _buildInfoRow('Phone', '+92 300 1234567'),
-              _buildInfoRow('Email', 'patient@buitms.edu.pk'),
+              _buildInfoRow('CMS Number', registrationNumber),
+              _buildInfoRow('Exact Age', exactAge),
+              _buildInfoRow('Gender', gender.isEmpty ? 'N/A' : gender),
+              _buildInfoRow('Date of Birth', dobDisplay),
+              _buildInfoRow('Phone', phone.isEmpty ? 'N/A' : phone),
+              _buildInfoRow('Email', email.isEmpty ? 'N/A' : email),
             ]),
             const SizedBox(height: 16),
             _buildInfoCard('Medical History', [
-              _buildInfoRow('Allergies', 'Penicillin'),
-              _buildInfoRow('Chronic Conditions', 'None'),
-              _buildInfoRow('Last Visit', '5 days ago'),
-              _buildInfoRow('Total Visits', '8'),
+              _buildInfoRow('Last Visit', lastVisitDisplay),
+              _buildMedicalHistorySection(patientIdInt),
             ]),
             const SizedBox(height: 16),
-            _buildActionButtons(),
+            _buildInfoCard('Emergency Contacts', [
+              _buildEmergencyContactsSection(patientIdInt),
+            ]),
+            const SizedBox(height: 16),
+            _buildActionButtons(args, patientIdInt, patientName),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildMedicalHistorySection(int? patientId) {
+    if (patientId == null) {
+      return _buildInfoRow('Records', 'Patient ID unavailable');
+    }
+
+    final doctorService = Get.find<DoctorService>();
+
+    return FutureBuilder(
+      future: doctorService.getPatientMedicalHistory(patientId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: LinearProgressIndicator(minHeight: 3),
+          );
+        }
+
+        if (!snapshot.hasData || !(snapshot.data?.success ?? false)) {
+          final message = snapshot.data?.message ?? 'Unable to load records';
+          return _buildInfoRow('Records', message);
+        }
+
+        final records = snapshot.data?.data ?? <MedicalHistory>[];
+        if (records.isEmpty) {
+          return _buildInfoRow('Records', 'No medical history found');
+        }
+
+        final allergies =
+            records.where((r) => r.recordType == 'Allergy').length;
+        final chronic =
+            records.where((r) => r.recordType == 'ChronicCondition').length;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildInfoRow('Total Records', records.length.toString()),
+            _buildInfoRow('Allergies', allergies.toString()),
+            _buildInfoRow('Chronic Conditions', chronic.toString()),
+            const SizedBox(height: 8),
+            ...records.take(5).map((record) {
+              final subtitle = [
+                record.recordType,
+                if ((record.diagnosisDate ?? '').isNotEmpty)
+                  record.diagnosisDate!,
+              ].join(' • ');
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surface,
+                    borderRadius: BorderRadius.circular(8),
+                    border:
+                        Border.all(color: AppTheme.border.withOpacity(0.08)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        record.title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildEmergencyContactsSection(int? patientId) {
+    if (patientId == null) {
+      return _buildInfoRow('Contacts', 'Patient ID unavailable');
+    }
+
+    final doctorService = Get.find<DoctorService>();
+
+    return FutureBuilder(
+      future: doctorService.getPatientEmergencyContacts(patientId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: LinearProgressIndicator(minHeight: 3),
+          );
+        }
+
+        if (!snapshot.hasData || !(snapshot.data?.success ?? false)) {
+          final message = snapshot.data?.message ?? 'Unable to load contacts';
+          return _buildInfoRow('Contacts', message);
+        }
+
+        final contacts = snapshot.data?.data ?? <Map<String, dynamic>>[];
+        if (contacts.isEmpty) {
+          return _buildInfoRow('Contacts', 'No emergency contacts found');
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ...contacts.map((contact) {
+              final name =
+                  contact['contactName'] ?? contact['ContactName'] ?? 'Unknown';
+              final relation =
+                  contact['relationship'] ?? contact['Relationship'] ?? 'N/A';
+              final phone =
+                  contact['phoneNumber'] ?? contact['PhoneNumber'] ?? 'N/A';
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surface,
+                    borderRadius: BorderRadius.circular(8),
+                    border:
+                        Border.all(color: AppTheme.border.withOpacity(0.08)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$name ($relation)',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          const Icon(Icons.phone,
+                              size: 14, color: AppTheme.textSecondary),
+                          const SizedBox(width: 4),
+                          Text(
+                            phone,
+                            style: const TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ],
+        );
+      },
+    );
+  }
+
+  String _formatDate(String value) {
+    if (value.trim().isEmpty) return 'N/A';
+    final parsed = DateTime.tryParse(value);
+    if (parsed == null) return value;
+    return DateFormat('dd MMM yyyy').format(parsed);
+  }
+
+  String _calculateExactAge(String dobValue) {
+    if (dobValue.trim().isEmpty) return 'N/A';
+    final dob = DateTime.tryParse(dobValue);
+    if (dob == null) return 'N/A';
+
+    final now = DateTime.now();
+    var years = now.year - dob.year;
+    var months = now.month - dob.month;
+    var days = now.day - dob.day;
+
+    if (days < 0) {
+      final previousMonth = DateTime(now.year, now.month, 0);
+      days += previousMonth.day;
+      months -= 1;
+    }
+    if (months < 0) {
+      months += 12;
+      years -= 1;
+    }
+
+    if (years < 0) return 'N/A';
+    return '$years years, $months months, $days days';
   }
 
   Widget _buildPatientHeader(String name, String id) {
@@ -81,9 +305,19 @@ class PatientDetailScreen extends StatelessWidget {
     final initial = trimmedName.isNotEmpty
         ? trimmedName.substring(0, 1).toUpperCase()
         : 'P';
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.border.withOpacity(0.08)),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.textPrimary.withOpacity(0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Row(
@@ -94,7 +328,7 @@ class PatientDetailScreen extends StatelessWidget {
               child: Text(
                 initial,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppTheme.surface,
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                 ),
@@ -115,19 +349,21 @@ class PatientDetailScreen extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     id,
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    style:
+                        TextStyle(fontSize: 14, color: AppTheme.textSecondary),
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
+                      color: AppTheme.success.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       'Active Patient',
                       style: TextStyle(
-                        color: Colors.green[700],
+                        color: AppTheme.success,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -143,9 +379,19 @@ class PatientDetailScreen extends StatelessWidget {
   }
 
   Widget _buildInfoCard(String title, List<Widget> children) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.border.withOpacity(0.08)),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.textPrimary.withOpacity(0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -178,7 +424,7 @@ class PatientDetailScreen extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                color: Colors.grey[700],
+                color: AppTheme.textSecondary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -194,7 +440,7 @@ class PatientDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(Map<String, dynamic> args, int? patientIdInt, String patientName) {
     return Row(
       children: [
         Expanded(
@@ -202,10 +448,10 @@ class PatientDetailScreen extends StatelessWidget {
             onPressed: () {
               Get.snackbar(
                 'Medical Records',
-                'Viewing patient medical records',
+                'Viewing patient medical records is available in the Medical History section above.',
                 snackPosition: SnackPosition.BOTTOM,
                 backgroundColor: AppTheme.primary,
-                colorText: Colors.white,
+                colorText: AppTheme.surface,
               );
             },
             icon: const Icon(Icons.description),
@@ -219,19 +465,21 @@ class PatientDetailScreen extends StatelessWidget {
         Expanded(
           child: ElevatedButton.icon(
             onPressed: () {
-              Get.snackbar(
-                'Write Prescription',
-                'Opening prescription form',
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: AppTheme.primary,
-                colorText: Colors.white,
+              final appointmentId = args['appointmentId'] ?? args['AppointmentId'] ?? args['id'];
+              Get.toNamed(
+                '/write-prescription',
+                arguments: {
+                  'patientId': patientIdInt,
+                  'appointmentId': appointmentId,
+                  'patientName': patientName,
+                },
               );
             },
             icon: const Icon(Icons.edit_note),
-            label: const Text('Prescribe'),
+            label: const Text('Issue Prescription'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primary,
-              foregroundColor: Colors.white,
+              foregroundColor: AppTheme.surface,
               padding: const EdgeInsets.all(16),
             ),
           ),

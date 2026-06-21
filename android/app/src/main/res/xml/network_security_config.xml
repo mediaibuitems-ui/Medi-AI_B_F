@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Scopes cleartext HTTP to local development hosts only.
+  10.0.2.2 = Android Emulator alias for host machine localhost.
+  192.168.0.0/16 covers typical Wi-Fi LAN for physical device testing.
+  In production builds, remove or replace this file and set
+  android:usesCleartextTraffic="false" in the manifest.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <domain includeSubdomains="false">localhost</domain>
+        <!-- Physical device Wi-Fi: your PC's LAN IP -->
+        <domain includeSubdomains="false">192.168.100.111</domain>
+    </domain-config>
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>

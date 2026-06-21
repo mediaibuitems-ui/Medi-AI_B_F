@@ -1,23 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../services/auth_service.dart';
+import '../../../services/storage_service.dart';
 import '../../../routes/app_routes.dart';
+import '../../../widgets/app_feedback.dart';
 
+/// Handles login form state and authentication actions.
 class LoginController extends GetxController {
+  // AuthService provides the actual API login call and current user state.
   final _authService = Get.find<AuthService>();
+  final _storageService = Get.find<StorageService>();
 
-  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  // Form key used to validate the login fields.
+  GlobalKey<FormState>? formKey;
 
   // Controllers
+  // Email input controller.
   late TextEditingController emailController;
+  // Password input controller.
   late TextEditingController passwordController;
 
   // Observables
+  // Controls whether the password is visible.
   final RxBool showPassword = false.obs;
+  // Tracks whether the login request is currently running.
   final RxBool isLoading = false.obs;
+  // Stores the remember-me checkbox state.
   final RxBool rememberMe = false.obs;
 
   @override
+
+  /// Creates the text controllers and loads saved credentials if needed.
   void onInit() {
     super.onInit();
     emailController = TextEditingController();
@@ -26,52 +39,64 @@ class LoginController extends GetxController {
   }
 
   @override
+
+  /// Cleans up the controller when the screen is removed.
   void onClose() {
-    // emailController.dispose();
-    // passwordController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
     super.onClose();
   }
 
+  /// Loads any saved login data for the remember-me feature.
   Future<void> _loadSavedCredentials() async {
-    // Load saved email if remember me was checked
-    // You can implement this with SharedPreferences
+    final savedEmail = _storageService.getRememberMeEmail();
+    if (savedEmail != null && savedEmail.isNotEmpty) {
+      emailController.text = savedEmail;
+      rememberMe.value = true;
+    }
   }
 
+  /// Toggles password visibility in the login field.
   void togglePasswordVisibility() {
     showPassword.value = !showPassword.value;
   }
 
+  /// Toggles the remember-me checkbox.
   void toggleRememberMe() {
     rememberMe.value = !rememberMe.value;
   }
 
+  /// Validates the form and sends the login request.
   Future<void> handleLogin() async {
-    if (!formKey.currentState!.validate()) return;
+    // Do not continue if the form is invalid or not yet attached.
+    if (formKey == null || formKey!.currentState == null || !formKey!.currentState!.validate()) return;
 
+    // Show a loading state while the backend request runs.
     isLoading.value = true;
 
     try {
+      // Send email and password to the auth service.
       final response = await _authService.login(
         email: emailController.text.trim(),
         password: passwordController.text,
       );
 
       if (response.success && response.data != null) {
-        Get.snackbar(
-          'Success',
-          'Welcome back!',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
+        if (rememberMe.value) {
+          await _storageService.saveRememberMeEmail(emailController.text.trim());
+        } else {
+          await _storageService.removeRememberMeEmail();
+        }
 
-        // Check user role and navigate to respective dashboard
+        AppFeedback.success('Welcome back', 'Login successful. Loading your dashboard...');
+
+        // Route the user to the correct dashboard based on their role.
         final user = _authService.currentUser.value;
         if (user != null) {
           if (user.isStudent) {
             Get.offAllNamed(AppRoutes.studentDashboard);
           } else if (user.isFaculty) {
-            Get.offAllNamed(AppRoutes.studentDashboard);
+            Get.offAllNamed(AppRoutes.facultyDashboard);
           } else if (user.isDoctor) {
             Get.offAllNamed(AppRoutes.doctorDashboard);
           } else if (user.isAdmin) {
@@ -82,35 +107,28 @@ class LoginController extends GetxController {
           }
         }
       } else {
-        // If login failed (e.g. incorrect password, user not found)
-        Get.snackbar(
-          'Login Failed',
+        // If the backend rejects the login, show the returned error.
+        AppFeedback.error(
+          'Login failed',
           response.message.isNotEmpty
               ? response.message
               : 'Invalid email or password',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 4),
         );
       }
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        e.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      // Show unexpected runtime or network errors.
+      AppFeedback.error('Login error', e.toString());
     } finally {
       isLoading.value = false;
     }
   }
 
+  /// Opens the registration screen.
   void goToRegister() {
     Get.toNamed(AppRoutes.registerEmail);
   }
 
+  /// Opens the forgot-password screen.
   void forgotPassword() {
     Get.toNamed(AppRoutes.forgotPassword);
   }

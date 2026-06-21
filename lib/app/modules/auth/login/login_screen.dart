@@ -4,12 +4,19 @@ import 'login_controller.dart';
 import '../../../../config/app_theme.dart';
 import '../../../../config/app_config.dart';
 
+/// Login page that collects credentials and sends the user to the correct dashboard.
 class LoginScreen extends GetView<LoginController> {
-  const LoginScreen({super.key});
+  LoginScreen({super.key});
+
+  final _formKey = GlobalKey<FormState>();
 
   @override
+
+  /// Builds the full login layout with gradient background and form card.
   Widget build(BuildContext context) {
+    controller.formKey = _formKey;
     return Scaffold(
+      // Decorative background gradient for the login page.
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -41,7 +48,7 @@ class LoginScreen extends GetView<LoginController> {
                       ],
                     ),
                     child: Form(
-                      key: controller.formKey,
+                      key: _formKey,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -69,11 +76,13 @@ class LoginScreen extends GetView<LoginController> {
     );
   }
 
+  /// Builds the logo, title, and short intro text.
   Widget _buildHeader(BuildContext context) {
     return Column(
       children: [
+        // BUITEMS logo shown at the top of the form.
         Image.asset(
-          'buitems-logo-png_seeklogo-273407.png',
+          'assets/images/logos/buitems-logo-png_seeklogo-273407.png',
           height: 120,
           width: 120,
           errorBuilder: (context, error, stackTrace) {
@@ -100,22 +109,27 @@ class LoginScreen extends GetView<LoginController> {
           },
         ),
         const SizedBox(height: 16),
+        // App name.
         Text(
-          'Medi-AI',
+          AppConfig.appName,
           style: AppTheme.h2.copyWith(color: AppTheme.primary),
         ),
         const SizedBox(height: 8),
+        // Short welcome description.
         Text(
           AppConfig.universityName,
           style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary),
+          textAlign: TextAlign.center,
         ),
       ],
     );
   }
 
+  /// Builds email and password input fields.
   Widget _buildFormFields() {
     return Obx(() => Column(
           children: [
+            // Email input field.
             TextFormField(
               controller: controller.emailController,
               keyboardType: TextInputType.emailAddress,
@@ -135,6 +149,7 @@ class LoginScreen extends GetView<LoginController> {
               },
             ),
             const SizedBox(height: 16),
+            // Password input field with show/hide toggle.
             TextFormField(
               controller: controller.passwordController,
               obscureText: !controller.showPassword.value,
@@ -162,21 +177,20 @@ class LoginScreen extends GetView<LoginController> {
         ));
   }
 
+  /// Builds the remember-me checkbox and forgot-password shortcut.
   Widget _buildRememberMeAndForgot() {
     return Obx(() => Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Row(
               children: [
+                // Keep the user signed in on this device.
                 Checkbox(
                   value: controller.rememberMe.value,
                   onChanged: (value) => controller.toggleRememberMe(),
                   activeColor: AppTheme.primary,
                 ),
-                Text(
-                  'Remember me',
-                  style: AppTheme.bodySmall,
-                ),
+                Text('Remember me', style: AppTheme.bodySmall),
               ],
             ),
             TextButton(
@@ -193,6 +207,7 @@ class LoginScreen extends GetView<LoginController> {
         ));
   }
 
+  /// Builds the login button and loading spinner.
   Widget _buildLoginButton() {
     return Obx(() => SizedBox(
           width: double.infinity,
@@ -226,14 +241,12 @@ class LoginScreen extends GetView<LoginController> {
         ));
   }
 
+  /// Builds the link that sends users to registration.
   Widget _buildRegisterLink() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(
-          'Don\'t have an account?',
-          style: AppTheme.bodyMedium,
-        ),
+        Text('Don\'t have an account?', style: AppTheme.bodyMedium),
         TextButton(
           onPressed: controller.goToRegister,
           child: Text(

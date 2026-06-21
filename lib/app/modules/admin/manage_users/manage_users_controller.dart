@@ -17,6 +17,10 @@ class ManageUsersController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    final args = Get.arguments;
+    if (args != null && args is Map && args['role'] != null) {
+      selectedFilter.value = args['role'];
+    }
     loadUsers();
   }
 
@@ -44,7 +48,7 @@ class ManageUsersController extends GetxController {
       }
     } catch (e) {
       print('Error loading users: $e');
-      Get.snackbar('Error', 'Network error occurred');
+      Get.snackbar('Error', 'A network error occurred');
     } finally {
       isLoading.value = false;
     }
@@ -93,8 +97,8 @@ class ManageUsersController extends GetxController {
 
       if (response.success) {
         Get.snackbar(
-          'Success',
-          'User created successfully',
+          'success',
+          'user_created_successfully',
           backgroundColor: Colors.green,
           colorText: Colors.white,
           snackPosition: SnackPosition.BOTTOM,
@@ -102,7 +106,7 @@ class ManageUsersController extends GetxController {
         loadUsers(); // Reload list
       } else {
         Get.snackbar(
-          'Error',
+          'error',
           response.message,
           backgroundColor: Colors.red,
           colorText: Colors.white,
@@ -124,8 +128,8 @@ class ManageUsersController extends GetxController {
 
       if (response.success) {
         Get.snackbar(
-          'Success',
-          'User updated successfully',
+          'success',
+          'user_updated_successfully',
           backgroundColor: Colors.green,
           colorText: Colors.white,
           snackPosition: SnackPosition.BOTTOM,
@@ -133,7 +137,7 @@ class ManageUsersController extends GetxController {
         loadUsers(); // Reload list
       } else {
         Get.snackbar(
-          'Error',
+          'error',
           response.message,
           backgroundColor: Colors.red,
           colorText: Colors.white,
@@ -154,15 +158,15 @@ class ManageUsersController extends GetxController {
 
       if (response.success) {
         Get.snackbar(
-          'Success',
-          'User deleted successfully',
+          'success',
+          'user_deleted_successfully',
           backgroundColor: Colors.green,
           colorText: Colors.white,
           snackPosition: SnackPosition.BOTTOM,
         );
         loadUsers(); // Reload list
       } else {
-        Get.snackbar('Error', response.message);
+        Get.snackbar('error', response.message);
       }
     } catch (e) {
       Get.snackbar('Error', 'Failed to delete user');
@@ -184,4 +188,23 @@ class ManageUsersController extends GetxController {
   Color getStatusColor(bool isActive) {
     return isActive ? Colors.green : Colors.red;
   }
+
+  Future<List<Map<String, dynamic>>> fetchUserEmergencyContacts(int userId) async {
+    try {
+      final response = await _apiService.get('/EmergencyContacts/user/$userId');
+      if (response.success && response.data != null) {
+        if (response.data is List) {
+          return (response.data as List)
+              .map((item) => item is Map<String, dynamic>
+                  ? item
+                  : Map<String, dynamic>.from(item as Map))
+              .toList();
+        }
+      }
+    } catch (e) {
+      print('Error loading emergency contacts: $e');
+    }
+    return [];
+  }
 }
+

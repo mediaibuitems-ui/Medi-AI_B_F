@@ -1,4 +1,4 @@
-import 'package:get/get.dart';
+﻿import 'package:get/get.dart';
 import '../../../services/doctor_service.dart';
 
 class ScheduleController extends GetxController {
@@ -74,7 +74,7 @@ class ScheduleController extends GetxController {
       }
     } catch (e) {
       schedule.value = _buildDefaultSchedule();
-      Get.snackbar('Error', 'Failed to load schedule from server. You can still set it locally and save.');
+      Get.snackbar('Error', 'Failed to load schedule');
     } finally {
       isLoading.value = false;
     }
@@ -112,15 +112,16 @@ class ScheduleController extends GetxController {
 
       final response = await _doctorService.updateSchedule(payload);
       if (response.success) {
-        Get.snackbar('Success', 'Schedule updated successfully', 
+        Get.snackbar('Success', 'Schedule updated successfully',
           backgroundColor: Get.theme.primaryColor, colorText: Get.theme.canvasColor);
       } else {
-        Get.snackbar('Error', response.message);
+        Get.snackbar('error', response.message);
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to save schedule: $e');
+      Get.snackbar('Error', 'Failed to save schedule');
     } finally {
       isSaving.value = false;
     }
   }
 }
+

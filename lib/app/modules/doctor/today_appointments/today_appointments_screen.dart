@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../config/app_theme.dart';
 import 'controllers/today_appointments_controller.dart';
@@ -18,9 +18,9 @@ class TodayAppointmentsScreen extends GetView<TodayAppointmentsController> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Get.back(),
         ),
-        title: const Text('Today\'s Appointments'),
+        title: const Text('Today Appointments'),
         backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: AppTheme.surface,
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
@@ -32,11 +32,11 @@ class TodayAppointmentsScreen extends GetView<TodayAppointmentsController> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.event_available, size: 80, color: Colors.grey[300]),
+                Icon(Icons.event_available, size: 80, color: AppTheme.textSecondary.withOpacity(0.18)),
                 const SizedBox(height: 16),
                 Text(
                   'No appointments for today',
-                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                  style: TextStyle(fontSize: 18, color: AppTheme.textSecondary),
                 ),
               ],
             ),
@@ -48,12 +48,20 @@ class TodayAppointmentsScreen extends GetView<TodayAppointmentsController> {
           itemCount: controller.appointments.length,
           itemBuilder: (context, index) {
             final appointment = controller.appointments[index];
-            return Card(
+            return Container(
               margin: const EdgeInsets.only(bottom: 16),
-              color: Colors.white,
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(
+                color: AppTheme.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTheme.border.withOpacity(0.08)),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.textPrimary.withOpacity(0.03),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -74,19 +82,19 @@ class TodayAppointmentsScreen extends GetView<TodayAppointmentsController> {
                       ],
                     ),
                     const Divider(height: 24),
-                    const Text(
-                      'Patient Name',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    Text(
+                      'Patient name',
+                      style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                     ),
                     Text(
-                      appointment.patientName ?? 'Unknown',
+                      appointment.patientName,
                       style: const TextStyle(
                           fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'Symptoms',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                      style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                     ),
                     Text(
                       appointment.symptoms ?? 'No symptoms specified',
@@ -102,7 +110,7 @@ class TodayAppointmentsScreen extends GetView<TodayAppointmentsController> {
                             onPressed: () => controller.updateStatus(
                                 appointment.id.toString(), 'Cancelled'),
                             style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.red),
+                              foregroundColor: AppTheme.error),
                             child: const Text('Cancel'),
                           ),
                           const SizedBox(width: 8),
@@ -110,7 +118,8 @@ class TodayAppointmentsScreen extends GetView<TodayAppointmentsController> {
                             onPressed: () => controller.updateStatus(
                                 appointment.id.toString(), 'Confirmed'),
                             style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.primary),
+                              backgroundColor: AppTheme.primary,
+                              foregroundColor: AppTheme.surface),
                             child: const Text('Confirm'),
                           ),
                         ] else if (appointment.status == 'Confirmed') ...[
@@ -118,13 +127,14 @@ class TodayAppointmentsScreen extends GetView<TodayAppointmentsController> {
                             onPressed: () => controller.updateStatus(
                                 appointment.id.toString(), 'Completed'),
                             style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green),
-                            child: const Text('Mark Checked'),
+                              backgroundColor: AppTheme.success,
+                              foregroundColor: AppTheme.surface),
+                            child: const Text('Mark as checked'),
                           ),
                         ] else if (appointment.status == 'Completed') ...[
-                          const Chip(
-                              label: Text('Completed'),
-                              backgroundColor: Colors.greenAccent),
+                            Chip(
+                              label: const Text('Completed'),
+                              backgroundColor: AppTheme.success.withOpacity(0.15)),
                         ],
                       ],
                     ),
@@ -143,20 +153,20 @@ class TodayAppointmentsScreen extends GetView<TodayAppointmentsController> {
     switch (status) {
       case 'Scheduled':
       case 'Pending':
-        color = Colors.orange;
+        color = AppTheme.warning;
         break;
       case 'Confirmed':
-        color = Colors.blue;
+        color = AppTheme.primary;
         break;
       case 'Completed':
       case 'Checked':
-        color = Colors.green;
+        color = AppTheme.success;
         break;
       case 'Cancelled':
-        color = Colors.red;
+        color = AppTheme.error;
         break;
       default:
-        color = Colors.grey;
+        color = AppTheme.textSecondary;
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -172,4 +182,6 @@ class TodayAppointmentsScreen extends GetView<TodayAppointmentsController> {
       ),
     );
   }
+
 }
+

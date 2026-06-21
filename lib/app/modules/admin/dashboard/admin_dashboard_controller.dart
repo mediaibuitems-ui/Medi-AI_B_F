@@ -21,6 +21,9 @@ class AdminDashboardController extends GetxController {
   final RxInt pendingVerifications = 0.obs;
   final RxInt systemAlerts = 0.obs;
 
+  final RxList<Map<String, dynamic>> monthlyTrends = <Map<String, dynamic>>[].obs;
+  final RxList<Map<String, dynamic>> monthlyUserTrends = <Map<String, dynamic>>[].obs;
+
   // Recent activities
   final RxList<Map<String, dynamic>> recentActivities =
       <Map<String, dynamic>>[].obs;
@@ -52,11 +55,10 @@ class AdminDashboardController extends GetxController {
   }
 
   Future<void> loadStatistics() async {
-    try {
-        final response = await _apiService.get('/Admin/statistics');
+      try {
+        final response = await _apiService.get('/Admin/dashboard-stats');
       if (response.success && response.data != null) {
         final data = _asMap(response.data);
-        if (data is Map<String, dynamic>) {
           totalUsers.value = _asInt(data['totalUsers'] ?? data['TotalUsers']);
           totalStudents.value =
             _asInt(data['totalStudents'] ?? data['TotalStudents']);
@@ -72,7 +74,13 @@ class AdminDashboardController extends GetxController {
             data['pendingVerifications'] ?? data['PendingVerifications']);
           systemAlerts.value =
             _asInt(data['systemAlerts'] ?? data['SystemAlerts']);
-        }
+
+          if (data['monthlyTrends'] != null && data['monthlyTrends'] is List) {
+            monthlyTrends.value = List<Map<String, dynamic>>.from(data['monthlyTrends']);
+          }
+          if (data['monthlyUserTrends'] != null && data['monthlyUserTrends'] is List) {
+            monthlyUserTrends.value = List<Map<String, dynamic>>.from(data['monthlyUserTrends']);
+          }
       }
     } catch (e) {
       print('Error loading statistics: $e');
@@ -153,8 +161,8 @@ class AdminDashboardController extends GetxController {
   }
 
   // Navigation methods
-  void manageUsers() {
-    Get.toNamed(AppRoutes.manageUsers);
+  void manageUsers([String? role]) {
+    Get.toNamed(AppRoutes.manageUsers, arguments: role != null ? {'role': role} : null);
   }
 
   void manageDoctors() {
@@ -165,12 +173,16 @@ class AdminDashboardController extends GetxController {
     Get.toNamed(AppRoutes.reports);
   }
 
+  void manageFeedback() {
+    Get.toNamed(AppRoutes.manageFeedback);
+  }
+
   void systemSettings() {
     Get.toNamed(AppRoutes.systemSettings);
   }
 
   void viewAllAppointments() {
-    Get.toNamed(AppRoutes.myAppointments);
+    Get.toNamed(AppRoutes.adminAppointments);
   }
 
   void viewProfile() {
@@ -188,8 +200,8 @@ class AdminDashboardController extends GetxController {
 
   String getGreeting() {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good Morning';
-    if (hour < 17) return 'Good Afternoon';
-    return 'Good Evening';
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
   }
 }

@@ -3,13 +3,11 @@ import 'package:get/get.dart';
 import '../../../../config/app_theme.dart';
 import 'manage_doctors_controller.dart';
 
-class ManageDoctorsScreen extends StatelessWidget {
+class ManageDoctorsScreen extends GetView<ManageDoctorsController> {
   const ManageDoctorsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Inject Controller
-    final controller = Get.put(ManageDoctorsController());
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -29,7 +27,7 @@ class ManageDoctorsScreen extends StatelessWidget {
               color: AppTheme.surface,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: AppTheme.textPrimary.withOpacity(0.03),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -40,7 +38,7 @@ class ManageDoctorsScreen extends StatelessWidget {
                 TextField(
                   controller: controller.searchController,
                   decoration: InputDecoration(
-                    hintText: 'Search doctors...',
+                    hintText: 'Search doctors',
                     prefixIcon: const Icon(Icons.search),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -149,16 +147,26 @@ class ManageDoctorsScreen extends StatelessWidget {
   Widget _buildDoctorCard(BuildContext context,
       ManageDoctorsController controller, Map<String, dynamic> doctor) {
     final user = doctor['user'] ?? {};
-    final name = user['fullName'] ?? 'Unknown Doctor';
-    final email = user['email'] ?? 'No Email';
+    final name = user['fullName'] ?? 'Unknown doctor';
+    final email = user['email'] ?? 'No email';
     final specialization = doctor['specialization'] ?? 'General';
     final isAvailable = doctor['isAvailable'] == true;
     final rating = doctor['averageRating']?.toString() ?? 'N/A';
 
-    return Card(
-      elevation: 2,
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.border.withOpacity(0.08)),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.textPrimary.withOpacity(0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       child: InkWell(
         onTap: () => _showDoctorDetails(context, controller, doctor),
         borderRadius: BorderRadius.circular(12),
@@ -217,7 +225,7 @@ class ManageDoctorsScreen extends StatelessWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(Icons.star, size: 16, color: Colors.amber),
+                        Icon(Icons.star, size: 16, color: AppTheme.warning),
                         const SizedBox(width: 4),
                         Text(
                           rating,
@@ -228,13 +236,13 @@ class ManageDoctorsScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 12),
                         Icon(Icons.email_outlined,
-                            size: 16, color: Colors.grey),
+                          size: 16, color: AppTheme.textSecondary),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             email,
                             style: const TextStyle(
-                                color: Colors.grey, fontSize: 12),
+                              color: AppTheme.textSecondary, fontSize: 12),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -255,14 +263,14 @@ class ManageDoctorsScreen extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: isAvailable
-            ? Colors.green.withOpacity(0.1)
-            : Colors.red.withOpacity(0.1),
+          ? AppTheme.success.withOpacity(0.1)
+          : AppTheme.error.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
-        isAvailable ? 'Available' : 'Unavailable',
+        isAvailable ? 'available' : 'unavailable',
         style: TextStyle(
-          color: isAvailable ? Colors.green : Colors.red,
+          color: isAvailable ? AppTheme.success : AppTheme.error,
           fontSize: 10,
           fontWeight: FontWeight.bold,
         ),
@@ -302,7 +310,7 @@ class ManageDoctorsScreen extends StatelessWidget {
   void _showDoctorDetails(BuildContext context,
       ManageDoctorsController controller, Map<String, dynamic> doctor) {
     final user = doctor['user'] ?? {};
-    final name = user['fullName'] ?? 'Unknown Doctor';
+    final name = user['fullName'] ?? 'unknown_doctor';
     final userId = doctor['userId'];
 
     showDialog(
@@ -326,12 +334,12 @@ class ManageDoctorsScreen extends StatelessWidget {
               if (user['phoneNumber'] != null)
                 _buildDetailRow('Phone', user['phoneNumber']),
               if (doctor['licenseNumber'] != null)
-                _buildDetailRow('License No', doctor['licenseNumber']),
+                _buildDetailRow('License no.', doctor['licenseNumber']),
               if (doctor['qualification'] != null)
                 _buildDetailRow('Qualification', doctor['qualification']),
               if (doctor['experience'] != null)
-                _buildDetailRow('Experience', '${doctor['experience']} Years'),
-              _buildDetailRow('Room No', doctor['roomNumber'] ?? 'N/A'),
+                _buildDetailRow('Experience', '${doctor['experience']} years'),
+              _buildDetailRow('Room no.', doctor['roomNumber'] ?? 'N/A'),
               const Divider(height: 24),
               if (userId != null)
                 ElevatedButton.icon(
@@ -340,10 +348,10 @@ class ManageDoctorsScreen extends StatelessWidget {
                     _confirmDelete(context, controller, userId, name);
                   },
                   icon: const Icon(Icons.delete_forever),
-                  label: const Text('Remove Doctor'),
+                  label: const Text('Remove doctor'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppTheme.error,
+                    foregroundColor: AppTheme.surface,
                     minimumSize: const Size(double.infinity, 45),
                   ),
                 ),
@@ -359,9 +367,10 @@ class ManageDoctorsScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirm Deletion'),
+        title: const Text('Confirm deletion'),
         content: Text(
-            'Are you sure you want to remove Dr. $name? This will delete their user account and all associated data.'),
+          'Are you sure you want to remove this doctor?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -380,3 +389,4 @@ class ManageDoctorsScreen extends StatelessWidget {
     );
   }
 }
+

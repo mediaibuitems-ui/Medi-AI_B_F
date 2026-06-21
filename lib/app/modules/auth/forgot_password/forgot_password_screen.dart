@@ -74,7 +74,7 @@ class ForgotPasswordScreen extends GetView<ForgotPasswordController> {
     return Column(
       children: [
         Image.asset(
-          'buitems-logo-png_seeklogo-273407.png',
+          'assets/images/logos/buitems-logo-png_seeklogo-273407.png',
           height: 120,
           width: 120,
           errorBuilder: (context, error, stackTrace) {

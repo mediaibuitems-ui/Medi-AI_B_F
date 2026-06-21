@@ -19,7 +19,6 @@ class BookingSettingsController extends GetxController {
   
   // Reminder settings
   final RxBool enableAppointmentReminders = true.obs;
-  final RxBool enableMedicineReminders = true.obs;
   final RxInt reminderNotificationMinutes = 15.obs;
   
   final RxBool isLoading = false.obs;
@@ -81,7 +80,6 @@ class BookingSettingsController extends GetxController {
     breakStartTime.value = readString('breakStartTime', '12:00');
     breakEndTime.value = readString('breakEndTime', '13:00');
     enableAppointmentReminders.value = readBool('enableAppointmentReminders', true);
-    enableMedicineReminders.value = readBool('enableMedicineReminders', true);
     reminderNotificationMinutes.value = readInt('reminderNotificationMinutes', 15);
   }
 
@@ -97,7 +95,6 @@ class BookingSettingsController extends GetxController {
         'breakStartTime': breakStartTime.value,
         'breakEndTime': breakEndTime.value,
         'enableAppointmentReminders': enableAppointmentReminders.value,
-        'enableMedicineReminders': enableMedicineReminders.value,
         'reminderNotificationMinutes': reminderNotificationMinutes.value,
       };
 

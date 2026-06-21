@@ -63,7 +63,7 @@ class OtpVerificationScreen extends GetView<OtpVerificationController> {
     return Obx(() => Column(
       children: [
         Image.asset(
-          'buitems-logo-png_seeklogo-273407.png',
+          'assets/images/logos/buitems-logo-png_seeklogo-273407.png',
           height: 100,
           width: 100,
           errorBuilder: (context, error, stackTrace) {

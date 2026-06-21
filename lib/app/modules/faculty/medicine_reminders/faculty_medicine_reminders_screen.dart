@@ -2,11 +2,14 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-
+import 'package:medi_ai/config/app_config.dart';
 import '../../../../config/app_theme.dart';
+import '../../../services/api_service.dart';
+import '../../../services/medicine_reminder_service.dart';
+import '../../../services/auth_service.dart';
 import '../../../services/notification_service.dart';
+import '../../../widgets/app_feedback.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 
 export 'faculty_medicine_reminders_binding.dart';
 
@@ -21,9 +24,16 @@ class FacultyMedicineRemindersScreen extends StatefulWidget {
 class _FacultyMedicineRemindersScreenState
     extends State<FacultyMedicineRemindersScreen> {
   final _notificationService = Get.find<NotificationService>();
+  final _medicineReminderService = Get.find<MedicineReminderService>();
+  final _authService = Get.find<AuthService>();
 
   final List<Map<String, dynamic>> reminders = [];
   bool isLoading = false;
+
+  String get _storageKey {
+    final userId = _authService.currentUser.value?.id ?? 'guest';
+    return 'offline_faculty_medicine_reminders_$userId';
+  }
 
   @override
   void initState() {
@@ -31,12 +41,13 @@ class _FacultyMedicineRemindersScreenState
     _loadReminders();
   }
 
+  final _apiService = Get.find<ApiService>();
+
   Future<void> _loadReminders() async {
     setState(() => isLoading = true);
     try {
       final prefs = await SharedPreferences.getInstance();
-      final String? remindersJson =
-          prefs.getString('offline_faculty_medicine_reminders');
+      final String? remindersJson = prefs.getString(_storageKey);
 
       if (remindersJson != null) {
         final List<dynamic> decoded = jsonDecode(remindersJson);
@@ -50,10 +61,101 @@ class _FacultyMedicineRemindersScreenState
           reminders.clear();
         });
       }
+
+      // Fetch from backend
+      final response = await _apiService.get<dynamic>('${AppConfig.baseUrl}/MedicineReminders');
+      if (response.success && response.data is List) {
+        final List<dynamic> dbReminders = response.data;
+        if (dbReminders.isNotEmpty) {
+           reminders.clear();
+           reminders.addAll(dbReminders.map((e) => _mapApiReminder(Map<String, dynamic>.from(e))));
+           
+           await prefs.setString(_storageKey, jsonEncode(reminders));
+        }
+      }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to load reminders: $e');
+      AppFeedback.error('Error', 'Failed to load reminders: $e');
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
+
+  Map<String, dynamic> _mapApiReminder(Map<String, dynamic> apiReminder) {
+    final timesRaw = apiReminder['times'] ?? apiReminder['Times'];
+
+    String times;
+    if (timesRaw is List) {
+      times = timesRaw.map((e) => e.toString().replaceAll(RegExp(r'[\[\]"]'), '')).join(',');
+    } else if (timesRaw is String) {
+      if (timesRaw.trim().startsWith('[')) {
+        try {
+          final List<dynamic> parsed = jsonDecode(timesRaw);
+          times = parsed.map((e) => e.toString().replaceAll(RegExp(r'[\[\]"]'), '')).join(',');
+        } catch (_) {
+          times = timesRaw.replaceAll(RegExp(r'[\[\]"]'), '');
+        }
+      } else {
+        times = timesRaw.replaceAll(RegExp(r'[\[\]"]'), '');
+      }
+    } else {
+      times = '';
+    }
+
+    return {
+      'id': (apiReminder['id'] ?? apiReminder['Id'] ?? '').toString(),
+      'medicineName':
+          apiReminder['medicineName'] ?? apiReminder['MedicineName'] ?? '',
+      'dosage': apiReminder['dosage'] ?? apiReminder['Dosage'] ?? '',
+      'frequency':
+          apiReminder['frequency'] ?? apiReminder['Frequency'] ?? 'Custom',
+      'customFrequency':
+          apiReminder['customFrequency'] ?? apiReminder['CustomFrequency'],
+      'times': times,
+      'startDate': (apiReminder['startDate'] ?? apiReminder['StartDate'] ?? '')
+          .toString(),
+      'endDate': apiReminder['endDate'] ?? apiReminder['EndDate'],
+      'notes': (apiReminder['notes'] ?? apiReminder['Notes'] ?? '').toString(),
+      'isActive': (apiReminder['isActive'] ?? apiReminder['IsActive']) == true,
+      'isSynced': true,
+    };
+  }
+
+  Map<String, dynamic> _buildApiPayload({
+    required String name,
+    required String dosage,
+    required String frequency,
+    required List<String> finalTimes,
+    String? notes,
+  }) {
+    return {
+      'medicineName': name,
+      'dosage': dosage,
+      'frequency': frequency,
+      'customFrequency': null,
+      'times': finalTimes.join(','),
+      'startDate': DateFormat('yyyy-MM-dd').format(DateTime.now()),
+      'endDate': null,
+      'notes': notes ?? '',
+    };
+  }
+
+  Future<void> _persistOfflineCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_storageKey, jsonEncode(reminders));
+    
+    // Sync with backend DB
+    try {
+      await _medicineReminderService.syncReminders(reminders);
+      for (var r in reminders) {
+        r['isSynced'] = true;
+      }
+      await prefs.setString(_storageKey, jsonEncode(reminders));
+    } catch (e) {
+      print('Warning: Failed to sync medicine reminders to DB (Offline Mode): $e');
+      for (var r in reminders) {
+        if (r['isSynced'] == null) r['isSynced'] = false;
+      }
+      await prefs.setString(_storageKey, jsonEncode(reminders));
     }
   }
 
@@ -101,7 +203,7 @@ class _FacultyMedicineRemindersScreenState
     if (!isActive) return;
 
     for (int i = 0; i < timesApp.length; i++) {
-      final timeStr = timesApp[i].trim();
+      final timeStr = timesApp[i].replaceAll(RegExp(r'[\[\]"\\/]'), '').trim();
       // Parse "hh:mm a"
       final format = DateFormat('hh:mm a');
       final dt = format.parse(timeStr); // returns DateTime(1970, 1, 1, hh, mm)
@@ -163,16 +265,13 @@ class _FacultyMedicineRemindersScreenState
                     TextField(
                       controller: nameController,
                       decoration: const InputDecoration(
-                        labelText: 'Reminder Name',
-                        border: OutlineInputBorder(),
-                      ),
+                        labelText: 'Reminder Name'),
                     ),
                     const SizedBox(height: 16),
                     TextField(
                       controller: dosageController,
                       decoration: const InputDecoration(
                         labelText: 'Details/Dosage',
-                        border: OutlineInputBorder(),
                         hintText: 'e.g., Take with food',
                       ),
                     ),
@@ -258,12 +357,12 @@ class _FacultyMedicineRemindersScreenState
                       );
                       Navigator.of(context).pop();
                     } else if (currentTimes.isEmpty) {
-                      Get.snackbar('Error', 'Please add at least one time');
+                      AppFeedback.error('Error', 'Please add at least one time');
                     }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primary,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppTheme.surface,
                   ),
                   child: Text(isEditing ? 'Save' : 'Add'),
                 ),
@@ -287,6 +386,14 @@ class _FacultyMedicineRemindersScreenState
   }) async {
     final finalTimes = timesList ?? _getTimesForFrequency(frequency);
 
+    final payload = _buildApiPayload(
+      name: name,
+      dosage: dosage,
+      frequency: frequency,
+      finalTimes: finalTimes,
+      notes: notes,
+    );
+
     final newReminder = {
       'id': reminderId ?? DateTime.now().millisecondsSinceEpoch.toString(),
       'medicineName': name,
@@ -298,42 +405,52 @@ class _FacultyMedicineRemindersScreenState
       'endDate': null,
       'notes': notes ?? '',
       'isActive': isActive,
+      'isSynced': false,
     };
 
+    if (!mounted) return;
     setState(() => isLoading = true);
     try {
-      final prefs = await SharedPreferences.getInstance();
-
       if (isEditing && reminderId != null) {
+        final parsedId = int.tryParse(reminderId);
+        if (parsedId != null && parsedId <= 2147483647) {
+          await _medicineReminderService.updateReminder(parsedId, payload);
+          newReminder['isSynced'] = true;
+        }
+
         final index =
             reminders.indexWhere((r) => r['id'].toString() == reminderId);
         if (index != -1) {
           reminders[index] = newReminder;
         }
       } else {
+        try {
+          final realId = await _medicineReminderService.createReminder(payload);
+          newReminder['id'] = realId.toString();
+          newReminder['isSynced'] = true;
+        } catch (e) {
+          print('Create failed online, falling back to offline id: $e');
+        }
         reminders.add(newReminder);
       }
 
-      await prefs.setString(
-          'offline_faculty_medicine_reminders', jsonEncode(reminders));
+      await _persistOfflineCache();
 
       // Schedule notification
       await _scheduleRemindersFor(newReminder);
 
-      Get.back();
-      Get.snackbar(
-        'Success',
-        isEditing
-            ? 'Reminder updated successfully'
-            : 'Reminder added successfully',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
+      if (mounted) {
+        AppFeedback.success(
+          'Success',
+          isEditing
+              ? 'Reminder updated successfully'
+              : 'Reminder added successfully',
+        );
+      }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to save reminder: $e');
+      if (mounted) AppFeedback.error('Error', 'Failed to save reminder: $e');
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
@@ -343,14 +460,18 @@ class _FacultyMedicineRemindersScreenState
       final index =
           reminders.indexWhere((r) => r['id'].toString() == id.toString());
       if (index != -1) {
+        final parsedId = int.tryParse(id.toString());
+        if (parsedId != null && parsedId <= 2147483647) {
+          await _medicineReminderService.toggleReminderStatus(parsedId);
+        }
+
+        if (!mounted) return;
         setState(() {
           reminders[index]['isActive'] =
               !(reminders[index]['isActive'] == true);
         });
 
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(
-            'offline_faculty_medicine_reminders', jsonEncode(reminders));
+        await _persistOfflineCache();
 
         final updated = reminders[index];
         if (updated['isActive'] == true) {
@@ -363,20 +484,25 @@ class _FacultyMedicineRemindersScreenState
         }
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to toggle reminder: $e');
+      AppFeedback.error('Error', 'Failed to toggle reminder: $e');
     }
   }
 
   Future<void> _deleteReminder(dynamic id) async {
     if (id == null) return;
     try {
+      // Try deleting from backend if it is a numeric ID
+      final parsedId = int.tryParse(id.toString());
+      if (parsedId != null && parsedId <= 2147483647) {
+        await _medicineReminderService.deleteReminder(parsedId);
+      }
+
+      if (!mounted) return;
       setState(() {
         reminders.removeWhere((r) => r['id'].toString() == id.toString());
       });
 
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(
-          'offline_faculty_medicine_reminders', jsonEncode(reminders));
+      await _persistOfflineCache();
 
       // Cancel notifications locally
       for (int i = 0; i < 20; i++) {
@@ -384,15 +510,9 @@ class _FacultyMedicineRemindersScreenState
             .cancelNotification(_generateNotificationId(id.toString(), i));
       }
 
-      Get.snackbar(
-        'Deleted',
-        'Reminder removed',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      AppFeedback.success('Deleted', 'Reminder removed');
     } catch (e) {
-      Get.snackbar('Error', 'Failed to delete reminder: $e');
+      AppFeedback.error('Error', 'Failed to delete reminder: $e');
     }
   }
 
@@ -403,25 +523,25 @@ class _FacultyMedicineRemindersScreenState
       appBar: AppBar(
         title: const Text('Faculty Reminders'),
         backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: AppTheme.surface,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : reminders.isEmpty
-              ? const Center(
+              ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.alarm, size: 64, color: Colors.grey),
-                      SizedBox(height: 16),
+                      Icon(Icons.alarm, size: 64, color: AppTheme.textSecondary.withOpacity(0.18)),
+                      const SizedBox(height: 16),
                       Text(
                         'No reminders set',
-                        style: TextStyle(fontSize: 18, color: Colors.grey),
+                        style: TextStyle(fontSize: 18, color: AppTheme.textSecondary),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Text(
                         'Tap + to add your first reminder',
-                        style: TextStyle(color: Colors.grey),
+                        style: TextStyle(color: AppTheme.textSecondary),
                       ),
                     ],
                   ),
@@ -431,13 +551,31 @@ class _FacultyMedicineRemindersScreenState
                   itemCount: reminders.length,
                   itemBuilder: (context, index) {
                     final reminder = reminders[index];
-                    final times = (reminder['times'] ?? '')
-                        .toString()
-                        .split(',')
-                        .where((e) => e.trim().isNotEmpty)
-                        .toList();
-                    return Card(
+                    var timesRaw = reminder['times'] ?? '';
+                    List<String> times = [];
+                    if (timesRaw is String) {
+                      times = timesRaw
+                          .replaceAll(RegExp(r'[\[\]"]'), '')
+                          .split(',')
+                          .where((e) => e.trim().isNotEmpty)
+                          .toList();
+                    } else if (timesRaw is List) {
+                      times = timesRaw.map((e) => e.toString()).toList();
+                    }
+                    return Container(
                       margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppTheme.border.withOpacity(0.08)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.textPrimary.withOpacity(0.03),
+                            blurRadius: 12,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Column(
@@ -475,7 +613,7 @@ class _FacultyMedicineRemindersScreenState
                                       Text(
                                         '${reminder['dosage'] ?? ''}',
                                         style:
-                                            const TextStyle(color: Colors.grey),
+                                          const TextStyle(color: AppTheme.textSecondary),
                                       ),
                                     ],
                                   ),
@@ -508,7 +646,7 @@ class _FacultyMedicineRemindersScreenState
                               const SizedBox(height: 12),
                               Text(
                                 'Notes: ${reminder['notes']}',
-                                style: const TextStyle(color: Colors.grey),
+                                style: const TextStyle(color: AppTheme.textSecondary),
                               ),
                             ],
                             const SizedBox(height: 12),
@@ -520,12 +658,14 @@ class _FacultyMedicineRemindersScreenState
                                       _showAddReminderDialog(reminder, index),
                                   child: const Text('Edit'),
                                 ),
-                                TextButton(
-                                  onPressed: () =>
-                                      _deleteReminder(reminder['id']),
-                                  child: const Text('Delete',
-                                      style: TextStyle(color: Colors.red)),
-                                ),
+                                  TextButton(
+                                    onPressed: () =>
+                                        _deleteReminder(reminder['id']),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: AppTheme.error,
+                                    ),
+                                    child: const Text('Delete'),
+                                  ),
                               ],
                             ),
                           ],
@@ -537,7 +677,7 @@ class _FacultyMedicineRemindersScreenState
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddReminderDialog(),
         backgroundColor: AppTheme.primary,
-        child: const Icon(Icons.add, color: Colors.white),
+        child: const Icon(Icons.add, color: AppTheme.surface),
       ),
     );
   }

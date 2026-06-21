@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../services/auth_service.dart';
 import '../../../routes/app_routes.dart';
+import '../../../widgets/app_feedback.dart';
 
 class OtpVerificationController extends GetxController {
   final _authService = Get.find<AuthService>();
@@ -30,11 +31,14 @@ class OtpVerificationController extends GetxController {
 
   bool _isDisposed = false; // Track disposal state
 
+  bool isPasswordReset = false;
+
   @override
   void onInit() {
     super.onInit();
     // Get email from arguments
     email.value = Get.arguments?['email'] ?? '';
+    isPasswordReset = Get.arguments?['isPasswordReset'] ?? false;
 
     // Check if OTP was passed in dev mode
     final devOtp = Get.arguments?['devOtp']?.toString();
@@ -49,14 +53,7 @@ class OtpVerificationController extends GetxController {
       otp6Controller.text = devOtp[5];
 
       // Show snackbar with OTP
-      Get.snackbar(
-        'Development Mode',
-        'OTP auto-filled: $devOtp',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: Colors.orange,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 5),
-      );
+      AppFeedback.info('Development Mode', 'OTP auto-filled: $devOtp');
     }
 
     startResendTimer();
@@ -106,12 +103,18 @@ class OtpVerificationController extends GetxController {
     final otp = getOtp();
 
     if (otp.length != 6) {
-      Get.snackbar(
-        'Invalid OTP',
-        'Please enter complete 6-digit OTP',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orange,
-        colorText: Colors.white,
+      AppFeedback.error('Invalid OTP', 'Please enter complete 6-digit OTP');
+      return;
+    }
+
+    if (isPasswordReset) {
+      // For password reset, we don't verify OTP here, we just pass it to the SetPassword screen
+      Get.toNamed(
+        AppRoutes.setPassword,
+        arguments: {
+          'email': email.value,
+          'token': otp,
+        },
       );
       return;
     }
@@ -127,14 +130,7 @@ class OtpVerificationController extends GetxController {
       if (response.success) {
         isLoading.value = false; // Set to false before navigation
 
-        Get.snackbar(
-          'Success',
-          'Email verified successfully! Welcome!',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-          duration: const Duration(seconds: 2),
-        );
+        AppFeedback.success('Success', 'Email verified successfully! Welcome!');
 
         // User is now authenticated - navigate to role-based dashboard
         await Future.delayed(const Duration(milliseconds: 500));
@@ -144,7 +140,7 @@ class OtpVerificationController extends GetxController {
           if (user.isStudent) {
             Get.offAllNamed(AppRoutes.studentDashboard);
           } else if (user.isFaculty) {
-            Get.offAllNamed(AppRoutes.studentDashboard);
+            Get.offAllNamed(AppRoutes.facultyDashboard);
           } else if (user.isDoctor) {
             Get.offAllNamed(AppRoutes.doctorDashboard);
           } else if (user.isAdmin) {
@@ -159,23 +155,11 @@ class OtpVerificationController extends GetxController {
         }
       } else {
         isLoading.value = false;
-        Get.snackbar(
-          'Error',
-          response.message,
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
+        AppFeedback.error('Error', response.message);
       }
     } catch (e) {
       isLoading.value = false;
-      Get.snackbar(
-        'Error',
-        e.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      AppFeedback.error('Error', e.toString());
     }
   }
 
@@ -185,45 +169,16 @@ class OtpVerificationController extends GetxController {
     isResending.value = true;
 
     try {
-      /*
-      final response = await _authService.sendOtp(email.value);
+      final response = await _authService.resendOtp(email.value);
 
       if (response.success) {
-        Get.snackbar(
-          'Success',
-          'OTP sent successfully!',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
+        AppFeedback.success('Success', 'OTP sent successfully!');
         startResendTimer();
       } else {
-        Get.snackbar(
-      
-          'Error',
-          response.message,
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
+        AppFeedback.error('Error', response.message);
       }
-      */
-
-      Get.snackbar(
-        'Info',
-        'OTP Resend disabled temporarily',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.blue,
-        colorText: Colors.white,
-      );
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        e.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      AppFeedback.error('Error', e.toString());
     } finally {
       isResending.value = false;
     }

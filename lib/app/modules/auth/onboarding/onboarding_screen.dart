@@ -34,7 +34,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     },
     {
       'title': 'Stay Healthy',
-      'description': 'Access health tips, medicine reminders, and personalized wellness recommendations.',
+      'description': 'Access medicine reminders and personalized wellness recommendations.',
       'icon': 'favorite',
     },
   ];
@@ -58,7 +58,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Image.asset(
-                    'buitems-logo-png_seeklogo-273407.png',
+                    'assets/images/logos/buitems-logo-png_seeklogo-273407.png',
                     width: 40,
                     height: 40,
                     errorBuilder: (context, error, stackTrace) {

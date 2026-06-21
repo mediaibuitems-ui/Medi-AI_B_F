@@ -15,7 +15,7 @@ class SystemSettingsScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('System Settings'),
         backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: AppTheme.surface,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -35,36 +35,63 @@ class SystemSettingsScreen extends StatelessWidget {
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            _buildSectionHeader('General Settings'),
-            Card(
+            _buildSectionHeader('General settings'),
+            Container(
+              decoration: BoxDecoration(
+                color: AppTheme.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTheme.border.withOpacity(0.08)),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.textPrimary.withOpacity(0.03),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
                     TextField(
                       controller: controller.systemNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'System Name',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.business),
+                      decoration: InputDecoration(
+                        labelText: 'System name',
+                        filled: true,
+                        fillColor: AppTheme.background,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        prefixIcon: const Icon(Icons.business),
                       ),
                     ),
                     const SizedBox(height: 16),
                     TextField(
                       controller: controller.emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'Admin Email',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.email),
+                      decoration: InputDecoration(
+                        labelText: 'Admin email',
+                        filled: true,
+                        fillColor: AppTheme.background,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        prefixIcon: const Icon(Icons.email),
                       ),
                     ),
                     const SizedBox(height: 16),
                     TextField(
                       controller: controller.supportEmailController,
-                      decoration: const InputDecoration(
-                        labelText: 'Support Email',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.support_agent),
+                      decoration: InputDecoration(
+                        labelText: 'Support email',
+                        filled: true,
+                        fillColor: AppTheme.background,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        prefixIcon: const Icon(Icons.support_agent),
                       ),
                     ),
                   ],
@@ -72,36 +99,48 @@ class SystemSettingsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            _buildSectionHeader('Security Settings'),
-            Card(
+            _buildSectionHeader('Security settings'),
+            Container(
+              decoration: BoxDecoration(
+                color: AppTheme.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTheme.border.withOpacity(0.08)),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.textPrimary.withOpacity(0.03),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
               child: Column(
                 children: [
                    Obx(() => SwitchListTile(
-                    title: const Text('Require Email Verification'),
-                    subtitle: const Text('Users must verify email before login'),
+                    title: const Text('Require email verification'),
+                    subtitle: const Text('Users must verify their email before login.'),
                     value: controller.requireEmailVerification.value,
                     onChanged: (value) => controller.requireEmailVerification.value = value,
                     activeColor: AppTheme.primary,
                   )),
                   const Divider(height: 1),
                   Obx(() => SwitchListTile(
-                    title: const Text('Two-Factor Authentication'),
-                    subtitle: const Text('Enable 2FA for admin accounts'),
+                    title: const Text('Two-factor authentication'),
+                    subtitle: const Text('Enable 2FA for admin accounts.'),
                     value: controller.twoFactorAuth.value,
                     onChanged: (value) => controller.twoFactorAuth.value = value,
                     activeColor: AppTheme.primary,
                   )),
                   const Divider(height: 1),
                   Obx(() => ListTile(
-                    title: const Text('Session Timeout'),
-                    subtitle: Text(' minutes'),
+                    title: const Text('Session timeout'),
+                    subtitle: const Text('Minutes'),
                     trailing: SizedBox(
                       width: 100,
                       child: DropdownButton<int>(
                         value: controller.sessionTimeout.value,
                         isExpanded: true,
                         items: [15, 30, 60, 120]
-                            .map((min) => DropdownMenuItem(value: min, child: Text(' min')))
+                            .map((min) => DropdownMenuItem(value: min, child: Text('$min min')))
                             .toList(),
                         onChanged: (value) => controller.sessionTimeout.value = value!,
                       ),
@@ -109,8 +148,8 @@ class SystemSettingsScreen extends StatelessWidget {
                   )),
                   const Divider(height: 1),
                   Obx(() => ListTile(
-                    title: const Text('Max Login Attempts'),
-                    subtitle: Text(' attempts before lockout'),
+                    title: const Text('Max login attempts'),
+                    subtitle: const Text('Attempts before lockout'),
                     trailing: SizedBox(
                       width: 100,
                       child: DropdownButton<int>(
@@ -127,21 +166,21 @@ class SystemSettingsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            _buildSectionHeader('Notification Settings'),
+            _buildSectionHeader('Notification settings'),
             Card(
               child: Column(
                 children: [
                    Obx(() => SwitchListTile(
-                    title: const Text('Email Notifications'),
-                    subtitle: const Text('Send email notifications to users'),
+                    title: const Text('Email notifications'),
+                    subtitle: const Text('Send email notifications to users.'),
                     value: controller.emailNotifications.value,
                     onChanged: (val) => controller.emailNotifications.value = val,
                     activeColor: AppTheme.primary,
                   )),
                   const Divider(height: 1),
                    Obx(() => SwitchListTile(
-                    title: const Text('SMS Notifications'),
-                    subtitle: const Text('Send SMS notifications to users'),
+                    title: const Text('SMS notifications'),
+                    subtitle: const Text('Send SMS notifications to users.'),
                     value: controller.smsNotifications.value,
                     onChanged: (val) => controller.smsNotifications.value = val,
                     activeColor: AppTheme.primary,
@@ -150,13 +189,13 @@ class SystemSettingsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            _buildSectionHeader('Registration Settings'),
+            _buildSectionHeader('Registration settings'),
             Card(
               child: Column(
                 children: [
                    Obx(() => SwitchListTile(
-                    title: const Text('Auto-Approve Registrations'),
-                    subtitle: const Text('Automatically approve new user registrations'),
+                    title: const Text('Auto-approve registrations'),
+                    subtitle: const Text('Automatically approve new registrations.'),
                     value: controller.autoApproveRegistrations.value,
                     onChanged: (val) => controller.autoApproveRegistrations.value = val,
                     activeColor: AppTheme.primary,
@@ -165,30 +204,30 @@ class SystemSettingsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            _buildSectionHeader('System Maintenance'),
+            _buildSectionHeader('System maintenance'),
             Card(
               child: Column(
                 children: [
                    Obx(() => SwitchListTile(
-                    title: const Text('Maintenance Mode'),
-                    subtitle: const Text('Put system in maintenance mode'),
+                    title: const Text('Maintenance mode'),
+                    subtitle: const Text('Put the system into maintenance mode.'),
                     value: controller.maintenanceMode.value,
                     onChanged: (val) => controller.maintenanceMode.value = val,
-                    activeColor: Colors.orange,
+                    activeColor: AppTheme.warning,
                   )),
                   const Divider(height: 1),
                   ListTile(
-                    leading: const Icon(Icons.clear_all, color: Colors.orange),
-                    title: const Text('Clear Cache'),
-                    subtitle: const Text('Clear all cached data'),
+                    leading: const Icon(Icons.clear_all, color: AppTheme.warning),
+                    title: const Text('Clear cache'),
+                    subtitle: const Text('Clear all cached data.'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: controller.clearCache,
                   ),
                   const Divider(height: 1),
                   ListTile(
-                    leading: const Icon(Icons.backup, color: Colors.blue),
-                    title: const Text('Backup Database'),
-                    subtitle: const Text('Create a database backup'),
+                    leading: const Icon(Icons.backup, color: AppTheme.primary),
+                    title: const Text('Backup database'),
+                    subtitle: const Text('Create a database backup.'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: controller.backupDatabase,
                   ),
@@ -196,8 +235,20 @@ class SystemSettingsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            _buildSectionHeader('System Information'),
-            Card(
+            _buildSectionHeader('System information'),
+            Container(
+              decoration: BoxDecoration(
+                color: AppTheme.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTheme.border.withOpacity(0.08)),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.textPrimary.withOpacity(0.03),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -221,13 +272,13 @@ class SystemSettingsScreen extends StatelessWidget {
                 onPressed: controller.saveSettings,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primary,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppTheme.surface,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text('Save All Settings', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                child: const Text('Save all settings', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(height: 16),
@@ -253,8 +304,9 @@ class SystemSettingsScreen extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),
-        Text(value, style: TextStyle(color: Colors.grey[600], fontSize: 15)),
+        Text(value, style: TextStyle(color: AppTheme.textSecondary, fontSize: 15)),
       ],
     );
   }
 }
+

@@ -8,9 +8,20 @@ class SymptomCheckerController extends GetxController {
 
   final symptomsController = TextEditingController();
   final selectedSymptoms = <String>[].obs;
+  final severityOptions = const ['Mild', 'Moderate', 'Severe'];
+  final durationOptions = const [
+    'Less than a day',
+    '1-3 days',
+    '1 week',
+    'More than a week',
+  ];
+  final selectedSeverity = 'Moderate'.obs;
+  final selectedDuration = '1-3 days'.obs;
   final isAnalyzing = false.obs;
+  final isLoadingHistory = false.obs;
   // Using a map to simplify frontend binding, but could be a typed model
   final analysisResult = Rx<Map<String, dynamic>?>(null);
+  final historyItems = <Map<String, dynamic>>[].obs;
 
   final List<String> commonSymptoms = [
     'Fever',
@@ -26,6 +37,12 @@ class SymptomCheckerController extends GetxController {
   ];
 
   @override
+  void onInit() {
+    super.onInit();
+    loadHistory();
+  }
+
+  @override
   void onClose() {
     symptomsController.dispose();
     super.onClose();
@@ -36,6 +53,18 @@ class SymptomCheckerController extends GetxController {
       selectedSymptoms.remove(symptom);
     } else {
       selectedSymptoms.add(symptom);
+    }
+  }
+
+  void setSeverity(String severity) {
+    if (severityOptions.contains(severity)) {
+      selectedSeverity.value = severity;
+    }
+  }
+
+  void setDuration(String duration) {
+    if (durationOptions.contains(duration)) {
+      selectedDuration.value = duration;
     }
   }
 
@@ -55,17 +84,21 @@ class SymptomCheckerController extends GetxController {
     analysisResult.value = null;
 
     try {
-      // Use dynamic to be safe, then cast manually
       final response = await _apiService.post<dynamic>(
         '${AppConfig.baseUrl}/ai/analyze',
         data: {
           'SelectedSymptoms': selectedSymptoms.toList(),
           'AdditionalDescription': symptomsController.text.trim(),
           'Question': symptomsController.text.trim(),
+          'Severity': selectedSeverity.value,
+          'Duration': selectedDuration.value,
         },
+        requiresAuth: true,
       );
 
       if (response.success && response.data != null) {
+
+      await loadHistory();
         final data = response.data as Map<String, dynamic>;
         // Map backend response to frontend structure.
         // Handle both PascalCase (C# Default) and camelCase (JSON Default) keys
@@ -102,6 +135,26 @@ class SymptomCheckerController extends GetxController {
       );
     } finally {
       isAnalyzing.value = false;
+    }
+  }
+
+  Future<void> loadHistory() async {
+    isLoadingHistory.value = true;
+    try {
+      final response = await _apiService.get<List<dynamic>>(
+        '${AppConfig.baseUrl}/ai/history',
+      );
+
+      if (response.success && response.data is List) {
+        historyItems.value = (response.data as List)
+            .whereType<Map>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList();
+      }
+    } catch (e) {
+      historyItems.clear();
+    } finally {
+      isLoadingHistory.value = false;
     }
   }
 

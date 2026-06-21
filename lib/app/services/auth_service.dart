@@ -1,13 +1,15 @@
 import 'package:get/get.dart';
-import 'package:medi_ai/config/app_config.dart';
+import 'package:logger/logger.dart';
 import '../data/models/user.dart';
 import '../data/models/api_response.dart';
 import 'api_service.dart';
 import 'storage_service.dart';
+import '../widgets/app_feedback.dart';
 
 class AuthService extends GetxService {
   final _apiService = Get.find<ApiService>();
   final _storageService = Get.find<StorageService>();
+  final _logger = Logger();
 
   final Rx<User?> currentUser = Rx<User?>(null);
   final RxBool isAuthenticated = false.obs;
@@ -63,17 +65,10 @@ class AuthService extends GetxService {
       'Bio': bio,
     };
 
-    print('📤 Sending registration data to backend:');
-    print('   Email: $email');
-    print('   Role: $role');
-    print('   Department: $department');
-    print('   CMS ID (registrationNumber): $cmsId');
-    print('   Phone: $phoneNumber');
-    print('   DOB: $dateOfBirth');
-    print('   Gender: $gender');
+    _logger.d('Sending registration request for role: $role');
 
     final response = await _apiService.post<Map<String, dynamic>>(
-      '${AppConfig.baseUrl}/Auth/register',
+      '/Auth/register',
       data: requestData,
       fromJson: (json) => json as Map<String, dynamic>,
     );
@@ -84,7 +79,7 @@ class AuthService extends GetxService {
   // Resend OTP
   Future<ApiResponse<dynamic>> resendOtp(String email) async {
     return await _apiService.post(
-      '${AppConfig.baseUrl}/Auth/resend-otp',
+      '/Auth/resend-otp',
       data: {'Email': email},
     );
   }
@@ -95,7 +90,7 @@ class AuthService extends GetxService {
     required String otp,
   }) async {
     final response = await _apiService.post<Map<String, dynamic>>(
-      '${AppConfig.baseUrl}/Auth/verify-otp',
+      '/Auth/verify-otp',
       data: {
         'Email': email,
         'Otp': otp,
@@ -115,12 +110,11 @@ class AuthService extends GetxService {
     required String email,
     required String password,
   }) async {
-    // Real API call to backend
     final response = await _apiService.post<Map<String, dynamic>>(
-      '${AppConfig.baseUrl}/Auth/login',
+      '/Auth/login',
       data: {
-        'Email': email,
-        'Password': password,
+        'email': email,
+        'password': password,
       },
       fromJson: (json) => json as Map<String, dynamic>,
     );
@@ -135,8 +129,10 @@ class AuthService extends GetxService {
   // Save auth data
   Future<void> _saveAuthData(Map<String, dynamic> data) async {
     // Support both camelCase and PascalCase response payloads.
-    final token =
-        data['token'] ?? data['Token'] ?? data['accessToken'] ?? data['AccessToken'];
+    final token = data['token'] ??
+        data['Token'] ??
+        data['accessToken'] ??
+        data['AccessToken'];
     final refreshToken = data['refreshToken'] ??
         data['RefreshToken'] ??
         data['refresh_token'] ??
@@ -144,6 +140,9 @@ class AuthService extends GetxService {
 
     if (token is String && token.isNotEmpty) {
       await _storageService.saveAccessToken(token);
+      _logger.d('Access token saved successfully.');
+    } else {
+      _logger.w('No valid access token found in auth response. Keys: ${data.keys.toList()}');
     }
     if (refreshToken is String && refreshToken.isNotEmpty) {
       await _storageService.saveRefreshToken(refreshToken);
@@ -165,7 +164,8 @@ class AuthService extends GetxService {
       final user = User(
         id: userId.toString(),
         email: (data['email'] ?? data['Email'] ?? '').toString(),
-        name: (data['fullName'] ?? data['FullName'] ?? data['name'] ?? '').toString(),
+        name: (data['fullName'] ?? data['FullName'] ?? data['name'] ?? '')
+            .toString(),
         role: role.toString(),
         department: (data['department'] ?? data['Department'])?.toString(),
         emailVerified: (data['isEmailVerified'] ??
@@ -173,9 +173,13 @@ class AuthService extends GetxService {
                 data['IsEmailVerified'] ??
                 false) ==
             true,
-        cmsId: (data['registrationNumber'] ?? data['RegistrationNumber'] ?? data['cmsId'])
+
+        cmsId: (data['registrationNumber'] ??
+                data['RegistrationNumber'] ??
+                data['cmsId'])
             ?.toString(),
-        phone: (data['phoneNumber'] ?? data['PhoneNumber'] ?? data['phone'])?.toString(),
+        phone: (data['phoneNumber'] ?? data['PhoneNumber'] ?? data['phone'])
+            ?.toString(),
       );
       await _storageService.saveUser(user);
       currentUser.value = user;
@@ -186,15 +190,21 @@ class AuthService extends GetxService {
   // Logout
   Future<void> logout() async {
     try {
-      await _apiService.post('${AppConfig.baseUrl}/Auth/logout');
+      await _apiService.post('/Auth/logout');
     } catch (e) {
-      // Continue with logout even if API call fails
+      _logger.w('Logout API call failed (proceeding anyway): $e');
     }
 
     await _storageService.clearAuthData();
     currentUser.value = null;
     isAuthenticated.value = false;
-    Get.offAllNamed('/login');
+    AppFeedback.info('Signed out', 'You have been logged out successfully.');
+    
+    // Clear all GetX controllers and services to prevent state/data leakage
+    Get.deleteAll(force: true);
+    
+    // Reroute to splash to re-initialize core services fresh
+    Get.offAllNamed('/splash');
   }
 
   // Get current user from API
@@ -214,7 +224,7 @@ class AuthService extends GetxService {
     // Try to fetch from API (when backend is available)
     try {
       final response = await _apiService.get<User>(
-        '${AppConfig.baseUrl}/Auth/current-user',
+        '/Auth/current-user',
         fromJson: (json) => User.fromJson(json),
       );
 
@@ -237,11 +247,11 @@ class AuthService extends GetxService {
     String? department,
   }) async {
     final response = await _apiService.put<User>(
-      '/Users/${currentUser.value?.id}',
+      '/Users/profile',
       data: {
-        'name': name,
-        'phone': phone,
-        'department': department,
+        'FullName': name,
+        'PhoneNumber': phone,
+        'Department': department,
       },
       fromJson: (json) => User.fromJson(json),
     );
@@ -262,7 +272,7 @@ class AuthService extends GetxService {
     required String registrationNumber,
   }) async {
     return await _apiService.post<Map<String, dynamic>>(
-      '${AppConfig.baseUrl}/Auth/forgot-password',
+      '/Auth/forgot-password',
       data: {
         'email': email,
         'phoneNumber': phoneNumber,
@@ -279,7 +289,7 @@ class AuthService extends GetxService {
     required String newPassword,
   }) async {
     return await _apiService.post<void>(
-      '${AppConfig.baseUrl}/Auth/reset-password',
+      '/Auth/reset-password',
       data: {
         'email': email,
         'token': token,

@@ -7,6 +7,7 @@ import '../../../data/models/appointment.dart';
 import '../../../data/models/user.dart';
 import '../../../routes/app_routes.dart';
 import 'package:medi_ai/config/app_config.dart';
+import '../../../services/appointment_event_service.dart';
 
 class StudentDashboardController extends GetxController {
   final _authService = Get.find<AuthService>();
@@ -22,6 +23,8 @@ class StudentDashboardController extends GetxController {
   final RxInt completedAppointments = 0.obs;
   final RxInt upcomingCount = 0.obs;
 
+  final RxInt unreadNotifications = 0.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -31,15 +34,40 @@ class StudentDashboardController extends GetxController {
   Future<void> loadDashboardData() async {
     isLoading.value = true;
     try {
-      currentUser.value = await _authService.getCurrentUser();
+      // 1. Explicitly wait for the user from the service
+      final user = await _authService.getCurrentUser();
+      currentUser.value = user;
+
+      // 2. SAFETY CHECK: If the ID is missing, the cache is corrupted!
+      if (user == null || user.id.isEmpty) {
+        print('⛔ Error: User data corrupted. Forcing auto-logout.');
+        
+        // Clear the bad cache and send them back to the login screen safely
+        await logout(); 
+        return;
+      }
+
+      // 3. Proceed with valid ID
       await Future.wait([
         _loadUpcomingAppointments(),
         _loadRecentAppointments(),
+        _loadUnreadNotifications(),
       ]);
     } catch (e) {
       Get.snackbar('Error', 'Failed to load dashboard data');
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> _loadUnreadNotifications() async {
+    try {
+      final response = await _apiService.get('${AppConfig.baseUrl}/Notifications/unread');
+      if (response.success && response.data is List) {
+        unreadNotifications.value = (response.data as List).length;
+      }
+    } catch (e) {
+      print('Error loading notifications: $e');
     }
   }
 
@@ -117,12 +145,12 @@ class StudentDashboardController extends GetxController {
     Get.toNamed(AppRoutes.medicineReminders);
   }
 
-  void goToHealthTips() {
-    Get.toNamed(AppRoutes.healthTips);
-  }
-
   void goToMedicalHistory() {
     Get.toNamed(AppRoutes.medicalHistory);
+  }
+
+  void goToFeedback() {
+    Get.toNamed(AppRoutes.feedback);
   }
 
   void goToEmergencyContacts() {
@@ -131,6 +159,14 @@ class StudentDashboardController extends GetxController {
 
   void goToProfile() {
     Get.toNamed(AppRoutes.profile);
+  }
+
+  void goToSettings() {
+    Get.toNamed(AppRoutes.settings);
+  }
+
+  void goToPrescriptionHistory() {
+    Get.toNamed(AppRoutes.prescriptionHistory);
   }
 
   Future<void> logout() async {
@@ -164,7 +200,7 @@ class StudentDashboardController extends GetxController {
         Get.snackbar('Error', response.message);
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to update appointment: $e');
+      Get.snackbar('Error', 'Failed to update appointment');
     } finally {
       isLoading.value = false;
     }
@@ -188,23 +224,36 @@ class StudentDashboardController extends GetxController {
           .delete('${AppConfig.baseUrl}/Appointments/$appointmentId');
       if (response.success) {
         await refresh();
+        // Notify other parts of the app (doctors, faculty) about this cancellation
+        final eventService = Get.isRegistered<AppointmentEventService>()
+            ? Get.find<AppointmentEventService>()
+            : Get.put(AppointmentEventService());
+        eventService.emit(AppointmentEvent(appointmentId, 'cancelled'));
+
         Get.snackbar('Success', 'Appointment cancelled',
             backgroundColor: Colors.redAccent, colorText: Colors.white);
       } else {
         Get.snackbar('Error', response.message);
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to cancel: $e');
+      Get.snackbar('Error', 'Failed to cancel appointment');
     } finally {
       isLoading.value = false;
     }
   }
 
+  void viewAppointment(Appointment appointment) {
+    Get.toNamed(
+      AppRoutes.appointmentDetail,
+      arguments: {'appointment': appointment},
+    );
+  }
+
   String getGreeting() {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good Morning';
-    if (hour < 17) return 'Good Afternoon';
-    return 'Good Evening';
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
   }
 
   @override

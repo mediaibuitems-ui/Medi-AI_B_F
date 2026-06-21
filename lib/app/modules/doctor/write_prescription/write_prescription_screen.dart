@@ -37,7 +37,7 @@ class _WritePrescriptionScreenState extends State<WritePrescriptionScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: Image.asset(
-            'buitems-logo-png_seeklogo-273407.png',
+            'assets/images/logos/buitems-logo-png_seeklogo-273407.png',
             width: 32,
             height: 32,
             errorBuilder: (context, error, stackTrace) {
@@ -48,7 +48,7 @@ class _WritePrescriptionScreenState extends State<WritePrescriptionScreen> {
         ),
         title: const Text('Write Prescription'),
         backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: AppTheme.surface,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -57,9 +57,19 @@ class _WritePrescriptionScreenState extends State<WritePrescriptionScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.border.withOpacity(0.08)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.textPrimary.withOpacity(0.03),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(
@@ -71,7 +81,7 @@ class _WritePrescriptionScreenState extends State<WritePrescriptionScreen> {
                         children: [
                           const Text(
                             'Patient',
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                            style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                           ),
                           Text(
                             patientName,
@@ -100,8 +110,11 @@ class _WritePrescriptionScreenState extends State<WritePrescriptionScreen> {
                 maxLines: 3,
                 decoration: InputDecoration(
                   hintText: 'Enter diagnosis...',
+                  filled: true,
+                  fillColor: AppTheme.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
                   ),
                 ),
                 validator: (value) {
@@ -131,17 +144,22 @@ class _WritePrescriptionScreenState extends State<WritePrescriptionScreen> {
               ),
               const SizedBox(height: 8),
               if (_medications.isEmpty)
-                Card(
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppTheme.border.withOpacity(0.08)),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(32),
                     child: Center(
                       child: Column(
                         children: [
-                          Icon(Icons.medication, size: 48, color: Colors.grey[300]),
+                          Icon(Icons.medication, size: 48, color: AppTheme.textSecondary.withOpacity(0.18)),
                           const SizedBox(height: 8),
                           Text(
                             'No medications added',
-                            style: TextStyle(color: Colors.grey[600]),
+                            style: TextStyle(color: AppTheme.textSecondary),
                           ),
                         ],
                       ),
@@ -152,17 +170,22 @@ class _WritePrescriptionScreenState extends State<WritePrescriptionScreen> {
                 ..._medications.asMap().entries.map((entry) {
                   final index = entry.key;
                   final med = entry.value;
-                  return Card(
+                  return Container(
                     margin: const EdgeInsets.only(bottom: 8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppTheme.border.withOpacity(0.08)),
+                    ),
                     child: ListTile(
                       leading: const CircleAvatar(
                         backgroundColor: AppTheme.primary,
-                        child: Icon(Icons.medication, color: Colors.white, size: 20),
+                        child: Icon(Icons.medication, color: AppTheme.surface, size: 20),
                       ),
                       title: Text(med['name']!),
                       subtitle: Text('${med['dosage']} - ${med['duration']}'),
                       trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
+                        icon: const Icon(Icons.delete, color: AppTheme.error),
                         onPressed: () => _removeMedication(index),
                       ),
                     ),
@@ -182,8 +205,11 @@ class _WritePrescriptionScreenState extends State<WritePrescriptionScreen> {
                 maxLines: 4,
                 decoration: InputDecoration(
                   hintText: 'Enter any additional notes or instructions...',
+                  filled: true,
+                  fillColor: AppTheme.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
                   ),
                 ),
               ),
@@ -197,7 +223,7 @@ class _WritePrescriptionScreenState extends State<WritePrescriptionScreen> {
                   label: const Text('Save Prescription'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primary,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppTheme.surface,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -273,7 +299,7 @@ class _WritePrescriptionScreenState extends State<WritePrescriptionScreen> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primary,
-                foregroundColor: Colors.white,
+                foregroundColor: AppTheme.surface,
               ),
               child: const Text('Add'),
             ),
@@ -297,8 +323,8 @@ class _WritePrescriptionScreenState extends State<WritePrescriptionScreen> {
         'Error',
         'Please add at least one medication',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
+        backgroundColor: AppTheme.error,
+        colorText: AppTheme.surface,
       );
       return;
     }
@@ -329,8 +355,8 @@ class _WritePrescriptionScreenState extends State<WritePrescriptionScreen> {
             'Success',
             'Prescription saved & Appointment Completed',
             snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.green,
-            colorText: Colors.white,
+            backgroundColor: AppTheme.success,
+            colorText: AppTheme.surface,
           );
           Future.delayed(const Duration(milliseconds: 500), () {
             Get.back();

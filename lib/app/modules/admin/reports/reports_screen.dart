@@ -18,57 +18,101 @@ class _ReportsScreenState extends State<ReportsScreen> {
   final ApiService _apiService = Get.find<ApiService>();
   String selectedPeriod = 'This Month';
 
-  final Map<String, dynamic> reportData = {
-    'totalAppointments': 245,
-    'completedAppointments': 198,
-    'cancelledAppointments': 32,
-    'pendingAppointments': 15,
-    'totalUsers': 150,
-    'newUsers': 23,
-    'activeUsers': 142,
+  bool isLoading = true;
+
+  Map<String, dynamic> reportData = {
+    'totalAppointments': 0,
+    'completedAppointments': 0,
+    'cancelledAppointments': 0,
+    'pendingAppointments': 0,
+    'totalUsers': 0,
+    'newUsers': 0,
+    'activeUsers': 0,
   };
+
+  List<Map<String, dynamic>> monthlyTrends = [];
+  List<Map<String, dynamic>> monthlyUserTrends = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStatistics();
+  }
+
+  Future<void> _loadStatistics() async {
+    try {
+      final response = await _apiService.get('/Admin/dashboard-stats');
+      if (response.success && response.data != null) {
+        final data = response.data;
+        setState(() {
+          reportData = {
+            'totalAppointments': data['totalAppointments'] ?? 0,
+            'completedAppointments': data['completedAppointments'] ?? 0,
+            'cancelledAppointments': data['cancelledAppointments'] ?? 0,
+            'pendingAppointments': data['pendingAppointments'] ?? 0,
+            'totalUsers': data['totalUsers'] ?? 0,
+            'newUsers': data['newUsers'] ?? 0,
+            'activeUsers': data['activeUsers'] ?? 0,
+          };
+          
+          if (data['monthlyTrends'] != null && data['monthlyTrends'] is List) {
+            monthlyTrends = List<Map<String, dynamic>>.from(data['monthlyTrends']);
+          }
+          if (data['monthlyUserTrends'] != null && data['monthlyUserTrends'] is List) {
+            monthlyUserTrends = List<Map<String, dynamic>>.from(data['monthlyUserTrends']);
+          }
+
+          isLoading = false;
+        });
+      } else {
+        setState(() => isLoading = false);
+      }
+    } catch (e) {
+      setState(() => isLoading = false);
+    }
+  }
 
   final List<Map<String, dynamic>> recentReports = [
     {
-      'name': 'Monthly Appointments Report',
+      'name': 'Monthly appointments report',
       'date': DateTime(2024, 11, 30),
       'type': 'Appointments',
-      'status': 'Generated',
+      'status': 'generated',
     },
     {
-      'name': 'User Registration Report',
+      'name': 'User registration report',
       'date': DateTime(2024, 11, 28),
       'type': 'Users',
-      'status': 'Generated',
+      'status': 'generated',
     },
     {
-      'name': 'Doctor Performance Report',
+      'name': 'Doctor performance report',
       'date': DateTime(2024, 11, 25),
       'type': 'Doctors',
-      'status': 'Generated',
+      'status': 'generated',
     },
   ];
 
   void _generateReport(String reportType) {
     Get.dialog(
       AlertDialog(
-        title: Text('Generate $reportType Report'),
+        title: const Text('Generate report'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Generate $reportType report for $selectedPeriod?'),
+            const Text('Which report would you like to generate?'),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: selectedPeriod,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Period',
                 border: OutlineInputBorder(),
               ),
               items: ['Today', 'This Week', 'This Month', 'This Year', 'Custom']
                   .map((period) => DropdownMenuItem(
                         value: period,
-                        child: Text(period),
+                        child: Text(_periodLabel(period)),
                       ))
                   .toList(),
               onChanged: (value) {
@@ -87,10 +131,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
               Get.back();
               Get.snackbar(
                 'Success',
-                '$reportType report generated successfully',
+                'Report generated successfully',
                 snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: Colors.green,
-                colorText: Colors.white,
+                backgroundColor: AppTheme.success,
+                colorText: AppTheme.surface,
               );
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
@@ -119,21 +163,21 @@ class _ReportsScreenState extends State<ReportsScreen> {
       } else {
         // Mobile notification
         Get.snackbar(
-          'Report Generated',
-          '${report['name']} report generated. File download available on web version.',
+          'Report generated',
+          'The report has been prepared for download.',
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.blue,
-          colorText: Colors.white,
+          backgroundColor: AppTheme.primary,
+          colorText: AppTheme.surface,
           duration: const Duration(seconds: 3),
         );
       }
 
       Get.snackbar(
         'Success',
-        '${report['name']} ${kIsWeb ? 'downloaded' : 'generated'} successfully',
+        'Report downloaded or generated successfully',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
+        backgroundColor: AppTheme.success,
+        colorText: AppTheme.surface,
         duration: const Duration(seconds: 2),
       );
     } catch (e) {
@@ -141,10 +185,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
       Get.snackbar(
         'Error',
-        'Failed to generate report: $e',
+        'Failed to generate report',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
+        backgroundColor: AppTheme.error,
+        colorText: AppTheme.surface,
       );
     }
   }
@@ -167,16 +211,16 @@ class _ReportsScreenState extends State<ReportsScreen> {
       if (response.success && response.data != null) {
         final List<dynamic> appointments = response.data;
         for (var appt in appointments) {
-          final date = appt['appointmentDate']?.toString() ?? '';
-          final patient =
-              appt['patient']?['fullName'] ?? appt['patientName'] ?? 'Unknown';
-          final doctor = appt['doctor']?['user']?['fullName'] ??
-              appt['doctorName'] ??
-              'Unknown';
-          final status = appt['status'] ?? 'Unknown';
-          final time = appt['appointmentTime']?.toString() ?? '';
+          final dateTimeStr = appt['dateTime']?.toString() ?? '';
+          final dateTime = DateTime.tryParse(dateTimeStr);
+          final date = dateTime != null ? DateFormat('yyyy-MM-dd').format(dateTime) : '';
+          final time = dateTime != null ? DateFormat('HH:mm').format(dateTime) : '';
+          
+          final patient = (appt['patientName'] ?? 'Unknown').toString().replaceAll('"', '""');
+          final doctor = (appt['doctorName'] ?? 'Unknown').toString().replaceAll('"', '""');
+          final status = (appt['status'] ?? 'Unknown').toString().replaceAll('"', '""');
 
-          csv += '$date,$patient,$doctor,$status,$time\n';
+          csv += '"$date","$patient","$doctor","$status","$time"\n';
         }
       }
     } else if (reportType == 'Users') {
@@ -187,16 +231,16 @@ class _ReportsScreenState extends State<ReportsScreen> {
       if (response.success && response.data != null) {
         final List<dynamic> users = response.data;
         for (var user in users) {
-          final name = user['fullName'] ?? '';
-          final email = user['email'] ?? '';
-          final role = user['role'] ?? '';
+          final name = (user['fullName'] ?? '').toString().replaceAll('"', '""');
+          final email = (user['email'] ?? '').toString().replaceAll('"', '""');
+          final role = (user['role'] ?? '').toString().replaceAll('"', '""');
           final status = (user['isActive'] == true) ? 'Active' : 'Inactive';
-          final date = user['createdAt'] != null
+          final date = user['joinedDate'] != null
               ? DateFormat('yyyy-MM-dd')
-                  .format(DateTime.parse(user['createdAt'].toString()))
+                  .format(DateTime.parse(user['joinedDate'].toString()))
               : '';
 
-          csv += '$name,$email,$role,$status,$date\n';
+          csv += '"$name","$email","$role","$status","$date"\n';
         }
       }
     } else if (reportType == 'Doctors') {
@@ -207,13 +251,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
       if (response.success && response.data != null) {
         final List<dynamic> doctors = response.data;
         for (var doc in doctors) {
-          final name = doc['user']?['fullName'] ?? '';
-          final spec = doc['specialization'] ?? '';
+          final name = (doc['user']?['fullName'] ?? doc['doctorName'] ?? '').toString().replaceAll('"', '""');
+          final spec = (doc['specialization'] ?? '').toString().replaceAll('"', '""');
           final rating = doc['averageRating']?.toString() ?? '0.0';
           final status =
               (doc['isAvailable'] == true) ? 'Available' : 'Unavailable';
 
-          csv += '$name,$spec,$rating,$status\n';
+          csv += '"$name","$spec","$rating","$status"\n';
         }
       }
     }
@@ -228,16 +272,22 @@ class _ReportsScreenState extends State<ReportsScreen> {
       appBar: AppBar(
         title: const Text('Reports'),
         backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: AppTheme.surface,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Statistics Overview
-            const Text(
-              'Overview',
+            if (isLoading)
+              const Center(child: Padding(
+                padding: EdgeInsets.all(32.0),
+                child: CircularProgressIndicator(),
+              ))
+            else ...[
+              // Statistics Overview
+              Text(
+                'Overview',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -254,36 +304,103 @@ class _ReportsScreenState extends State<ReportsScreen> {
               childAspectRatio: 1.5,
               children: [
                 _buildStatCard(
-                  'Total Appointments',
+                  'Total appointments',
                   reportData['totalAppointments'].toString(),
                   Icons.calendar_today,
-                  Colors.blue,
+                  AppTheme.primary,
                 ),
                 _buildStatCard(
                   'Completed',
                   reportData['completedAppointments'].toString(),
                   Icons.check_circle,
-                  Colors.green,
+                  AppTheme.success,
                 ),
                 _buildStatCard(
-                  'Active Users',
+                  'Active users',
                   reportData['activeUsers'].toString(),
                   Icons.people,
-                  Colors.orange,
+                  AppTheme.warning,
                 ),
                 _buildStatCard(
-                  'New Users',
+                  'New users',
                   reportData['newUsers'].toString(),
                   Icons.person_add,
-                  Colors.purple,
+                  AppTheme.secondary,
                 ),
               ],
             ),
             const SizedBox(height: 32),
 
+            // Monthly Trends (Mock)
+            Text(
+              'Monthly Trends',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppTheme.surface,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.textPrimary.withOpacity(0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  const Text('Appointments per Month', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 160,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: monthlyTrends.isEmpty
+                          ? [const Text('No data available')]
+                          : monthlyTrends.map((trend) {
+                              final label = trend['label']?.toString() ?? '';
+                              final value = double.tryParse(trend['value']?.toString() ?? '0') ?? 0;
+                              final maxValue = monthlyTrends.map((t) => double.tryParse(t['value']?.toString() ?? '0') ?? 0).reduce((a, b) => a > b ? a : b);
+                              final scaleMax = maxValue > 0 ? maxValue : 100.0;
+                              return _buildBar(label, value, scaleMax, AppTheme.primary);
+                            }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  const Text('Registered Users per Month', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 160,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: monthlyUserTrends.isEmpty
+                          ? [const Text('No data available')]
+                          : monthlyUserTrends.map((trend) {
+                              final label = trend['label']?.toString() ?? '';
+                              final value = double.tryParse(trend['value']?.toString() ?? '0') ?? 0;
+                              final maxValue = monthlyUserTrends.map((t) => double.tryParse(t['value']?.toString() ?? '0') ?? 0).reduce((a, b) => a > b ? a : b);
+                              final scaleMax = maxValue > 0 ? maxValue : 100.0;
+                              return _buildBar(label, value, scaleMax, AppTheme.success);
+                            }).toList(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+
             // Generate Reports
-            const Text(
-              'Generate Reports',
+            Text(
+              'Generate reports',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -302,19 +419,19 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 _buildReportCard(
                   'Appointments',
                   Icons.calendar_month,
-                  Colors.blue,
+                  AppTheme.primary,
                   () => _generateReport('Appointments'),
                 ),
                 _buildReportCard(
                   'Users',
                   Icons.people,
-                  Colors.green,
+                  AppTheme.success,
                   () => _generateReport('Users'),
                 ),
                 _buildReportCard(
                   'Doctors',
                   Icons.medical_services,
-                  Colors.orange,
+                  AppTheme.warning,
                   () => _generateReport('Doctors'),
                 ),
               ],
@@ -322,8 +439,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
             const SizedBox(height: 32),
 
             // Recent Reports
-            const Text(
-              'Recent Reports',
+            Text(
+              'Recent reports',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -337,8 +454,20 @@ class _ReportsScreenState extends State<ReportsScreen> {
               itemCount: recentReports.length,
               itemBuilder: (context, index) {
                 final report = recentReports[index];
-                return Card(
+                return Container(
                   margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppTheme.border.withOpacity(0.08)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.textPrimary.withOpacity(0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
                   child: ListTile(
                     leading: CircleAvatar(
                       backgroundColor: AppTheme.primary.withOpacity(0.1),
@@ -348,7 +477,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       ),
                     ),
                     title: Text(
-                      report['name'],
+                      report['name'].toString(),
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Column(
@@ -365,14 +494,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.blue[50],
+                            color: AppTheme.primary.withOpacity(0.08),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            report['type'],
+                            _reportTypeLabel(report['type'].toString()),
                             style: const TextStyle(
                               fontSize: 11,
-                              color: Colors.blue,
+                              color: AppTheme.primary,
                             ),
                           ),
                         ),
@@ -391,6 +520,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               },
             ),
           ],
+          ],
         ),
       ),
     );
@@ -401,11 +531,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: AppTheme.textPrimary.withOpacity(0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -430,7 +560,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 11,
-              color: Colors.grey[600],
+              color: AppTheme.textSecondary,
             ),
           ),
         ],
@@ -449,12 +579,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
       borderRadius: BorderRadius.circular(12),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: color.withOpacity(0.3)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: AppTheme.textPrimary.withOpacity(0.03),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -475,10 +605,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Generate',
+              'generate',
               style: TextStyle(
                 fontSize: 11,
-                color: Colors.grey[600],
+                color: AppTheme.textSecondary,
               ),
             ),
           ],
@@ -486,4 +616,56 @@ class _ReportsScreenState extends State<ReportsScreen> {
       ),
     );
   }
+
+  String _periodLabel(String period) {
+    switch (period) {
+      case 'Today':
+        return 'period_today';
+      case 'This Week':
+        return 'period_this_week';
+      case 'This Month':
+        return 'period_this_month';
+      case 'This Year':
+        return 'period_this_year';
+      case 'Custom':
+        return 'period_custom';
+      default:
+        return period;
+    }
+  }
+
+  String _reportTypeLabel(String type) {
+    switch (type) {
+      case 'Appointments':
+        return 'appointments';
+      case 'Users':
+        return 'users';
+      case 'Doctors':
+        return 'doctors_label';
+      default:
+        return type;
+    }
+  }
+
+  Widget _buildBar(String label, double value, double maxValue, Color color) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Container(
+          width: 30,
+          height: (value / maxValue) * 140,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(4),
+              topRight: Radius.circular(4),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(label, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+      ],
+    );
+  }
 }
+
