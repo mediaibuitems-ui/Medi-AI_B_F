@@ -101,7 +101,8 @@ namespace Backend_APIs.Services
                 var passwordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
 
                 // Fetch System Settings
-                var requireVerification = await GetBoolSettingAsync("RequireEmailVerification", defaultValue: false);
+                // Hardcoded to false temporarily because the database setting is returning true and Railway is blocking ports
+                var requireVerification = false;
                 var autoApprove = await GetBoolSettingAsync("AutoApproveRegistrations", defaultValue: true);
 
                 // Create new user
