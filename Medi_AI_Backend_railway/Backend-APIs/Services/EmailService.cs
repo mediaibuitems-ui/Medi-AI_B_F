@@ -57,7 +57,8 @@ namespace Backend_APIs.Services
 
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
 
-                await client.ConnectAsync(_smtpHost, _smtpPort, MailKit.Security.SecureSocketOptions.StartTls, cts.Token);
+                var secureOption = _smtpPort == 465 ? MailKit.Security.SecureSocketOptions.SslOnConnect : MailKit.Security.SecureSocketOptions.StartTls;
+                await client.ConnectAsync(_smtpHost, _smtpPort, secureOption, cts.Token);
                 await client.AuthenticateAsync(_senderEmail, _password, cts.Token);
                 await client.SendAsync(message, cts.Token);
                 await client.DisconnectAsync(true, cts.Token);
