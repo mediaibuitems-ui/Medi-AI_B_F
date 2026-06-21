@@ -882,6 +882,9 @@ namespace Backend_APIs.Controllers
                     Success = false,
                     Message = $"Failed to update status: {ex.Message}",
                     Data = null
+                });
+            }
+        }
         /// <summary>
         /// Cancel appointment
         /// </summary>
