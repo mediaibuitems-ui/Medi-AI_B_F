@@ -179,18 +179,7 @@ class RegisterEmailController extends GetxController {
       return;
     }
 
-    // Email Domain Validation
-    if (selectedRole.value == 'Student' || selectedRole.value == 'Faculty') {
-      final email = emailController.text.trim().toLowerCase();
-      if (!email.endsWith('@buitems.edu.pk') && !email.endsWith('@student.buitems.edu.pk')) {
-        _logger.w('Invalid email domain for BUITEMS user: $email');
-        AppFeedback.error(
-          'Invalid Email',
-          'Students and Faculty must use a valid @buitems.edu.pk or @student.buitems.edu.pk email address.',
-        );
-        return;
-      }
-    }
+    // Email Domain Validation removed to allow any email domain.
 
     // Gender is required by the backend.
     if (selectedGender.value.isEmpty) {
