@@ -272,29 +272,41 @@ class RegisterEmailController extends GetxController {
       _logger.d('Registration response - Success: ${response.success}, Message: ${response.message}');
 
       if (response.success) {
-        // Capture a dev OTP if the backend returned one.
-        String? devOtp;
-        if (response.data != null && response.data is Map) {
-          final data = response.data as Map<String, dynamic>;
-          devOtp = data['otp']?.toString();
-          if (devOtp != null) {
-            _logger.i('DEV MODE - OTP received from backend: $devOtp');
+        if (response.message.contains("You can now login")) {
+          // OTP is bypassed by the backend
+          AppFeedback.success('Success', response.message);
+          
+          // Wait briefly so the user sees the success message.
+          await Future.delayed(const Duration(milliseconds: 1000));
+          
+          // Send the user directly to the Login screen
+          Get.offAllNamed(AppRoutes.login);
+          _logger.d('Navigation command sent to Login screen because OTP is bypassed');
+        } else {
+          // Capture a dev OTP if the backend returned one.
+          String? devOtp;
+          if (response.data != null && response.data is Map) {
+            final data = response.data as Map<String, dynamic>;
+            devOtp = data['otp']?.toString();
+            if (devOtp != null) {
+              _logger.i('DEV MODE - OTP received from backend: $devOtp');
+            }
           }
+
+          // Show a short success snackbar before redirecting to OTP verification.
+          AppFeedback.success('Success', 'Registration successful. Please verify your email.');
+
+          // Wait briefly so the user sees the success message.
+          await Future.delayed(const Duration(milliseconds: 500));
+
+          // Send the user to the OTP Verification screen after account creation.
+          Get.offAllNamed(AppRoutes.otpVerification, arguments: {
+            'email': emailController.text.trim(),
+            'devOtp': devOtp,
+          });
+
+          _logger.d('Navigation command sent to OTP Verification screen');
         }
-
-        // Show a short success snackbar before redirecting to OTP verification.
-        AppFeedback.success('Success', 'Registration successful. Please verify your email.');
-
-        // Wait briefly so the user sees the success message.
-        await Future.delayed(const Duration(milliseconds: 500));
-
-        // Send the user to the OTP Verification screen after account creation.
-        Get.offAllNamed(AppRoutes.otpVerification, arguments: {
-          'email': emailController.text.trim(),
-          'devOtp': devOtp,
-        });
-
-        _logger.d('Navigation command sent to OTP Verification screen');
       } else {
         // Display the backend error if registration fails.
         _logger.w('Registration failed: ${response.message}');

@@ -4,6 +4,7 @@ using Backend_APIs.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend_APIs.Migrations
 {
     [DbContext(typeof(MediaidbContext))]
-    partial class MediaidbContextModelSnapshot : ModelSnapshot
+    [Migration("20260623085948_UpdateSymptomCheckForChat")]
+    partial class UpdateSymptomCheckForChat
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

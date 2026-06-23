@@ -562,16 +562,11 @@ public partial class MediaidbContext : DbContext
 
             entity.HasIndex(e => new { e.UserId, e.CreatedAt }, "idx_user_date");
 
-            entity.Property(e => e.Airesponse)
-                .HasColumnType("json")
-                .HasColumnName("AIResponse");
-            entity.Property(e => e.Confidence).HasPrecision(5, 2);
+            entity.Property(e => e.ChatTranscript).HasColumnType("json");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("timestamp");
-            entity.Property(e => e.Duration).HasMaxLength(50);
-            entity.Property(e => e.RecommendedAction).HasColumnType("text");
-            entity.Property(e => e.Severity).HasColumnType("enum('Mild','Moderate','Severe')");
+            entity.Property(e => e.Title).HasMaxLength(255);
             entity.Property(e => e.Symptoms).HasColumnType("json");
 
             entity.HasOne(d => d.User).WithMany(p => p.Symptomchecks)

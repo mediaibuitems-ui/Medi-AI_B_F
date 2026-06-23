@@ -35,7 +35,7 @@ namespace Backend_APIs
             builder.Services.AddScoped<IUserService, UserService>();
 
             builder.Services.AddHttpClient();
-            builder.Services.AddScoped<IGeminiAiService, GeminiAiService>();
+            builder.Services.AddScoped<IGroqAgentService, GroqAgentService>();
             builder.Services.AddScoped<INotificationPushService, NotificationPushService>();
 
             // Configure JWT Authentication
