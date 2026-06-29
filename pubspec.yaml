@@ -58,6 +58,8 @@ dependencies:
   url_launcher: ^6.3.2
   flutter_timezone: ^5.1.0
   fl_chart: ^1.2.0
+  flutter_markdown: ^0.7.7+1
+  flutter_spinkit: ^5.2.2
 
 dev_dependencies:
   flutter_test:

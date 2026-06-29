@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 import '../../../../config/app_theme.dart';
 import 'ai_symptom_checker_controller.dart';
@@ -23,11 +25,19 @@ class AiSymptomCheckerScreen extends GetView<SymptomCheckerController> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Obx(
-              () => ListView.builder(
+      body: Obx(() {
+        if (!controller.isChatActive.value) {
+          return Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: _buildInitialForm(),
+            ),
+          );
+        }
+        return Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
                 controller: controller.scrollController,
                 padding: const EdgeInsets.all(16),
                 itemCount: controller.messages.length + (controller.isAnalyzing.value ? 1 : 0),
@@ -42,78 +52,104 @@ class AiSymptomCheckerScreen extends GetView<SymptomCheckerController> {
                 },
               ),
             ),
+            _buildInputArea(),
+          ],
+        );
+      }),
+    );
+  }
+
+  Widget _buildChatBubble(String content, bool isUser) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (!isUser) ...[
+            const CircleAvatar(
+              radius: 16,
+              backgroundColor: AppTheme.primary,
+              child: Icon(Icons.smart_toy_rounded, size: 20, color: Colors.white),
+            ),
+            const SizedBox(width: 8),
+          ],
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isUser ? AppTheme.primary : Colors.white,
+                borderRadius: BorderRadius.circular(16).copyWith(
+                  bottomRight: isUser ? const Radius.circular(0) : const Radius.circular(16),
+                  bottomLeft: !isUser ? const Radius.circular(0) : const Radius.circular(16),
+                ),
+                boxShadow: [
+                  if (!isUser)
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 5,
+                      offset: const Offset(0, 2),
+                    ),
+                ],
+              ),
+              child: isUser
+                  ? Text(
+                      content,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        height: 1.4,
+                      ),
+                    )
+                  : MarkdownBody(
+                      data: content,
+                      styleSheet: MarkdownStyleSheet(
+                        p: const TextStyle(color: Colors.black87, fontSize: 15, height: 1.4),
+                        strong: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+                      ),
+                    ),
+            ),
           ),
-          _buildInputArea(),
+          if (isUser) const SizedBox(width: 24), // Balance spacing on right if needed
         ],
       ),
     );
   }
 
-  Widget _buildChatBubble(String content, bool isUser) {
-    return Align(
-      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        constraints: BoxConstraints(
-          maxWidth: Get.width * 0.75,
-        ),
-        decoration: BoxDecoration(
-          color: isUser ? AppTheme.primary : Colors.white,
-          borderRadius: BorderRadius.circular(16).copyWith(
-            bottomRight: isUser ? const Radius.circular(0) : const Radius.circular(16),
-            bottomLeft: !isUser ? const Radius.circular(0) : const Radius.circular(16),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 5,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Text(
-          content,
-          style: TextStyle(
-            color: isUser ? Colors.white : Colors.black87,
-            fontSize: 15,
-            height: 1.4,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildTypingIndicator() {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16).copyWith(
-            bottomLeft: const Radius.circular(0),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          const CircleAvatar(
+            radius: 16,
+            backgroundColor: AppTheme.primary,
+            child: Icon(Icons.smart_toy_rounded, size: 20, color: Colors.white),
           ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: const [
-            SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: AppTheme.primary,
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16).copyWith(
+                bottomLeft: const Radius.circular(0),
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 5,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            SizedBox(width: 12),
-            Text(
-              'Thinking...',
-              style: TextStyle(color: Colors.black54, fontStyle: FontStyle.italic),
+            child: const SpinKitThreeBounce(
+              color: AppTheme.primary,
+              size: 20.0,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -136,26 +172,19 @@ class AiSymptomCheckerScreen extends GetView<SymptomCheckerController> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Obx(() {
-              if (controller.messages.length <= 1) {
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _buildPromptChip('I have a headache'),
-                      const SizedBox(width: 8),
-                      _buildPromptChip('Fever and chills'),
-                      const SizedBox(width: 8),
-                      _buildPromptChip('Check my prescriptions'),
-                      const SizedBox(width: 8),
-                      _buildPromptChip('Book an appointment'),
-                    ],
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
-            }),
-            Obx(() => controller.messages.length <= 1 ? const SizedBox(height: 12) : const SizedBox.shrink()),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                children: [
+                  _buildPromptChip('I have a fever'),
+                  const SizedBox(width: 8),
+                  _buildPromptChip('Book an appointment'),
+                  const SizedBox(width: 8),
+                  _buildPromptChip('My medical history'),
+                ],
+              ),
+            ),
             Row(
               children: [
                 Expanded(
@@ -196,11 +225,85 @@ class AiSymptomCheckerScreen extends GetView<SymptomCheckerController> {
     );
   }
 
+  Widget _buildInitialForm() {
+    final quickSymptoms = ['Headache', 'Fever', 'Cough', 'Nausea', 'Body Ache', 'Fatigue'];
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.primary.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('How long have you been experiencing this?', style: TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          TextField(
+            controller: controller.durationController,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              hintText: 'e.g., 2',
+              suffixText: 'days',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text('Select Symptoms:', style: TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: quickSymptoms.map((s) => Obx(() {
+              final isSelected = controller.selectedSymptoms.contains(s);
+              return FilterChip(
+                label: Text(s),
+                selected: isSelected,
+                onSelected: (_) => controller.toggleSymptom(s),
+                selectedColor: AppTheme.primary.withOpacity(0.2),
+                checkmarkColor: AppTheme.primary,
+              );
+            })).toList(),
+          ),
+          const SizedBox(height: 16),
+          const Text('Other Symptoms?', style: TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          TextField(
+            controller: controller.customSymptomController,
+            decoration: InputDecoration(
+              hintText: 'Type any other symptoms here...',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            textCapitalization: TextCapitalization.sentences,
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: controller.startAnalysis,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Start AI Analysis', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPromptChip(String text) {
     return ActionChip(
-      label: Text(text, style: const TextStyle(fontSize: 12, color: AppTheme.primary)),
-      backgroundColor: AppTheme.primary.withOpacity(0.1),
-      side: BorderSide(color: AppTheme.primary.withOpacity(0.3)),
+      label: Text(text, style: const TextStyle(fontSize: 13, color: AppTheme.primary)),
+      backgroundColor: AppTheme.primary.withOpacity(0.08),
+      side: BorderSide(color: AppTheme.primary.withOpacity(0.2)),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       onPressed: () => controller.sendSuggestedPrompt(text),
     );

@@ -2,23 +2,46 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:medi_ai/config/app_config.dart';
 import 'package:medi_ai/app/services/api_service.dart';
+import 'package:medi_ai/app/services/auth_service.dart';
 
 class SymptomCheckerController extends GetxController {
   final ApiService _apiService = Get.find<ApiService>();
+  final _authService = Get.find<AuthService>(); // Add auth service to get user name
 
   final textController = TextEditingController();
   final scrollController = ScrollController();
   
   final messages = <Map<String, String>>[].obs;
   final isAnalyzing = false.obs;
+  
+  // Form fields
+  final customSymptomController = TextEditingController();
+  final durationController = TextEditingController();
+  final selectedSymptoms = <String>[].obs;
+  
+  final RxString userName = ''.obs;
+  final RxBool isChatActive = false.obs;
 
   @override
   void onInit() {
     super.onInit();
-    // Start with a friendly greeting
+    _loadUserAndGreet();
+  }
+
+  Future<void> _loadUserAndGreet() async {
+    final user = await _authService.getCurrentUser();
+    if (user != null) {
+      userName.value = user.name;
+    }
+    _setGreeting();
+  }
+
+  void _setGreeting() {
+    final nameStr = userName.value.isNotEmpty ? " ${userName.value}" : "";
+    messages.clear();
     messages.add({
       'role': 'assistant',
-      'content': 'Welcome! As your BUITEMS Medical Assistant, I am here to help students and faculty members. How can I help you today? Please describe your symptoms or request an action.'
+      'content': 'Welcome$nameStr! I am your AI Medical Assistant. Please use the form below to describe your symptoms and how long you have had them.'
     });
   }
 
@@ -26,15 +49,73 @@ class SymptomCheckerController extends GetxController {
   void onClose() {
     textController.dispose();
     scrollController.dispose();
+    customSymptomController.dispose();
+    durationController.dispose();
     super.onClose();
   }
 
   void resetChat() {
-    messages.clear();
+    customSymptomController.clear();
+    durationController.clear();
+    selectedSymptoms.clear();
+    isChatActive.value = false;
+    _setGreeting();
+  }
+
+  void toggleSymptom(String symptom) {
+    if (selectedSymptoms.contains(symptom)) {
+      selectedSymptoms.remove(symptom);
+    } else {
+      selectedSymptoms.add(symptom);
+    }
+  }
+
+  void startAnalysis() {
+    final custom = customSymptomController.text.trim();
+    final duration = durationController.text.trim();
+    
+    List<String> allSymptoms = List.from(selectedSymptoms);
+    if (custom.isNotEmpty) {
+      allSymptoms.add(custom);
+    }
+    
+    if (allSymptoms.isEmpty) {
+      Get.snackbar('Required', 'Please select or enter at least one symptom');
+      return;
+    }
+    if (duration.isEmpty) {
+      Get.snackbar('Required', 'Please enter how many days you have had this issue');
+      return;
+    }
+
+    final symptomsStr = allSymptoms.join(', ');
+    final nameStr = userName.value.isNotEmpty ? "My name is ${userName.value}. " : "";
+    
+    final prompt = "${nameStr}I am experiencing the following symptoms: $symptomsStr. I have been facing this issue for $duration days. Please act as a medical triage AI and ask any relevant follow-up questions or suggest what I should do.";
+    
+    // We want the user bubble to look natural
+    final displayPrompt = "I am experiencing: $symptomsStr.\nDuration: $duration days.";
+    
+    sendFormPrompt(prompt, displayPrompt);
+  }
+
+  Future<void> sendFormPrompt(String actualPrompt, String displayPrompt) async {
+    if (isAnalyzing.value) return;
+
+    // Transition to chat UI
+    isChatActive.value = true;
+
+    // Add user message for display
     messages.add({
-      'role': 'assistant',
-      'content': 'Welcome! As your BUITEMS Medical Assistant, I am here to help students and faculty members. How can I help you today? Please describe your symptoms or request an action.'
+      'role': 'user',
+      'content': displayPrompt,
+      'actual_prompt': actualPrompt // Store the hidden prompt to send to backend
     });
+    
+    scrollToBottom();
+    isAnalyzing.value = true;
+
+    await _hitBackend();
   }
 
   void scrollToBottom() {
@@ -69,11 +150,21 @@ class SymptomCheckerController extends GetxController {
     scrollToBottom();
     isAnalyzing.value = true;
 
+    await _hitBackend();
+  }
+
+  Future<void> _hitBackend() async {
     try {
+      // Map the messages to send actual_prompt if it exists
+      final messagesToSend = messages.map((m) => {
+        'role': m['role'],
+        'content': m.containsKey('actual_prompt') ? m['actual_prompt'] : m['content']
+      }).toList();
+
       final response = await _apiService.post<dynamic>(
         '${AppConfig.baseUrl}/agent/chat',
         data: {
-          'Messages': messages.toList()
+          'Messages': messagesToSend
         },
         requiresAuth: true,
       );

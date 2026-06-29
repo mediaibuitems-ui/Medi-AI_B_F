@@ -62,18 +62,22 @@ class OtpVerificationController extends GetxController {
   @override
   void onClose() {
     _isDisposed = true; // Mark as disposed
-    otp1Controller.dispose();
-    otp2Controller.dispose();
-    otp3Controller.dispose();
-    otp4Controller.dispose();
-    otp5Controller.dispose();
-    otp6Controller.dispose();
-    otp1Focus.dispose();
-    otp2Focus.dispose();
-    otp3Focus.dispose();
-    otp4Focus.dispose();
-    otp5Focus.dispose();
-    otp6Focus.dispose();
+    Future.delayed(const Duration(milliseconds: 500), () {
+      try {
+        otp1Controller.dispose();
+        otp2Controller.dispose();
+        otp3Controller.dispose();
+        otp4Controller.dispose();
+        otp5Controller.dispose();
+        otp6Controller.dispose();
+        otp1Focus.dispose();
+        otp2Focus.dispose();
+        otp3Focus.dispose();
+        otp4Focus.dispose();
+        otp5Focus.dispose();
+        otp6Focus.dispose();
+      } catch (_) {}
+    });
     super.onClose();
   }
 

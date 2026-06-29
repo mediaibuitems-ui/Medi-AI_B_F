@@ -42,8 +42,14 @@ class LoginController extends GetxController {
 
   /// Cleans up the controller when the screen is removed.
   void onClose() {
-    emailController.dispose();
-    passwordController.dispose();
+    // Delay disposal to prevent 'used after dispose' crashes during route transitions
+    // when GetX synchronously closes controllers.
+    Future.delayed(const Duration(milliseconds: 500), () {
+      try {
+        emailController.dispose();
+        passwordController.dispose();
+      } catch (_) {}
+    });
     super.onClose();
   }
 

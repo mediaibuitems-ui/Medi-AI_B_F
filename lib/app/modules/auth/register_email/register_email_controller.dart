@@ -68,51 +68,26 @@ class RegisterEmailController extends GetxController {
 
   /// Releases controller resources when the screen closes.
   void onClose() {
-    // Safely dispose controllers. Wrap each dispose in try/catch to avoid
-    // navigation-time race conditions where the widget tree may already
-    // be tearing down and a controller gets accessed after dispose.
-    try {
-      firstNameController.dispose();
-    } catch (_) {}
-    try {
-      lastNameController.dispose();
-    } catch (_) {}
-    try {
-      emailController.dispose();
-    } catch (_) {}
-    try {
-      passwordController.dispose();
-    } catch (_) {}
-    try {
-      confirmPasswordController.dispose();
-    } catch (_) {}
-    try {
-      cmsIdController.dispose();
-    } catch (_) {}
-    try {
-      phoneController.dispose();
-    } catch (_) {}
-    try {
-      addressController.dispose();
-    } catch (_) {}
-    try {
-      specializationController.dispose();
-    } catch (_) {}
-    try {
-      licenseNumberController.dispose();
-    } catch (_) {}
-    try {
-      qualificationController.dispose();
-    } catch (_) {}
-    try {
-      experienceController.dispose();
-    } catch (_) {}
-    try {
-      roomNumberController.dispose();
-    } catch (_) {}
-    try {
-      bioController.dispose();
-    } catch (_) {}
+    // Delay disposal to avoid 'used after disposed' crashes during page transitions
+    // and when tap gestures are still completing in the widget tree.
+    Future.delayed(const Duration(milliseconds: 500), () {
+      try {
+        firstNameController.dispose();
+        lastNameController.dispose();
+        emailController.dispose();
+        passwordController.dispose();
+        confirmPasswordController.dispose();
+        cmsIdController.dispose();
+        phoneController.dispose();
+        addressController.dispose();
+        specializationController.dispose();
+        licenseNumberController.dispose();
+        qualificationController.dispose();
+        experienceController.dispose();
+        roomNumberController.dispose();
+        bioController.dispose();
+      } catch (_) {}
+    });
 
     super.onClose();
   }
@@ -279,9 +254,11 @@ class RegisterEmailController extends GetxController {
           // Wait briefly so the user sees the success message.
           await Future.delayed(const Duration(milliseconds: 1000));
           
+          isLoading.value = false; // Turn off loading before navigation
           // Send the user directly to the Login screen
           Get.offAllNamed(AppRoutes.login);
           _logger.d('Navigation command sent to Login screen because OTP is bypassed');
+          return; // Exit early to skip finally block
         } else {
           // Capture a dev OTP if the backend returned one.
           String? devOtp;
@@ -299,6 +276,7 @@ class RegisterEmailController extends GetxController {
           // Wait briefly so the user sees the success message.
           await Future.delayed(const Duration(milliseconds: 500));
 
+          isLoading.value = false; // Turn off loading before navigation
           // Send the user to the OTP Verification screen after account creation.
           Get.offAllNamed(AppRoutes.otpVerification, arguments: {
             'email': emailController.text.trim(),
@@ -306,6 +284,7 @@ class RegisterEmailController extends GetxController {
           });
 
           _logger.d('Navigation command sent to OTP Verification screen');
+          return; // Exit early to skip finally block
         }
       } else {
         // Display the backend error if registration fails.
@@ -317,7 +296,9 @@ class RegisterEmailController extends GetxController {
       _logger.e('Registration exception', error: e);
       AppFeedback.error('Error', e.toString());
     } finally {
-      isLoading.value = false;
+      if (!isClosed) {
+        isLoading.value = false;
+      }
     }
   }
 }

@@ -16,9 +16,13 @@ class ForgotPasswordController extends GetxController {
 
   @override
   void onClose() {
-    emailController.dispose();
-    phoneController.dispose();
-    cmsController.dispose();
+    Future.delayed(const Duration(milliseconds: 500), () {
+      try {
+        emailController.dispose();
+        phoneController.dispose();
+        cmsController.dispose();
+      } catch (_) {}
+    });
     super.onClose();
   }
 

@@ -201,10 +201,12 @@ class AuthService extends GetxService {
     AppFeedback.info('Signed out', 'You have been logged out successfully.');
     
     // Clear all GetX controllers and services to prevent state/data leakage
-    Get.deleteAll(force: true);
+    // Removing Get.deleteAll because it destroys services and currently active controllers
+    // before the route transition completes, causing UI crashes and 'used after dispose' errors.
+    // Get.offAllNamed naturally clears non-permanent controllers bound to the removed routes.
     
     // Reroute to splash to re-initialize core services fresh
-    Get.offAllNamed('/splash');
+    Get.offAllNamed('/login'); // Redirect to login directly, or splash
   }
 
   // Get current user from API
