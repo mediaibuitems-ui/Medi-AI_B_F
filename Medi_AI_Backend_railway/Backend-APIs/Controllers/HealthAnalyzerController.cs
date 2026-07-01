@@ -67,34 +67,63 @@ Patient Symptoms: " + request.Symptoms;
             
             try 
             {
-                var requestBody = new
+                bool isGroq = apiKey.StartsWith("gsk_");
+                string replyContent = string.Empty;
+
+                if (isGroq)
                 {
-                    contents = new[]
+                    var requestBody = new
                     {
-                        new { parts = new[] { new { text = systemPrompt } } }
-                    },
-                    generationConfig = new
+                        model = "llama-3.3-70b-versatile",
+                        messages = new[]
+                        {
+                            new { role = "system", content = systemPrompt }
+                        },
+                        response_format = new { type = "json_object" }
+                    };
+
+                    _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
+                    var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+                    var response = await _httpClient.PostAsync("https://api.groq.com/openai/v1/chat/completions", content);
+                    
+                    var responseString = await response.Content.ReadAsStringAsync();
+                    if (!response.IsSuccessStatusCode)
                     {
-                        responseMimeType = "application/json"
+                        _logger.LogError($"Groq API Error: {responseString}");
+                        return StatusCode(500, "Failed to analyze symptoms via Groq API.");
                     }
-                };
 
-                var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={apiKey}", content);
-                
-                var responseString = await response.Content.ReadAsStringAsync();
-                
-                // If the user's key is actually a Groq key (format differs), this URL will fail. 
-                // We'll catch and log it clearly.
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.LogError($"Gemini API Error: {responseString}");
-                    return StatusCode(500, "Failed to analyze symptoms via Gemini API. Please ensure a valid Google Gemini API key is configured.");
+                    using var doc = JsonDocument.Parse(responseString);
+                    replyContent = doc.RootElement.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString() ?? "{}";
                 }
+                else
+                {
+                    var requestBody = new
+                    {
+                        contents = new[]
+                        {
+                            new { parts = new[] { new { text = systemPrompt } } }
+                        },
+                        generationConfig = new
+                        {
+                            responseMimeType = "application/json"
+                        }
+                    };
 
-                using var doc = JsonDocument.Parse(responseString);
-                var candidates = doc.RootElement.GetProperty("candidates")[0];
-                var replyContent = candidates.GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString();
+                    var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+                    var response = await _httpClient.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={apiKey}", content);
+                    
+                    var responseString = await response.Content.ReadAsStringAsync();
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        _logger.LogError($"Gemini API Error: {responseString}");
+                        return StatusCode(500, "Failed to analyze symptoms via Gemini API. Please ensure a valid Google Gemini API key is configured.");
+                    }
+
+                    using var doc = JsonDocument.Parse(responseString);
+                    var candidates = doc.RootElement.GetProperty("candidates")[0];
+                    replyContent = candidates.GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString() ?? "{}";
+                }
 
                 var jsonResult = JsonSerializer.Deserialize<HealthAnalyzerResponseDto>(replyContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
