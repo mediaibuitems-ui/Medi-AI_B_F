@@ -42,6 +42,8 @@ class StudentDashboardController extends GetxController {
       if (user == null || user.id.isEmpty) {
         print('⛔ Error: User data corrupted. Forcing auto-logout.');
         
+        Get.snackbar("Session Expired", "Please log in again.", 
+            snackPosition: SnackPosition.BOTTOM);
         // Clear the bad cache and send them back to the login screen safely
         await logout(); 
         return;
@@ -62,7 +64,7 @@ class StudentDashboardController extends GetxController {
 
   Future<void> _loadUnreadNotifications() async {
     try {
-      final response = await _apiService.get('${AppConfig.baseUrl}/Notifications/unread');
+      final response = await _apiService.get('${AppConfig.baseUrl}/notifications/unread');
       if (response.success && response.data is List) {
         unreadNotifications.value = (response.data as List).length;
       }
@@ -74,7 +76,7 @@ class StudentDashboardController extends GetxController {
   Future<void> _loadUpcomingAppointments() async {
     try {
       final response = await _apiService.get(
-        '${AppConfig.baseUrl}/Appointments/student/${currentUser.value?.id}/upcoming',
+        '${AppConfig.baseUrl}/appointments/student/${currentUser.value?.id}/upcoming',
       );
       if (response.success && response.data is List) {
         final list = response.data as List;
@@ -95,7 +97,7 @@ class StudentDashboardController extends GetxController {
   Future<void> _loadRecentAppointments() async {
     try {
       final response = await _apiService.get(
-        '${AppConfig.baseUrl}/Appointments/student/${currentUser.value?.id}/history',
+        '${AppConfig.baseUrl}/appointments/student/${currentUser.value?.id}/history',
       );
       if (response.success && response.data is List) {
         final now = DateTime.now();
@@ -138,7 +140,7 @@ class StudentDashboardController extends GetxController {
   }
 
   void goToAIChecker() {
-    Get.toNamed(AppRoutes.aiSymptomChecker);
+    Get.toNamed(AppRoutes.healthAnalyzer);
   }
 
   void goToMedicineReminders() {
@@ -189,7 +191,7 @@ class StudentDashboardController extends GetxController {
       };
 
       final response = await _apiService
-          .put('${AppConfig.baseUrl}/Appointments/$appointmentId', data: data);
+          .put('${AppConfig.baseUrl}/appointments/$appointmentId', data: data);
 
       if (response.success) {
         await refresh(); // Reload lists
@@ -221,7 +223,7 @@ class StudentDashboardController extends GetxController {
     isLoading.value = true;
     try {
       final response = await _apiService
-          .delete('${AppConfig.baseUrl}/Appointments/$appointmentId');
+          .delete('${AppConfig.baseUrl}/appointments/$appointmentId');
       if (response.success) {
         await refresh();
         // Notify other parts of the app (doctors, faculty) about this cancellation

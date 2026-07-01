@@ -13,7 +13,7 @@ class AppRoutes {
   static const bookAppointment = '/book-appointment';
   static const myAppointments = '/my-appointments';
 
-  static const aiSymptomChecker = '/ai-symptom-checker';
+  static const healthAnalyzer = '/health-analyzer';
   static const medicineReminders = '/medicine-reminders';
   static const medicalHistory = '/medical-history';
   static const emergencyContacts = '/emergency-contacts';

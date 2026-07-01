@@ -27,7 +27,7 @@ class _MedicineRemindersScreenState extends State<MedicineRemindersScreen> {
   final _medicineReminderService = Get.find<MedicineReminderService>();
   final _apiService = Get.find<ApiService>();
   final _authService = Get.find<AuthService>();
-  final _endpoint = '${AppConfig.baseUrl}/MedicineReminders';
+
 
   final List<Map<String, dynamic>> reminders = [];
   bool isLoading = false;

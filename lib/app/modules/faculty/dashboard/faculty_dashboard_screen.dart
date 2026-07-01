@@ -148,10 +148,10 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.psychology_outlined),
-                  title: const Text('AI Symptom Analyzer'),
+                  title: const Text('AI Health Analyzer'),
                   onTap: () {
                     Get.back();
-                    controller.aiSymptomChecker();
+                    controller.healthAnalyzer();
                   },
                 ),
                 ListTile(
@@ -381,10 +381,10 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
                 SizedBox(
                   width: cardWidth,
                   child: DashboardQuickAction(
-                    label: 'AI Symptom Analyzer',
-                    icon: Icons.psychology,
+                    label: 'AI Health Analyzer',
+                    icon: Icons.psychology_outlined,
                     color: AppTheme.success,
-                    onTap: controller.aiSymptomChecker,
+                    onTap: controller.healthAnalyzer,
                     index: 1,
                   ),
                 ),

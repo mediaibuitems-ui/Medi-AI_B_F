@@ -57,7 +57,7 @@ class BookAppointmentController extends GetxController {
     isLoading.value = true;
     try {
       final response =
-          await _apiService.get('${AppConfig.baseUrl}/Doctors/available');
+          await _apiService.get('${AppConfig.baseUrl}/doctors/available');
       if (response.success && response.data != null) {
         final List<dynamic> data = response.data;
         doctors.value =
@@ -110,7 +110,7 @@ class BookAppointmentController extends GetxController {
     try {
       final dateStr = DateFormat('yyyy-MM-dd').format(selectedDate.value!);
       final response = await _apiService.get(
-          '/Doctors/${selectedDoctorId.value}/available-slots',
+          '/doctors/${selectedDoctorId.value}/available-slots',
           queryParameters: {'date': dateStr});
 
       if (response.success && response.data != null) {
@@ -137,7 +137,7 @@ class BookAppointmentController extends GetxController {
               },
             );
           } else {
-            Get.snackbar('Notice', response.message ?? 'No slots available');
+            Get.snackbar('Notice', response.message);
           }
         }
       }
@@ -183,7 +183,7 @@ class BookAppointmentController extends GetxController {
       };
 
       final response =
-          await _apiService.post('/Appointments', data: appointmentData);
+          await _apiService.post('/appointments', data: appointmentData);
 
       if (response.success) {
         // Refresh dashboards so the new appointment shows immediately
@@ -199,7 +199,7 @@ class BookAppointmentController extends GetxController {
       } else {
         Get.snackbar(
           'Booking Failed', 
-          response.message ?? 'Failed to book appointment',
+          response.message,
           backgroundColor: Colors.red.withOpacity(0.1),
           colorText: Colors.red,
           duration: const Duration(seconds: 4),

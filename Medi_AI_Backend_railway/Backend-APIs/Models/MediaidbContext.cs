@@ -54,7 +54,7 @@ public partial class MediaidbContext : DbContext
 
     public virtual DbSet<Report> Reports { get; set; }
 
-    public virtual DbSet<Symptomcheck> Symptomchecks { get; set; }
+    public virtual DbSet<AiHealthAssessment> AiHealthAssessments { get; set; }
 
     public virtual DbSet<Systemsetting> Systemsettings { get; set; }
 
@@ -554,24 +554,16 @@ public partial class MediaidbContext : DbContext
                 .HasConstraintName("reports_ibfk_1");
         });
 
-        modelBuilder.Entity<Symptomcheck>(entity =>
+        modelBuilder.Entity<AiHealthAssessment>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
-
-            entity.ToTable("symptomchecks");
-
-            entity.HasIndex(e => new { e.UserId, e.CreatedAt }, "idx_user_date");
-
-            entity.Property(e => e.ChatTranscript).HasColumnType("json");
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp");
-            entity.Property(e => e.Title).HasMaxLength(255);
-            entity.Property(e => e.Symptoms).HasColumnType("json");
-
-            entity.HasOne(d => d.User).WithMany(p => p.Symptomchecks)
+            entity.HasKey(e => e.AssessmentId).HasName("PRIMARY");
+            entity.ToTable("ai_health_assessments");
+            entity.HasIndex(e => new { e.UserId, e.CreatedAt }, "idx_health_user_date");
+            entity.Property(e => e.HomeCarePlan).HasColumnType("json");
+            
+            entity.HasOne(d => d.User).WithMany(p => p.AiHealthAssessments)
                 .HasForeignKey(d => d.UserId)
-                .HasConstraintName("symptomchecks_ibfk_1");
+                .HasConstraintName("aihealthassessments_ibfk_1");
         });
 
         modelBuilder.Entity<Systemsetting>(entity =>

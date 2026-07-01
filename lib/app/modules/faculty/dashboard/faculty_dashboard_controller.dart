@@ -218,8 +218,8 @@ class FacultyDashboardController extends GetxController {
     Get.toNamed(AppRoutes.prescriptionHistory);
   }
 
-  void aiSymptomChecker() {
-    Get.toNamed(AppRoutes.aiSymptomChecker);
+  void healthAnalyzer() {
+    Get.toNamed(AppRoutes.healthAnalyzer);
   }
 
   void medicineReminders() {

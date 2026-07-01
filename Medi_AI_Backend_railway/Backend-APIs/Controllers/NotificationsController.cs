@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace Backend_APIs.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/notifications")]
     [ApiController]
     [Authorize]
     public class NotificationsController : ControllerBase

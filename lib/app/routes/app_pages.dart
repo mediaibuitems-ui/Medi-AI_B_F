@@ -21,8 +21,8 @@ import '../modules/student/book_appointment/book_appointment_screen.dart';
 import '../modules/student/book_appointment/book_appointment_binding.dart';
 import '../modules/student/my_appointments/my_appointments_screen.dart';
 import '../modules/student/my_appointments/my_appointments_binding.dart';
-import '../modules/student/ai_symptom_checker/ai_symptom_checker_screen.dart';
-import '../modules/student/ai_symptom_checker/ai_symptom_checker_binding.dart';
+import '../modules/student/health_analyzer/health_analyzer_screen.dart';
+import '../modules/student/health_analyzer/health_analyzer_binding.dart';
 import '../modules/student/medicine_reminders/medicine_reminders_screen.dart';
 import '../modules/student/medicine_reminders/medicine_reminders_binding.dart';
 import '../modules/student/profile/profile_screen.dart';
@@ -146,9 +146,9 @@ class AppPages {
       binding: MyAppointmentsBinding(),
     ),
     GetPage(
-      name: AppRoutes.aiSymptomChecker,
-      page: () => const AiSymptomCheckerScreen(),
-      binding: AISymptomCheckerBinding(),
+      name: AppRoutes.healthAnalyzer,
+      page: () => const HealthAnalyzerScreen(),
+      binding: HealthAnalyzerBinding(),
     ),
     GetPage(
       name: AppRoutes.medicineReminders,

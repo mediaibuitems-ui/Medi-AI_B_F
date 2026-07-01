@@ -8,7 +8,7 @@ using System.Text.Json;
 
 namespace Backend_APIs.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/appointments")]
     [ApiController]
     [Authorize]
     public class AppointmentsController : ControllerBase
