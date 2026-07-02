@@ -140,7 +140,7 @@ class StudentDashboardController extends GetxController {
   }
 
   void goToAIChecker() {
-    Get.toNamed(AppRoutes.healthAnalyzer);
+    Get.toNamed(AppRoutes.symptomAnalyzerInput);
   }
 
   void goToMedicineReminders() {

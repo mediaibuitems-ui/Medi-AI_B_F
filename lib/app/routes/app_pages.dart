@@ -21,8 +21,10 @@ import '../modules/student/book_appointment/book_appointment_screen.dart';
 import '../modules/student/book_appointment/book_appointment_binding.dart';
 import '../modules/student/my_appointments/my_appointments_screen.dart';
 import '../modules/student/my_appointments/my_appointments_binding.dart';
-import '../modules/student/health_analyzer/health_analyzer_screen.dart';
-import '../modules/student/health_analyzer/health_analyzer_binding.dart';
+import '../modules/student/symptom_analyzer/ai_symptom_input_screen.dart';
+import '../modules/student/symptom_analyzer/ai_symptom_input_binding.dart';
+import '../modules/student/symptom_analyzer/ai_symptom_result_screen.dart';
+import '../modules/student/symptom_analyzer/ai_symptom_result_binding.dart';
 import '../modules/student/medicine_reminders/medicine_reminders_screen.dart';
 import '../modules/student/medicine_reminders/medicine_reminders_binding.dart';
 import '../modules/student/profile/profile_screen.dart';
@@ -146,9 +148,14 @@ class AppPages {
       binding: MyAppointmentsBinding(),
     ),
     GetPage(
-      name: AppRoutes.healthAnalyzer,
-      page: () => const HealthAnalyzerScreen(),
-      binding: HealthAnalyzerBinding(),
+      name: AppRoutes.symptomAnalyzerInput,
+      page: () => const AiSymptomInputScreen(),
+      binding: AiSymptomInputBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.symptomAnalyzerResult,
+      page: () => const AiSymptomResultScreen(),
+      binding: AiSymptomResultBinding(),
     ),
     GetPage(
       name: AppRoutes.medicineReminders,

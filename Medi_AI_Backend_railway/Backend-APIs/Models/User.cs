@@ -72,7 +72,7 @@ public partial class User
 
     public virtual ICollection<Report> Reports { get; set; } = new List<Report>();
 
-    public virtual ICollection<AiHealthAssessment> AiHealthAssessments { get; set; } = new List<AiHealthAssessment>();
+    public virtual ICollection<AiSymptomAnalysis> AiSymptomAnalyses { get; set; } = new List<AiSymptomAnalysis>();
 
     public virtual ICollection<Systemsetting> Systemsettings { get; set; } = new List<Systemsetting>();
 

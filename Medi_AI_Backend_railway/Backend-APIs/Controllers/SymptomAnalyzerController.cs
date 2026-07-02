@@ -1,69 +1,91 @@
+using System.Text;
+using System.Text.Json;
 using Backend_APIs.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
-using System.Text;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend_APIs.Controllers
 {
-    [Route("api/healthanalyzer")]
+    public class SymptomAnalyzerRequestDto
+    {
+        public List<string> SelectedSymptoms { get; set; } = new();
+        public string OtherSymptoms { get; set; } = string.Empty;
+        public string Severity { get; set; } = string.Empty;
+        public string Duration { get; set; } = string.Empty;
+    }
+
+    public class SymptomAnalyzerResponseDto
+    {
+        public string PossibleCondition { get; set; } = string.Empty;
+        public string ConfidenceLevel { get; set; } = string.Empty;
+        public string Severity { get; set; } = string.Empty;
+        public string UrgencyMessage { get; set; } = string.Empty;
+        public List<string> Recommendations { get; set; } = new();
+        public List<string> HomeCareGuidance { get; set; } = new();
+        public string RecommendedDoctorType { get; set; } = string.Empty;
+    }
+
+    [Route("api/v1/analyzer")]
     [ApiController]
     [Authorize]
-    public class HealthAnalyzerController : ControllerBase
+    public class SymptomAnalyzerController : ControllerBase
     {
         private readonly MediaidbContext _context;
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
-        private readonly ILogger<HealthAnalyzerController> _logger;
+        private readonly ILogger<SymptomAnalyzerController> _logger;
 
-        public HealthAnalyzerController(MediaidbContext context, HttpClient httpClient, IConfiguration configuration, ILogger<HealthAnalyzerController> logger)
+        public SymptomAnalyzerController(MediaidbContext context, IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<SymptomAnalyzerController> logger)
         {
             _context = context;
-            _httpClient = httpClient;
+            _httpClient = httpClientFactory.CreateClient();
             _configuration = configuration;
             _logger = logger;
         }
 
-        [HttpPost("assess")]
-        public async Task<IActionResult> AssessSymptoms([FromBody] HealthAssessmentRequest request)
+        [HttpPost("evaluate")]
+        public async Task<IActionResult> EvaluateSymptoms([FromBody] SymptomAnalyzerRequestDto request)
         {
-            if (string.IsNullOrWhiteSpace(request.Symptoms))
-                return BadRequest("Symptoms cannot be empty.");
-
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-                return Unauthorized("Invalid user token.");
-
-            var apiKey = _configuration["Gemini:ApiKey"];
-            if (string.IsNullOrEmpty(apiKey))
             {
-                // Fallback to Groq API Key if Gemini is not explicitly set, but warn the dev.
-                apiKey = _configuration["Groq:ApiKey"];
-                if (string.IsNullOrEmpty(apiKey))
-                    return StatusCode(500, "Gemini API Key is not configured in appsettings.json.");
+                return Unauthorized("Invalid token.");
             }
 
-            var systemPrompt = @"Act as Med-AI, an expert clinical triage assistant.
-Your job is to analyze the patient's symptoms and provide a safe, structured, and actionable preliminary care plan.
+            var apiKey = _configuration["Gemini:ApiKey"];
+            if (string.IsNullOrEmpty(apiKey) || apiKey.Contains("INSERT_GEMINI_API_KEY_HERE"))
+            {
+                apiKey = _configuration["Groq:ApiKey"];
+                if (string.IsNullOrEmpty(apiKey) || apiKey.Contains("INSERT_GROQ_API_KEY_HERE"))
+                    return StatusCode(500, "API Key is not configured in appsettings.json.");
+            }
+
+            var selectedSymptomsStr = string.Join(", ", request.SelectedSymptoms);
+
+            string systemPrompt = $@"
+Act as an expert clinical triage assistant.
 CRITICAL RULES:
 1. DO NOT provide a definitive medical diagnosis. State that this is a preliminary analysis.
-2. DO NOT prescribe restricted or prescription medications (e.g., antibiotics, strong painkillers).
+2. DO NOT prescribe restricted or prescription medications.
 3. YOU MAY suggest standard Over-The-Counter (OTC) remedies for symptom relief.
 4. Always provide a clear home-care procedure.
 
 Analyze the following symptoms and respond STRICTLY in the following JSON format without any markdown formatting or extra text:
-{
-  ""triageLevel"": ""[Choose one: EMERGENCY, URGENT, ROUTINE, or SELF-CARE]"",
-  ""analysis"": ""[A 2-3 sentence explanation]"",
-  ""suggestedOtcMedicine"": ""[List 1-2 standard over-the-counter remedies, or write 'None']"",
-  ""homeCareProcedure"": [
-    ""[Step 1]"",
-    ""[Step 2]""
-  ],
-  ""doctorRecommendation"": ""[What specific specialist should they book an appointment with]""
-}
+{{
+  ""possibleCondition"": ""[General Malaise]"",
+  ""confidenceLevel"": ""[70%]"",
+  ""severity"": ""[Mild, Moderate, or Severe]"",
+  ""urgencyMessage"": ""[Mild urgency. Home care and monitoring may help.]"",
+  ""recommendations"": [""[Rest]"", ""[Monitor symptoms]""],
+  ""homeCareGuidance"": [""[Hydrate well]"", ""[Rest]""],
+  ""recommendedDoctorType"": ""[General Physician]""
+}}
 
-Patient Symptoms: " + request.Symptoms;
+Patient Symptoms: {selectedSymptomsStr}
+Other Symptoms: {request.OtherSymptoms}
+Patient Reported Severity: {request.Severity}
+Duration: {request.Duration}";
             
             try 
             {
@@ -117,7 +139,7 @@ Patient Symptoms: " + request.Symptoms;
                     if (!response.IsSuccessStatusCode)
                     {
                         _logger.LogError($"Gemini API Error: {responseString}");
-                        return StatusCode(500, "Failed to analyze symptoms via Gemini API. Please ensure a valid Google Gemini API key is configured.");
+                        return StatusCode(500, "Failed to analyze symptoms via Gemini API.");
                     }
 
                     using var doc = JsonDocument.Parse(responseString);
@@ -125,48 +147,40 @@ Patient Symptoms: " + request.Symptoms;
                     replyContent = candidates.GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString() ?? "{}";
                 }
 
-                var jsonResult = JsonSerializer.Deserialize<HealthAnalyzerResponseDto>(replyContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                var jsonResult = JsonSerializer.Deserialize<SymptomAnalyzerResponseDto>(replyContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                var assessment = new AiHealthAssessment
+                if (jsonResult == null)
+                {
+                    return StatusCode(500, "Failed to parse AI response.");
+                }
+
+                var analysisRecord = new AiSymptomAnalysis
                 {
                     UserId = userId,
-                    RawSymptoms = request.Symptoms,
-                    TriageLevel = jsonResult?.TriageLevel ?? "ROUTINE",
-                    ClinicalAnalysis = jsonResult?.Analysis ?? "Unable to analyze.",
-                    SuggestedMedicine = jsonResult?.SuggestedOtcMedicine,
-                    HomeCarePlan = JsonSerializer.Serialize(jsonResult?.HomeCareProcedure ?? new List<string>()),
-                    RecommendedDoctor = jsonResult?.DoctorRecommendation
+                    SelectedSymptoms = selectedSymptomsStr,
+                    OtherSymptoms = request.OtherSymptoms,
+                    SeverityInput = request.Severity,
+                    Duration = request.Duration,
+                    PossibleCondition = jsonResult.PossibleCondition,
+                    ConfidenceLevel = jsonResult.ConfidenceLevel,
+                    CalculatedSeverity = jsonResult.Severity,
+                    UrgencyMessage = jsonResult.UrgencyMessage,
+                    Recommendations = JsonSerializer.Serialize(jsonResult.Recommendations),
+                    HomeCareGuidance = JsonSerializer.Serialize(jsonResult.HomeCareGuidance),
+                    RecommendedDoctorType = jsonResult.RecommendedDoctorType,
+                    CreatedAt = DateTime.UtcNow
                 };
 
-                _context.AiHealthAssessments.Add(assessment);
+                _context.AiSymptomAnalyses.Add(analysisRecord);
                 await _context.SaveChangesAsync();
 
-                return Ok(new
-                {
-                    success = true,
-                    message = "Symptoms analyzed successfully.",
-                    data = assessment
-                });
+                return Ok(new { success = true, data = jsonResult });
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during health assessment.");
-                return StatusCode(500, "An internal error occurred.");
+                _logger.LogError($"SymptomAnalyzer Evaluate Error: {ex.Message}");
+                return StatusCode(500, "An internal error occurred during symptom analysis.");
             }
         }
-    }
-
-    public class HealthAssessmentRequest
-    {
-        public string Symptoms { get; set; }
-    }
-
-    public class HealthAnalyzerResponseDto
-    {
-        public string TriageLevel { get; set; }
-        public string Analysis { get; set; }
-        public string SuggestedOtcMedicine { get; set; }
-        public List<string> HomeCareProcedure { get; set; }
-        public string DoctorRecommendation { get; set; }
     }
 }
