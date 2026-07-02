@@ -26,7 +26,7 @@ namespace Backend_APIs.Controllers
         public string RecommendedDoctorType { get; set; } = string.Empty;
     }
 
-    [Route("api/v1/analyzer")]
+    [Route("api/analyzer")]
     [ApiController]
     [Authorize]
     public class SymptomAnalyzerController : ControllerBase
