@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Backend_APIs.Models;
 
@@ -30,6 +31,9 @@ public partial class Appointment
     public DateTime? CreatedAt { get; set; }
 
     public DateTime? UpdatedAt { get; set; }
+
+    [Timestamp]
+    public byte[]? RowVersion { get; set; }
 
     public virtual User? CancelledByNavigation { get; set; }
 

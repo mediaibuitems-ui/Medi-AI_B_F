@@ -99,10 +99,12 @@ class StudentDashboardController extends GetxController {
       final response = await _apiService.get(
         '${AppConfig.baseUrl}/appointments/student/${currentUser.value?.id}/history',
       );
-      if (response.success && response.data is List) {
+      if (response.success && response.data != null) {
+        final Map<String, dynamic> data = response.data as Map<String, dynamic>;
+        final List<dynamic> list = data['items'] as List<dynamic>;
+        
         final now = DateTime.now();
         final thirtyDaysAgo = now.subtract(const Duration(days: 30));
-        final list = response.data as List;
         recentAppointments.value = list
             .map((json) => Appointment.fromJson(json))
             .where((a) => a.dateTime.isAfter(thirtyDaysAgo))

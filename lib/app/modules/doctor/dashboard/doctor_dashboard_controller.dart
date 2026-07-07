@@ -53,6 +53,8 @@ class DoctorDashboardController extends GetxController {
   final Set<int> _shownNotificationIds = <int>{};
   final Set<String> _shownNotificationKeys = <String>{};
 
+  StreamSubscription? _eventSubscription;
+
   @override
   void onInit() {
     super.onInit();
@@ -63,7 +65,7 @@ class DoctorDashboardController extends GetxController {
     final eventService = Get.isRegistered<AppointmentEventService>()
         ? Get.find<AppointmentEventService>()
         : Get.put(AppointmentEventService());
-    eventService.stream.listen((event) async {
+    _eventSubscription = eventService.stream.listen((event) async {
       try {
         // If an appointment changed, refresh lists so cancelled/updated items disappear
         await loadUpcomingAppointments();
@@ -74,6 +76,7 @@ class DoctorDashboardController extends GetxController {
 
   @override
   void onClose() {
+    _eventSubscription?.cancel();
     _notificationTimer?.cancel();
     super.onClose();
   }

@@ -119,9 +119,28 @@ class ManageUsersScreen extends GetView<ManageUsersController> {
               return RefreshIndicator(
                 onRefresh: controller.loadUsers,
                 child: ListView.builder(
+                  controller: controller.scrollController,
                   padding: const EdgeInsets.all(16),
-                  itemCount: controller.filteredUsers.length,
+                  itemCount: controller.filteredUsers.length + 1, // +1 for loading indicator
                   itemBuilder: (context, index) {
+                    if (index == controller.filteredUsers.length) {
+                      return Obx(() {
+                        if (controller.isLoadingMore.value) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16.0),
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
+                        if (!controller.hasMore.value && controller.filteredUsers.isNotEmpty) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16.0),
+                            child: Center(child: Text('No more users')),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      });
+                    }
+                    
                     final user = controller.filteredUsers[index];
                     return _buildUserCard(context, controller, user);
                   },

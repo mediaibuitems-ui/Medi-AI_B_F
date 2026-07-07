@@ -7,6 +7,7 @@ import '../../../services/auth_service.dart';
 import '../../../services/api_service.dart';
 import '../../../routes/app_routes.dart';
 import '../../../services/appointment_event_service.dart';
+import 'dart:async';
 import '../../../../config/app_config.dart';
 
 class FacultyDashboardController extends GetxController {
@@ -25,6 +26,8 @@ class FacultyDashboardController extends GetxController {
 
   final RxInt unreadNotifications = 0.obs;
 
+  StreamSubscription? _eventSubscription;
+
   @override
   void onInit() {
     super.onInit();
@@ -34,10 +37,16 @@ class FacultyDashboardController extends GetxController {
     final eventService = Get.isRegistered<AppointmentEventService>()
         ? Get.find<AppointmentEventService>()
         : Get.put(AppointmentEventService());
-    eventService.stream.listen((event) {
+    _eventSubscription = eventService.stream.listen((event) {
       // For now refresh whole dashboard on any appointment change
       refresh();
     });
+  }
+
+  @override
+  void onClose() {
+    _eventSubscription?.cancel();
+    super.onClose();
   }
 
   Future<void> loadDashboardData() async {
@@ -102,10 +111,12 @@ class FacultyDashboardController extends GetxController {
       final response = await _apiService.get(
         '${AppConfig.baseUrl}/Appointments/student/${currentUser.value?.id}/history',
       );
-      if (response.success && response.data is List) {
+      if (response.success && response.data != null) {
+        final Map<String, dynamic> data = response.data as Map<String, dynamic>;
+        final List<dynamic> list = data['items'] as List<dynamic>;
+
         final now = DateTime.now();
         final thirtyDaysAgo = now.subtract(const Duration(days: 30));
-        final list = response.data as List;
         recentAppointments.value = list
             .map((json) => Appointment.fromJson(json))
             .where((a) => a.dateTime.isAfter(thirtyDaysAgo))

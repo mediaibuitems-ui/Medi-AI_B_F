@@ -14,6 +14,12 @@ class ManageUsersController extends GetxController {
   final RxString selectedFilter = 'All'.obs;
   final searchController = TextEditingController();
 
+  int _page = 1;
+  final int _limit = 20;
+  final RxBool hasMore = true.obs;
+  final RxBool isLoadingMore = false.obs;
+  final ScrollController scrollController = ScrollController();
+
   @override
   void onInit() {
     super.onInit();
@@ -22,26 +28,40 @@ class ManageUsersController extends GetxController {
       selectedFilter.value = args['role'];
     }
     loadUsers();
+
+    scrollController.addListener(() {
+      if (scrollController.position.pixels >= scrollController.position.maxScrollExtent - 50) {
+        loadMoreUsers();
+      }
+    });
   }
 
   @override
   void onClose() {
+    scrollController.dispose();
     searchController.dispose();
     super.onClose();
   }
 
   Future<void> loadUsers() async {
+    _page = 1;
+    hasMore.value = true;
     isLoading.value = true;
     try {
-      final response = await _apiService.get('/Admin/users');
+      final role = selectedFilter.value != 'All' ? '&role=${selectedFilter.value}' : '';
+      final search = searchController.text.isNotEmpty ? '&search=${searchController.text}' : '';
+      final response = await _apiService.get('/Admin/users?page=$_page&limit=$_limit$role$search');
 
       if (response.success && response.data != null) {
-        final List<dynamic> data = response.data is List ? response.data as List : <dynamic>[];
-        users.value = data
-            .map((item) => item is Map<String, dynamic>
-                ? item
-                : Map<String, dynamic>.from(item as Map))
+        final Map<String, dynamic> data = response.data as Map<String, dynamic>;
+        final List<dynamic> items = data['items'] as List<dynamic>;
+        final int totalCount = data['totalCount'] as int;
+
+        users.value = items
+            .map((item) => Map<String, dynamic>.from(item as Map))
             .toList();
+        
+        hasMore.value = users.length < totalCount;
         filterUsers();
       } else {
         Get.snackbar('Error', 'Failed to load users');
@@ -51,6 +71,37 @@ class ManageUsersController extends GetxController {
       Get.snackbar('Error', 'A network error occurred');
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> loadMoreUsers() async {
+    if (isLoadingMore.value || !hasMore.value || isLoading.value) return;
+
+    isLoadingMore.value = true;
+    _page++;
+    try {
+      final role = selectedFilter.value != 'All' ? '&role=${selectedFilter.value}' : '';
+      final search = searchController.text.isNotEmpty ? '&search=${searchController.text}' : '';
+      final response = await _apiService.get('/Admin/users?page=$_page&limit=$_limit$role$search');
+
+      if (response.success && response.data != null) {
+        final Map<String, dynamic> data = response.data as Map<String, dynamic>;
+        final List<dynamic> items = data['items'] as List<dynamic>;
+        final int totalCount = data['totalCount'] as int;
+
+        final newUsers = items
+            .map((item) => Map<String, dynamic>.from(item as Map))
+            .toList();
+        
+        users.addAll(newUsers);
+        hasMore.value = users.length < totalCount;
+        filterUsers();
+      }
+    } catch (e) {
+      print('Error loading more users: $e');
+      _page--; // Revert page if failed
+    } finally {
+      isLoadingMore.value = false;
     }
   }
 

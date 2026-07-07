@@ -166,7 +166,13 @@ class AiSymptomInputScreen extends GetView<AiSymptomInputController> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 elevation: 0,
               ),
-              child: const Text('Analyze Symptoms', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              child: controller.isLoading.value
+                  ? const SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                  : const Text('Analyze Symptoms', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             )),
       ),
     );

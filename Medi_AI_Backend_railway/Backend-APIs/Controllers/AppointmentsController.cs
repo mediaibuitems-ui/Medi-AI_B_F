@@ -91,7 +91,7 @@ namespace Backend_APIs.Controllers
         /// Get student/patient appointment history
         /// </summary>
         [HttpGet("student/{studentId}/history")]
-        public async Task<IActionResult> GetStudentAppointmentHistory(string studentId)
+        public async Task<IActionResult> GetStudentAppointmentHistory(string studentId, [FromQuery] int page = 1, [FromQuery] int limit = 20)
         {
             try
             {
@@ -119,16 +119,22 @@ namespace Backend_APIs.Controllers
 
                 var today = DateOnly.FromDateTime(DateTime.Today);
 
-                var appointmentList = await _context.Appointments
+                var query = _context.Appointments
                     .Include(a => a.Patient)
                     .Include(a => a.Doctor)
                         .ThenInclude(d => d.User)
                     .Include(a => a.Prescriptions)
                     .AsNoTracking()
                     .Where(a => a.PatientId == patientId) // Get all, then separate by date/status? OR just get past
-                    .Where(a => a.AppointmentDate < today || a.Status == "Completed" || a.Status == "Cancelled")
+                    .Where(a => a.AppointmentDate < today || a.Status == "Completed" || a.Status == "Cancelled");
+
+                var totalCount = await query.CountAsync();
+
+                var appointmentList = await query
                     .OrderByDescending(a => a.AppointmentDate)
                     .ThenByDescending(a => a.AppointmentTime)
+                    .Skip((page - 1) * limit)
+                    .Take(limit)
                     .ToListAsync();
 
                 var appointments = appointmentList.Select(a => new AppointmentResponseDto
@@ -148,11 +154,11 @@ namespace Backend_APIs.Controllers
                     CreatedAt = a.CreatedAt.HasValue ? a.CreatedAt.Value.ToString("o") : null
                 }).ToList();
 
-                return Ok(new ApiResponse<List<AppointmentResponseDto>>
+                return Ok(new ApiResponse<object>
                 {
                     Success = true,
                     Message = "Appointment history retrieved successfully",
-                    Data = appointments
+                    Data = new { totalCount, items = appointments }
                 });
             }
             catch (Exception ex)
@@ -464,6 +470,8 @@ namespace Backend_APIs.Controllers
                     appointmentsList = await _context.Appointments
                         .AsNoTracking()
                         .Include(a => a.Patient)
+                        .Include(a => a.Doctor)
+                            .ThenInclude(d => d.User)
                         .Include(a => a.Prescriptions)
                         .Where(a => a.DoctorId == doctor.Id)
                         .OrderByDescending(a => a.AppointmentDate)
@@ -474,6 +482,7 @@ namespace Backend_APIs.Controllers
                 {
                     appointmentsList = await _context.Appointments
                         .AsNoTracking()
+                        .Include(a => a.Patient)
                         .Include(a => a.Doctor).ThenInclude(d => d.User)
                         .Include(a => a.Prescriptions)
                         .Where(a => a.PatientId == userId)

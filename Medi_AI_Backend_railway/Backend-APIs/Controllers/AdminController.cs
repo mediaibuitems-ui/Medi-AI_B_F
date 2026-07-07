@@ -379,7 +379,7 @@ namespace Backend_APIs.Controllers
         }
 
         [HttpGet("users")]
-        public async Task<IActionResult> GetAllUsers([FromQuery] string? role, [FromQuery] string? search)
+        public async Task<IActionResult> GetAllUsers([FromQuery] string? role, [FromQuery] string? search, [FromQuery] int page = 1, [FromQuery] int limit = 20)
         {
             try
             {
@@ -398,8 +398,12 @@ namespace Backend_APIs.Controllers
                                            (u.RegistrationNumber != null && u.RegistrationNumber.ToLower().Contains(search)));
                 }
 
+                var totalCount = await query.CountAsync();
+
                 var users = await query
                     .OrderByDescending(u => u.CreatedAt)
+                    .Skip((page - 1) * limit)
+                    .Take(limit)
                     .Select(u => new
                     {
                         u.Id,
@@ -418,7 +422,7 @@ namespace Backend_APIs.Controllers
                 {
                     Success = true,
                     Message = "Users loaded successfully",
-                    Data = users
+                    Data = new { totalCount, items = users }
                 });
             }
             catch (Exception ex)

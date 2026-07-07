@@ -4,6 +4,7 @@ using Backend_APIs.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Backend_APIs.Controllers
 {
@@ -47,7 +48,8 @@ namespace Backend_APIs.Controllers
         [HttpPost("evaluate")]
         public async Task<IActionResult> EvaluateSymptoms([FromBody] SymptomAnalyzerRequestDto request)
         {
-            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+                              ?? User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
             {
                 return Unauthorized("Invalid token.");
