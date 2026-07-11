@@ -459,7 +459,17 @@ class PatientDetailScreen extends StatelessWidget {
         Expanded(
           child: ElevatedButton.icon(
             onPressed: () {
-              final appointmentId = args['appointmentId'] ?? args['AppointmentId'] ?? args['id'];
+              final appointmentId = args['appointmentId'] ?? args['AppointmentId'];
+              if (appointmentId == null) {
+                Get.snackbar(
+                  'Action Unavailable',
+                  'Prescriptions can only be written during an active appointment.',
+                  snackPosition: SnackPosition.BOTTOM,
+                  backgroundColor: AppTheme.error,
+                  colorText: AppTheme.surface,
+                );
+                return;
+              }
               Get.toNamed(
                 '/write-prescription',
                 arguments: {
