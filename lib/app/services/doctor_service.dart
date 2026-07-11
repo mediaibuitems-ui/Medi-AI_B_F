@@ -166,6 +166,34 @@ class DoctorService extends GetxService {
     );
   }
 
+  // Create a structured prescription with medicines list → POST /api/Prescriptions
+  Future<ApiResponse<Map<String, dynamic>>> createStructuredPrescription({
+    required int appointmentId,
+    required String diagnosis,
+    String? notes,
+    required List<Map<String, String>> medicines,
+  }) async {
+    final payload = {
+      'appointmentId': appointmentId,
+      'diagnosis': diagnosis,
+      'notes': notes ?? '',
+      'medicines': medicines
+          .map((m) => {
+                'medicineName': m['name'] ?? '',
+                'dosage': m['dosage'] ?? '',
+                'frequency': m['frequency'] ?? '',
+                'duration': m['duration'] ?? '',
+                'instructions': m['instructions'] ?? '',
+              })
+          .toList(),
+    };
+    return await _apiService.post<Map<String, dynamic>>(
+      '${AppConfig.baseUrl}/Prescriptions',
+      data: payload,
+      fromJson: (json) => json is Map<String, dynamic> ? json : Map<String, dynamic>.from(json as Map),
+    );
+  }
+
   // Get a specific patient's medical history for doctor view
   Future<ApiResponse<List<MedicalHistory>>> getPatientMedicalHistory(int patientId) async {
     return await _apiService.get<List<MedicalHistory>>(

@@ -183,7 +183,8 @@ class _WritePrescriptionScreenState extends State<WritePrescriptionScreen> {
                         child: Icon(Icons.medication, color: AppTheme.surface, size: 20),
                       ),
                       title: Text(med['name']!),
-                      subtitle: Text('${med['dosage']} - ${med['duration']}'),
+                      subtitle: Text('${med['dosage']} - ${med['duration']}\nFreq: ${med['frequency'] ?? 'N/A'} | Inst: ${med['instructions'] ?? 'None'}'),
+                      isThreeLine: true,
                       trailing: IconButton(
                         icon: const Icon(Icons.delete, color: AppTheme.error),
                         onPressed: () => _removeMedication(index),
@@ -244,6 +245,8 @@ class _WritePrescriptionScreenState extends State<WritePrescriptionScreen> {
         final nameController = TextEditingController();
         final dosageController = TextEditingController();
         final durationController = TextEditingController();
+        final frequencyController = TextEditingController();
+        final instructionsController = TextEditingController();
 
         return AlertDialog(
           title: const Text('Add Medication'),
@@ -274,6 +277,22 @@ class _WritePrescriptionScreenState extends State<WritePrescriptionScreen> {
                     hintText: 'e.g., 5 days',
                   ),
                 ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: frequencyController,
+                  decoration: const InputDecoration(
+                    labelText: 'Frequency',
+                    hintText: 'e.g., Every 8 hours',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: instructionsController,
+                  decoration: const InputDecoration(
+                    labelText: 'Instructions',
+                    hintText: 'e.g., Take after meals',
+                  ),
+                ),
               ],
             ),
           ),
@@ -292,6 +311,8 @@ class _WritePrescriptionScreenState extends State<WritePrescriptionScreen> {
                       'name': nameController.text,
                       'dosage': dosageController.text,
                       'duration': durationController.text,
+                      'frequency': frequencyController.text,
+                      'instructions': instructionsController.text,
                     });
                   });
                   Navigator.pop(context);
@@ -340,17 +361,15 @@ class _WritePrescriptionScreenState extends State<WritePrescriptionScreen> {
         return;
     }
 
-    String prescriptionText = "Diagnosis: ${_diagnosisController.text}\n\nMedications:\n";
-    for(var med in _medications) {
-        prescriptionText += "- ${med['name']} (${med['duration']}): ${med['dosage']}\n";
-    }
-    if (_notesController.text.isNotEmpty) {
-        prescriptionText += "\nNotes: ${_notesController.text}";
-    }
-
     // Call API
-    doctorService.addPrescription(appointmentId.toString(), prescriptionText).then((response) {
+    doctorService.createStructuredPrescription(
+      appointmentId: int.parse(appointmentId.toString()),
+      diagnosis: _diagnosisController.text,
+      notes: _notesController.text,
+      medicines: _medications,
+    ).then((response) async {
        if (response.success) {
+          await doctorService.updateAppointmentStatus(appointmentId.toString(), 'Completed');
           Get.snackbar(
             'Success',
             'Prescription saved & Appointment Completed',

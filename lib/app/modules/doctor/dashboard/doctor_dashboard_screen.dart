@@ -52,14 +52,8 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
     return AppBar(
       leading: Builder(
         builder: (context) => IconButton(
-          icon: Image.asset(
-            'assets/images/logos/buitems-logo-png_seeklogo-273407.png',
-            width: 32,
-            height: 32,
-            errorBuilder: (context, error, stackTrace) {
-              return const Icon(Icons.menu);
-            },
-          ),
+          icon: const Icon(Icons.menu, color: AppTheme.surface),
+          tooltip: 'Open menu',
           onPressed: () => Scaffold.of(context).openDrawer(),
         ),
       ),

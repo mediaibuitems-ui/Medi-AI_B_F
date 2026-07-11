@@ -55,14 +55,8 @@ class PatientDetailScreen extends StatelessWidget {
       backgroundColor: AppTheme.background,
       appBar: AppBar(
         leading: IconButton(
-          icon: Image.asset(
-            'assets/images/logos/buitems-logo-png_seeklogo-273407.png',
-            width: 32,
-            height: 32,
-            errorBuilder: (context, error, stackTrace) {
-              return const Icon(Icons.arrow_back);
-            },
-          ),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppTheme.surface),
+          tooltip: 'Back',
           onPressed: () => Get.back(),
         ),
         title: const Text('Patient Details'),
