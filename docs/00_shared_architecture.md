@@ -190,16 +190,18 @@ Two tabs via `DefaultTabController(length: 2)`:
 | `users` | `Id`, `FullName`, `Email`, `PasswordHash`, `Role`, `PhoneNumber`, `Department`, `RegistrationNumber`, `DateOfBirth`, `Gender`, `ProfileImageUrl`, `IsActive`, `IsEmailVerified`, `CreatedAt` | `Role` is a plain string: "Student", "Faculty", "Doctor", "Admin" |
 | `notifications` | `Id`, `UserId` (FK→users), `Title`, `Message`, `Type`, `RelatedEntityId`, `RelatedEntityType`, `IsRead`, `CreatedAt` | Push notification records per user |
 | `feedbacks` | `Id`, `UserId` (FK→users), `Subject`, `Message`, `AdminResponse`, `Status`, `CreatedAt`, `RespondedAt` | Status: "Pending" or "Responded" |
-| `auditlogs` | `Id`, `UserId`, `Action`, `EntityType`, `EntityId`, `OldValues`, `NewValues`, `CreatedAt` | Used by Admin "Recent Activity" |
+| `auditlogs` | `Id`, `UserId`, `Action`, `IconKey`, `EntityType`, `EntityId`, `OldValues`, `NewValues`, `CreatedAt` | Used by Admin "Recent Activity" |
 | `systemsettings` | `Id`, `SettingKey`, `SettingValue` | KV store for global admin config and per-doctor booking JSON (key prefix: `DoctorBookingSettings:{doctorId}`) |
 
 ---
 
-## 8. Resolved Architecture Gaps
+## 8. Security Architecture & Resolved Gaps
 
-| # | Original Issue | Resolution |
+| # | Original Issue / Topic | Resolution |
 |---|---|---|
 | 1 | JWT blacklist is in-memory only | Implemented DB-backed revocation using the `RevokedTokens` table with memory cache preload. |
 | 2 | Role stored as plain string | Refactored to use `UserRoles` (C#) and `AppRoles` (Dart) constants. Enforced across endpoints. |
 | 3 | No refresh token | **Invalid claim.** Verified `api_service.dart` handles 401s and utilizes `POST /api/Auth/refresh-token` correctly. |
 | 4 | SharedPreferences for settings | **Accepted behavior.** Local settings are kept device-local by design. |
+| 5 | IDOR (Insecure Direct Object Reference) | Secured endpoints (like `DELETE /appointments/{id}`) by strictly verifying `ClaimTypes.NameIdentifier` matches the target resource owner. |
+| 6 | BCrypt Password Hashing | Verified that the ASP.NET Identity pipeline utilizes BCrypt with automatic salting. Passwords are never stored or logged in plaintext. |
