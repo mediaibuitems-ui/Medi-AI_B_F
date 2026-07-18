@@ -1,5 +1,7 @@
-using MimeKit;
-using MailKit.Net.Smtp;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 
 namespace Backend_APIs.Services
 {
@@ -7,11 +9,9 @@ namespace Backend_APIs.Services
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<EmailService> _logger;
-        private readonly string _smtpHost;
-        private readonly int _smtpPort;
         private readonly string _senderEmail;
         private readonly string _senderName;
-        private readonly string _password;
+        private readonly string _password; // This will now store the SendGrid API Key
 
         public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
         {
@@ -19,18 +19,12 @@ namespace Backend_APIs.Services
             _logger = logger;
 
             var emailSettings = _configuration.GetSection("EmailSettings");
-            _smtpHost = emailSettings["SmtpHost"] ?? "smtp.gmail.com";
-            _smtpPort = int.TryParse(emailSettings["SmtpPort"], out int port) ? port : 587;
             _senderEmail = emailSettings["SenderEmail"] ?? "mediaibuitems@gmail.com";
             _senderName = emailSettings["SenderName"] ?? "BUITEMS Medi-AI";
             _password = emailSettings["Password"] ?? "";
 
-            Console.WriteLine($"[DEBUG] EmailService initialized. Host: {_smtpHost}:{_smtpPort}");
+            Console.WriteLine($"[DEBUG] EmailService initialized for SendGrid API.");
             Console.WriteLine($"[DEBUG] SenderEmail: '{_senderEmail}'");
-            Console.WriteLine($"[DEBUG] Password Length: {_password.Length}");
-            if (_password.Length > 0) {
-                Console.WriteLine($"[DEBUG] Password starts with: '{_password[0]}' and ends with: '{_password[^1]}'");
-            }
         }
 
         public async Task<bool> SendEmailAsync(string toEmail, string subject, string htmlBody)
@@ -39,36 +33,62 @@ namespace Backend_APIs.Services
             {
                 if (string.IsNullOrEmpty(_password))
                 {
-                    _logger.LogWarning("Email credentials not configured. Cannot send email to {ToEmail}", toEmail);
+                    _logger.LogWarning("Email credentials (API Key) not configured. Cannot send email to {ToEmail}", toEmail);
                     return false;
                 }
 
-                var message = new MimeMessage();
-                message.From.Add(new MailboxAddress(_senderName, _senderEmail));
-                message.To.Add(new MailboxAddress("", toEmail));
-                message.Subject = subject;
+                // Construct SendGrid JSON Payload
+                var payload = new
+                {
+                    personalizations = new[]
+                    {
+                        new
+                        {
+                            to = new[] { new { email = toEmail } },
+                            subject = subject
+                        }
+                    },
+                    from = new
+                    {
+                        email = _senderEmail,
+                        name = _senderName
+                    },
+                    content = new[]
+                    {
+                        new
+                        {
+                            type = "text/html",
+                            value = htmlBody
+                        }
+                    }
+                };
 
-                var bodyBuilder = new BodyBuilder { HtmlBody = htmlBody };
-                message.Body = bodyBuilder.ToMessageBody();
+                var jsonContent = JsonSerializer.Serialize(payload);
+                var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                using var client = new MailKit.Net.Smtp.SmtpClient();
-                // Accept all SSL certificates for development/testing
-                client.ServerCertificateValidationCallback = (s, c, h, e) => true;
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _password);
 
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                // Timeout after 10 seconds just in case
+                client.Timeout = TimeSpan.FromSeconds(10);
 
-                var secureOption = _smtpPort == 465 ? MailKit.Security.SecureSocketOptions.SslOnConnect : MailKit.Security.SecureSocketOptions.StartTls;
-                await client.ConnectAsync(_smtpHost, _smtpPort, secureOption, cts.Token);
-                await client.AuthenticateAsync(_senderEmail, _password, cts.Token);
-                await client.SendAsync(message, cts.Token);
-                await client.DisconnectAsync(true, cts.Token);
+                var response = await client.PostAsync("https://api.sendgrid.com/v3/mail/send", httpContent);
 
-                _logger.LogInformation("Email sent successfully to {ToEmail}", toEmail);
-                return true;
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation("Email sent successfully via SendGrid to {ToEmail}", toEmail);
+                    return true;
+                }
+                else
+                {
+                    var responseBody = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("SendGrid API returned {StatusCode}: {ResponseBody}", response.StatusCode, responseBody);
+                    return false;
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to send email to {ToEmail}", toEmail);
+                _logger.LogError(ex, "Failed to send HTTP email to {ToEmail}", toEmail);
                 return false;
             }
         }
