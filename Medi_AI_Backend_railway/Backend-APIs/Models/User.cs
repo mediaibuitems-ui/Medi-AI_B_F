@@ -1,15 +1,12 @@
 using System;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Identity;
 
 namespace Backend_APIs.Models;
 
-public partial class User
+public partial class User : IdentityUser<int>
 {
-    public int Id { get; set; }
-
-    public string Email { get; set; } = null!;
-
-    public string PasswordHash { get; set; } = null!;
+    // Id, Email, PasswordHash, PhoneNumber are inherited from IdentityUser<int>
 
     public string FullName { get; set; } = null!;
 
@@ -18,8 +15,6 @@ public partial class User
     public string? Department { get; set; }
 
     public string? RegistrationNumber { get; set; }
-
-    public string? PhoneNumber { get; set; }
 
     public DateOnly? DateOfBirth { get; set; }
 

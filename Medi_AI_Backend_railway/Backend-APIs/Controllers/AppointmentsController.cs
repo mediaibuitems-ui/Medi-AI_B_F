@@ -39,18 +39,24 @@ namespace Backend_APIs.Controllers
         /// </summary>
         [HttpGet]
         [Authorize(Roles = Backend_APIs.Constants.UserRoles.Admin)]
-        public async Task<IActionResult> GetAllAppointments()
+        public async Task<IActionResult> GetAllAppointments([FromQuery] int page = 1, [FromQuery] int limit = 50)
         {
             try
             {
-                var appointmentList = await _context.Appointments
+                var query = _context.Appointments
                     .Include(a => a.Patient)
                     .Include(a => a.Doctor)
                         .ThenInclude(d => d.User)
                     .Include(a => a.Prescriptions)
-                    .AsNoTracking()
+                    .AsNoTracking();
+
+                var totalCount = await query.CountAsync();
+
+                var appointmentList = await query
                     .OrderByDescending(a => a.AppointmentDate)
                     .ThenByDescending(a => a.AppointmentTime)
+                    .Skip((page - 1) * limit)
+                    .Take(limit)
                     .ToListAsync();
 
                 var appointments = appointmentList.Select(a => new AppointmentResponseDto
@@ -70,11 +76,17 @@ namespace Backend_APIs.Controllers
                     CreatedAt = a.CreatedAt.HasValue ? a.CreatedAt.Value.ToString("o") : null
                 }).ToList();
 
-                return Ok(new ApiResponse<List<AppointmentResponseDto>>
+                return Ok(new ApiResponse<object>
                 {
                     Success = true,
-                    Message = "All appointments retrieved successfully",
-                    Data = appointments
+                    Message = "Appointments retrieved successfully",
+                    Data = new
+                    {
+                        items = appointments,
+                        totalCount = totalCount,
+                        page = page,
+                        limit = limit
+                    }
                 });
             }
             catch (Exception ex)
@@ -181,6 +193,80 @@ namespace Backend_APIs.Controllers
                 });
             }
         }
+        /// <summary>
+        /// Get available slots for a doctor on a specific date
+        /// </summary>
+        [HttpGet("available-slots")]
+        public async Task<IActionResult> GetAvailableSlots([FromQuery] int doctorId, [FromQuery] string date)
+        {
+            try
+            {
+                if (!DateTime.TryParse(date, out DateTime appointmentDate))
+                {
+                    return BadRequest(new ApiResponse<object> { Success = false, Message = "Invalid date format." });
+                }
+                var apptDateOnly = DateOnly.FromDateTime(appointmentDate);
+
+                // Check leave
+                var leave = await _context.Doctorleaves
+                    .Where(l => l.DoctorId == doctorId && l.StartDate <= apptDateOnly && l.EndDate >= apptDateOnly)
+                    .FirstOrDefaultAsync();
+
+                if (leave != null)
+                {
+                    return Ok(new ApiResponse<List<string>> { Success = true, Message = "Doctor is on leave", Data = new List<string>() });
+                }
+
+                if (!UniversityWorkingDays.Contains(appointmentDate.DayOfWeek))
+                {
+                    return Ok(new ApiResponse<List<string>> { Success = true, Message = "Not a working day", Data = new List<string>() });
+                }
+
+                var dayName = appointmentDate.DayOfWeek.ToString();
+                var schedule = await _context.Doctorschedules
+                    .FirstOrDefaultAsync(s => s.DoctorId == doctorId && s.DayOfWeek == dayName && s.IsActive == true);
+
+                if (schedule == null)
+                {
+                    return Ok(new ApiResponse<List<string>> { Success = true, Message = "No schedule for this day", Data = new List<string>() });
+                }
+
+                var bookingSettings = await GetDoctorBookingSettingsAsync(doctorId);
+                int slotDuration = bookingSettings.AppointmentDuration;
+                
+                var availableSlots = new List<string>();
+                var currentTime = schedule.StartTime;
+
+                // Generate all possible slots
+                while (currentTime.AddMinutes(slotDuration) <= schedule.EndTime)
+                {
+                    // Within University Timings
+                    if (currentTime >= UniversityStartTime && currentTime.AddMinutes(slotDuration) <= UniversityEndTime)
+                    {
+                        availableSlots.Add(currentTime.ToString("HH:mm"));
+                    }
+                    currentTime = currentTime.AddMinutes(slotDuration);
+                }
+
+                // Get booked slots
+                var bookedAppointments = await _context.Appointments
+                    .Where(a => a.DoctorId == doctorId && a.AppointmentDate == apptDateOnly && a.Status != "Cancelled" && a.Status != "NoShow")
+                    .Select(a => a.AppointmentTime)
+                    .ToListAsync();
+
+                var bookedTimes = bookedAppointments.Select(t => t.ToString("HH:mm")).ToHashSet();
+
+                // Remove booked slots
+                availableSlots.RemoveAll(slot => bookedTimes.Contains(slot));
+
+                return Ok(new ApiResponse<List<string>> { Success = true, Message = "Available slots", Data = availableSlots });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse<object> { Success = false, Message = ex.Message });
+            }
+        }
+
         /// <summary>
         /// Book a new appointment
         /// </summary>

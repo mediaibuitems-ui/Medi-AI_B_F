@@ -1,6 +1,7 @@
 using Backend_APIs.Models;
 using Backend_APIs.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +11,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Threading.RateLimiting;
-using System.Text;
 
 namespace Backend_APIs
 {
@@ -39,6 +39,24 @@ namespace Backend_APIs
             builder.Services.AddHttpClient();
 
             builder.Services.AddScoped<INotificationPushService, NotificationPushService>();
+            
+            // Register Background Services
+            builder.Services.AddHostedService<TokenCleanupService>();
+
+            // Configure ASP.NET Core Identity with custom BCrypt hasher for existing passwords
+            builder.Services.AddScoped<Microsoft.AspNetCore.Identity.IPasswordHasher<User>, BCryptPasswordHasher>();
+            builder.Services.AddIdentity<User, Microsoft.AspNetCore.Identity.IdentityRole<int>>(options =>
+            {
+                options.Password.RequireDigit = true;
+                options.Password.RequiredLength = 8;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireLowercase = false;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+                options.Lockout.MaxFailedAccessAttempts = 5;
+            })
+            .AddEntityFrameworkStores<MediaidbContext>()
+            .AddDefaultTokenProviders();
 
             // Configure JWT Authentication
             var jwtSettings = builder.Configuration.GetSection("Jwt");

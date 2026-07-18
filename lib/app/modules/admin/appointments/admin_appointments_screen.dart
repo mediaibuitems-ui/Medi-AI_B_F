@@ -68,9 +68,16 @@ class AdminAppointmentsScreen extends GetView<AdminAppointmentsController> {
         return RefreshIndicator(
           onRefresh: controller.loadAppointments,
           child: ListView.builder(
+            controller: controller.scrollController,
             padding: const EdgeInsets.all(16),
-            itemCount: controller.filteredAppointments.length,
+            itemCount: controller.filteredAppointments.length + (controller.hasMore.value ? 1 : 0),
             itemBuilder: (context, index) {
+              if (index == controller.filteredAppointments.length) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
               final appointment = controller.filteredAppointments[index];
               return _buildAppointmentCard(appointment);
             },

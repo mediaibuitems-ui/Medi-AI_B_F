@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'dart:convert';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../data/models/medicine_reminder.dart';
 import 'api_service.dart';
 import 'notification_service.dart';
 import '../../config/app_config.dart';
@@ -84,37 +86,40 @@ class MedicineReminderService extends GetxService {
 
   Future<void> syncPendingReminders() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final keys = prefs.getKeys().where((k) =>
-          k.startsWith('offline_medicine_reminders_') ||
-          k.startsWith('offline_faculty_medicine_reminders_'));
+      final userId = Get.find<AuthService>().currentUser.value?.id ?? 'guest';
+      final boxName = 'offline_medicine_reminders_$userId';
+      
+      if (!Hive.isBoxOpen(boxName)) {
+        await Hive.openBox<MedicineReminder>(boxName);
+      }
+      final box = Hive.box<MedicineReminder>(boxName);
+      
+      final unsynced = box.values.where((r) => !r.isSynced).toList();
+      if (unsynced.isNotEmpty) {
+        final mapList = unsynced.map((r) => {
+          'id': r.id,
+          'medicineName': r.medicineName,
+          'dosage': r.dosage,
+          'frequency': 'Custom',
+          'times': r.times.join(','),
+          'startDate': r.startDate.toIso8601String(),
+          'endDate': r.endDate?.toIso8601String(),
+          'notes': r.notes,
+          'isActive': r.isActive,
+        }).toList();
 
-      for (final key in keys) {
-        final String? remindersJson = prefs.getString(key);
-        if (remindersJson == null || remindersJson.isEmpty) continue;
-
-        final List<dynamic> decoded = jsonDecode(remindersJson);
-        final List<Map<String, dynamic>> reminders =
-            decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-
-        // Find unsynced
-        final unsynced = reminders.where((r) => r['isSynced'] != true).toList();
-        if (unsynced.isNotEmpty) {
-          try {
-            final resultIds = await syncReminders(unsynced);
-            // If successful, update local storage and reconcile IDs
-            for (int i = 0; i < unsynced.length; i++) {
-              unsynced[i]['isSynced'] = true;
-              if (i < resultIds.length) {
-                // If the old ID was temporary (negative or string-based timestamp), update it.
-                // We keep the logic simple: always use the server's ID.
-                unsynced[i]['id'] = resultIds[i].toString();
-              }
+        try {
+          final resultIds = await syncReminders(mapList);
+          for (int i = 0; i < unsynced.length; i++) {
+            final reminder = unsynced[i];
+            reminder.isSynced = true;
+            if (i < resultIds.length) {
+              reminder.id = resultIds[i].toString();
             }
-            await prefs.setString(key, jsonEncode(reminders));
-          } catch (e) {
-            // Fails silently if offline
+            await reminder.save();
           }
+        } catch (e) {
+          // Fails silently if offline
         }
       }
     } catch (e) {

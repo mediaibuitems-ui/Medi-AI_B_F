@@ -122,7 +122,9 @@ class AiSymptomHistoryScreen extends GetView<AiSymptomHistoryController> {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        Row(
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
                           children: [
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -139,7 +141,6 @@ class AiSymptomHistoryScreen extends GetView<AiSymptomHistoryController> {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(

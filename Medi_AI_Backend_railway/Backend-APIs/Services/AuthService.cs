@@ -1,4 +1,4 @@
-﻿using Backend_APIs.DTOs;
+using Backend_APIs.DTOs;
 using Backend_APIs.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -14,16 +14,18 @@ namespace Backend_APIs.Services
         private readonly MediaidbContext _context;
         private readonly IConfiguration _configuration;
         private readonly IEmailService _emailService;
+        private readonly Microsoft.AspNetCore.Identity.UserManager<User> _userManager;
 
         private const int DEFAULT_MAX_LOGIN_ATTEMPTS = 5;
         private const int DEFAULT_SESSION_TIMEOUT = 30; // 30 minutes
         private const int LOCKOUT_DURATION_MINUTES = 30;
 
-        public AuthService(MediaidbContext context, IConfiguration configuration, IEmailService emailService)
+        public AuthService(MediaidbContext context, IConfiguration configuration, IEmailService emailService, Microsoft.AspNetCore.Identity.UserManager<User> userManager)
         {
             _context = context;
             _configuration = configuration;
             _emailService = emailService;
+            _userManager = userManager;
         }
 
         public async Task<(bool Success, string Message)> RegisterAsync(RegisterDto registerDto)
@@ -97,19 +99,15 @@ namespace Backend_APIs.Services
                     }
                 }
 
-                // Hash password
-                var passwordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
-
                 // Fetch System Settings
-                // Hardcoded to false temporarily because the database setting is returning true and Railway is blocking ports
-                var requireVerification = false;
+                var requireVerification = await GetBoolSettingAsync("RequireEmailVerification", defaultValue: true);
                 var autoApprove = await GetBoolSettingAsync("AutoApproveRegistrations", defaultValue: true);
 
                 // Create new user
                 var user = new User
                 {
+                    UserName = email,
                     Email = email,
-                    PasswordHash = passwordHash,
                     FullName = fullName,
                     Role = role,
                     Department = department,
@@ -124,8 +122,12 @@ namespace Backend_APIs.Services
                     UpdatedAt = DateTime.UtcNow
                 };
 
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
+                var result = await _userManager.CreateAsync(user, registerDto.Password);
+                if (!result.Succeeded)
+                {
+                    await transaction.RollbackAsync();
+                    return (false, string.Join(", ", result.Errors.Select(e => e.Description)));
+                }
 
                 if (role == Backend_APIs.Constants.UserRoles.Doctor)
                 {
@@ -239,59 +241,35 @@ namespace Backend_APIs.Services
         {
             try
             {
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginDto.Email);
+                var user = await _userManager.FindByEmailAsync(loginDto.Email);
                 if (user == null)
                 {
                     return (false, "Invalid email or password", null, null, null);
                 }
 
-
-                /* Temporarily Disabled Lackout Logic due to DB Schema Mismatch
-                // Check for account lockout
-                if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTime.UtcNow)
+                if (await _userManager.IsLockedOutAsync(user))
                 {
-                   var minutesLeft = (int)(user.LockoutEnd.Value - DateTime.UtcNow).TotalMinutes;
-                   return (false, $"Account locked due to too many failed attempts. Try again in {minutesLeft} minutes.", null, null);
+                    var lockoutEnd = await _userManager.GetLockoutEndDateAsync(user);
+                    var minutesLeft = (int)(lockoutEnd!.Value.UtcDateTime - DateTime.UtcNow).TotalMinutes;
+                    return (false, $"Account locked due to multiple failed attempts. Try again in {minutesLeft} minutes.", null, null, null);
                 }
-                */
 
-                // Verify password
-                if (!BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash))
+                if (!await _userManager.CheckPasswordAsync(user, loginDto.Password))
                 {
-                    /* Temporarily Disabled Failed Attempt Tracking due to DB Schema Mismatch
-                    // Increment failed login attempts
-                    user.FailedLoginAttempts++;
-
-                    // Get MaxLoginAttempts setting
-                    var maxAttemptsSetting = await _context.Systemsettings
-                        .FirstOrDefaultAsync(s => s.SettingKey == "MaxLoginAttempts");
+                    await _userManager.AccessFailedAsync(user);
                     
-                    int maxAttempts = DEFAULT_MAX_LOGIN_ATTEMPTS;
-                    if (maxAttemptsSetting != null && int.TryParse(maxAttemptsSetting.SettingValue, out int val))
+                    if (await _userManager.IsLockedOutAsync(user))
                     {
-                        maxAttempts = val;
+                        var lockoutEnd = await _userManager.GetLockoutEndDateAsync(user);
+                        var minutesLeft = (int)(lockoutEnd!.Value.UtcDateTime - DateTime.UtcNow).TotalMinutes;
+                        return (false, $"Account locked due to multiple failed attempts. Try again in {minutesLeft} minutes.", null, null, null);
                     }
-
-                    if (user.FailedLoginAttempts >= maxAttempts)
-                    {
-                        user.LockoutEnd = DateTime.UtcNow.AddMinutes(LOCKOUT_DURATION_MINUTES);
-                        user.FailedLoginAttempts = 0; // Reset attempts after lockout or keep them? Usually reset or keep max. Let's reset to start clean cycle after lockout.
-                        await _context.SaveChangesAsync();
-                        return (false, $"Account locked for {LOCKOUT_DURATION_MINUTES} minutes due to {maxAttempts} failed login attempts.", null, null);
-                    }
-
-                    await _context.SaveChangesAsync();
-                    int attemptsLeft = maxAttempts - user.FailedLoginAttempts;
-                    return (false, $"Invalid email or password. {attemptsLeft} attempts remaining.", null, null);
-                    */
-                    return (false, "Invalid email or password", null, null, null);
+                    
+                    var attemptsLeft = _userManager.Options.Lockout.MaxFailedAccessAttempts - await _userManager.GetAccessFailedCountAsync(user);
+                    return (false, $"Invalid email or password. {attemptsLeft} attempts remaining before lockout.", null, null, null);
                 }
 
-                /* Temporarily Disabled Reset Logic due to DB Schema Mismatch
-                // Reset failed attempts on successful login
-                user.FailedLoginAttempts = 0;
-                user.LockoutEnd = null;
-                */
+                await _userManager.ResetAccessFailedCountAsync(user);
 
                 if (user.IsActive == false)
                 {
@@ -520,11 +498,15 @@ namespace Backend_APIs.Services
                     return (false, "Reset token has expired");
                 }
 
-                // Hash new password
-                var newPasswordHash = BCrypt.Net.BCrypt.HashPassword(resetPasswordDto.NewPassword);
+                // Generate identity reset token and consume it to update password properly via UserManager
+                var identityResetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var resetResult = await _userManager.ResetPasswordAsync(user, identityResetToken, resetPasswordDto.NewPassword);
 
-                // Update password
-                user.PasswordHash = newPasswordHash;
+                if (!resetResult.Succeeded)
+                {
+                    return (false, string.Join(", ", resetResult.Errors.Select(e => e.Description)));
+                }
+
                 user.UpdatedAt = DateTime.UtcNow;
 
                 // Mark token as used

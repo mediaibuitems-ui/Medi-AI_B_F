@@ -143,6 +143,14 @@ class FacultyDashboardScreen extends GetView<FacultyDashboardController> {
                 ),
 
                 ListTile(
+                  leading: const Icon(Icons.health_and_safety_outlined),
+                  title: const Text('AI Symptom Analyzer'),
+                  onTap: () {
+                    Get.back();
+                    controller.healthAnalyzer();
+                  },
+                ),
+                ListTile(
                   leading: const Icon(Icons.alarm_outlined),
                   title: const Text('Medicine Reminders'),
                   onTap: () {

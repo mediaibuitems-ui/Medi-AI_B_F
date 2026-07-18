@@ -274,12 +274,12 @@ Save → `PUT /api/doctors/profile`
 
 ---
 
-## 7. Gaps & Known Issues
+## 7. Recent Updates
 
-| # | Issue | File | Impact |
+| # | Update | File | Impact |
 |---|---|---|---|
-| 1 | AI Symptom Analyzer not available to doctors | Doctor module | Doctors cannot use the diagnostic tool themselves |
-| 2 | No delete appointment endpoint shown in doctor UI | Doctor dashboard | Doctor can only change status; cannot remove an appointment row |
+| 1 | AI Symptom Analyzer integrated | Doctor dashboard | Doctors can now use the diagnostic tool directly from their sidebar. |
+| 2 | Delete appointment support | Doctor dashboard | Doctors can now permanently delete past, cancelled, or completed appointments. |
 
 > **Resolved Backlogs:** The following critical issues have been fixed:
 > 1. **Booking Settings Validation:** Added strict schema validation and safe fallbacks for `DoctorBookingSettings` JSON storage.

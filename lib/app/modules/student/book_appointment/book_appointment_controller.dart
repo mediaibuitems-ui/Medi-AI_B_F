@@ -110,15 +110,16 @@ class BookAppointmentController extends GetxController {
     try {
       final dateStr = DateFormat('yyyy-MM-dd').format(selectedDate.value!);
       final response = await _apiService.get(
-          '/doctors/${selectedDoctorId.value}/available-slots',
-          queryParameters: {'date': dateStr});
+          '/appointments/available-slots',
+          queryParameters: {
+            'doctorId': selectedDoctorId.value,
+            'date': dateStr
+          });
 
       if (response.success && response.data != null) {
-        final data = response.data as Map<String, dynamic>;
-        if (data['slots'] != null) {
-          final List<dynamic> slotsList = data['slots'];
-          availableSlots.value =
-              slotsList.map((s) => s as Map<String, dynamic>).toList();
+        final List<dynamic> slotsList = response.data;
+        availableSlots.value =
+            slotsList.map((s) => {'time': s.toString()}).toList();
         } else {
           availableSlots.clear();
         }

@@ -4,6 +4,7 @@ using Backend_APIs.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend_APIs.Migrations
 {
     [DbContext(typeof(MediaidbContext))]
-    partial class MediaidbContextModelSnapshot : ModelSnapshot
+    [Migration("20260718084113_IdentityMigration")]
+    partial class IdentityMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -453,7 +456,7 @@ namespace Backend_APIs.Migrations
 
                     b.HasIndex("PatientId");
 
-                    b.ToTable("Doctorreviews", (string)null);
+                    b.ToTable("Doctorreviews");
                 });
 
             modelBuilder.Entity("Backend_APIs.Models.Doctorschedule", b =>

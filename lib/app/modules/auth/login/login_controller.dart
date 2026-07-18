@@ -72,8 +72,10 @@ class LoginController extends GetxController {
     rememberMe.value = !rememberMe.value;
   }
 
-  /// Validates the form and sends the login request.
   Future<void> handleLogin() async {
+    // Prevent duplicate submissions if already loading.
+    if (isLoading.value) return;
+
     // Do not continue if the form is invalid or not yet attached.
     if (formKey == null ||
         formKey!.currentState == null ||

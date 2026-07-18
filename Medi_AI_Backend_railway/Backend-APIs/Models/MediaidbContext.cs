@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace Backend_APIs.Models;
 
-public partial class MediaidbContext : DbContext
+public partial class MediaidbContext : IdentityDbContext<User, IdentityRole<int>, int>
 {
     public MediaidbContext()
     {
@@ -59,12 +61,6 @@ public partial class MediaidbContext : DbContext
 
     public virtual DbSet<Systemsetting> Systemsettings { get; set; }
 
-    public virtual DbSet<Todaysappointment> Todaysappointments { get; set; }
-
-    public virtual DbSet<User> Users { get; set; }
-
-
-
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         // Configuration is always injected via DI from Program.cs.
@@ -73,6 +69,8 @@ public partial class MediaidbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
         modelBuilder
             .UseCollation("utf8mb4_unicode_ci")
             .HasCharSet("utf8mb4");
@@ -613,23 +611,8 @@ public partial class MediaidbContext : DbContext
                 .HasConstraintName("systemsettings_ibfk_1");
         });
 
-        modelBuilder.Entity<Todaysappointment>(entity =>
-        {
-            entity
-                .HasNoKey()
-                .ToView("todaysappointments");
-
-            entity.Property(e => e.AppointmentTime).HasColumnType("time");
-            entity.Property(e => e.DoctorName).HasMaxLength(100);
-            entity.Property(e => e.PatientEmail).HasMaxLength(100);
-            entity.Property(e => e.PatientName).HasMaxLength(100);
-            entity.Property(e => e.PatientPhone).HasMaxLength(20);
-            entity.Property(e => e.Specialization).HasMaxLength(100);
-            entity.Property(e => e.Status)
-                .HasDefaultValueSql("'Pending'")
-                .HasColumnType("enum('Pending','Confirmed','InProgress','Completed','Cancelled','NoShow')");
-            entity.Property(e => e.Symptoms).HasColumnType("text");
-        });
+        // Global Query Filter for Soft Delete Integrity
+        modelBuilder.Entity<User>().HasQueryFilter(u => u.IsActive == true);
 
         modelBuilder.Entity<User>(entity =>
         {

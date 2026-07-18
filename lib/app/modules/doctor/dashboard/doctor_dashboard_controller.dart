@@ -247,6 +247,24 @@ class DoctorDashboardController extends GetxController {
     await updateAppointmentStatus(appointmentId, 'Cancelled', reason);
   }
 
+  Future<void> deleteAppointment(String appointmentId) async {
+    isLoading.value = true;
+    try {
+      final response = await Get.find<ApiService>().delete('/Appointments/$appointmentId');
+      if (response.success) {
+        Get.snackbar('Success', 'Appointment deleted permanently',
+            backgroundColor: Colors.redAccent, colorText: Colors.white);
+        await loadDashboardData();
+      } else {
+        Get.snackbar('Error', response.message);
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to delete appointment');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   Future<void> markAsChecked(String appointmentId) async {
     await updateAppointmentStatus(appointmentId, 'Checked');
   }

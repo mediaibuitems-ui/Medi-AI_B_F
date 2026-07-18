@@ -180,12 +180,11 @@ This means the `FacultyController.cs` endpoints are **dead code / orphaned**.
 
 ---
 
-## 9. Gaps & Known Issues
+## 9. Recent Updates
 
-| # | Issue | Impact |
+| # | Update | Impact |
 |---|---|---|
-| 1 | No Profile screen for Faculty | Faculty cannot view or update their own profile within the app |
-| 2 | No Medical History or Emergency Contacts for Faculty | These health features are unavailable to faculty users |
-| 3 | Faculty sidebar has fewer items than Student | Inconsistent feature access — may be intentional but is undocumented |
+| 1 | Shared Routes Integration | Faculty now have full access to Profile, Medical History, Emergency Contacts, and AI Symptom Analyzer utilizing shared modules. |
+| 2 | Sidebar Parity | Faculty sidebar now accurately reflects access to the same core features as Students. |
 
 > **Resolved Backlogs:** The severe coupling between Faculty and Student endpoints (including the orphaned `FacultyController.cs`) has been completely resolved. Faculty now utilize properly secured and decoupled routes, preventing any IDOR data-leakage vulnerabilities.
