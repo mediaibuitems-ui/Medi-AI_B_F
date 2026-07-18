@@ -6,6 +6,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/models/medicine_reminder.dart';
 import 'api_service.dart';
+import 'auth_service.dart';
 import 'notification_service.dart';
 import '../../config/app_config.dart';
 

@@ -8,6 +8,7 @@ import '../../../services/auth_service.dart';
 import '../../../services/doctor_service.dart';
 import '../../../services/notification_service.dart';
 import '../../../routes/app_routes.dart';
+import '../../../services/api_service.dart';
 import '../../../services/appointment_event_service.dart';
 
 class DoctorDashboardController extends GetxController {

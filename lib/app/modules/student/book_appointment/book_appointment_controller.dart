@@ -120,9 +120,6 @@ class BookAppointmentController extends GetxController {
         final List<dynamic> slotsList = response.data;
         availableSlots.value =
             slotsList.map((s) => {'time': s.toString()}).toList();
-        } else {
-          availableSlots.clear();
-        }
       } else {
         availableSlots.clear();
         if (response.message != "Doctor is not available on this day") {

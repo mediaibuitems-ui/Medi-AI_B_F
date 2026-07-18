@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:medi_ai/app/data/models/appointment.dart';
 import 'package:medi_ai/app/services/api_service.dart';
