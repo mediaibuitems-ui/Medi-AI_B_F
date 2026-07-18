@@ -79,7 +79,7 @@ namespace Backend_APIs.Services
                 var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
                 if (existingUser != null)
                 {
-                    if (existingUser.IsEmailVerified)
+                    if (existingUser.IsEmailVerified == true)
                     {
                         return (false, "Email already registered and verified. Please login.");
                     }
