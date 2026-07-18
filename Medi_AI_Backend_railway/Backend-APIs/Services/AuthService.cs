@@ -174,7 +174,7 @@ namespace Backend_APIs.Services
                     }
 
                     await transaction.CommitAsync();
-                    return (true, $"Registration successful! Please verify your email. DEV OTP: {user.Otp}");
+                    return (true, $"Registration successful! Please verify your email. DEV OTP: {otp}");
                 }
 
                 await transaction.CommitAsync();
