@@ -347,7 +347,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                             color: AppTheme.textPrimary)),
                     const SizedBox(height: 16),
                     SizedBox(
-                      height: 160,
+                      height: 180,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -379,7 +379,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                             color: AppTheme.textPrimary)),
                     const SizedBox(height: 16),
                     SizedBox(
-                      height: 160,
+                      height: 180,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         crossAxisAlignment: CrossAxisAlignment.end,

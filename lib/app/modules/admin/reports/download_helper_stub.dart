@@ -5,31 +5,35 @@ import 'package:get/get.dart';
 Future<void> downloadFile(String content, String filename) async {
   try {
     Directory? directory;
+    String finalPath = '';
+
     if (Platform.isAndroid) {
-      // Use Downloads directory on Android so users can easily find it
-      directory = Directory('/storage/emulated/0/Download');
-      if (!await directory.exists()) {
-        directory = await getExternalStorageDirectory();
-      }
+      // Direct write to public Downloads folder (allowed without permissions for new files on Android 10+)
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final safeFilename = filename.replaceAll('.csv', '_$timestamp.csv');
+      finalPath = '/storage/emulated/0/Download/$safeFilename';
     } else {
       directory = await getApplicationDocumentsDirectory();
+      finalPath = '${directory.path}/$filename';
     }
     
-    if (directory != null) {
-      final file = File('${directory.path}/$filename');
-      await file.writeAsString(content);
-      Get.snackbar(
-        'Report Saved!',
-        'Saved to: ${file.path}',
-        snackPosition: SnackPosition.BOTTOM,
-        duration: const Duration(seconds: 5),
-      );
-    }
+    final file = File(finalPath);
+    await file.writeAsString(content);
+    
+    Get.snackbar(
+      'Report Saved Successfully!',
+      'Saved in your Downloads folder:\n$finalPath',
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 8),
+      backgroundColor: const Color(0xFF4CAF50),
+      colorText: const Color(0xFFFFFFFF),
+    );
   } catch (e) {
     Get.snackbar(
-      'Error',
-      'Could not save report: $e',
+      'Error Saving Report',
+      'Please ensure you have enough storage space. Error: $e',
       snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 5),
     );
   }
 }
