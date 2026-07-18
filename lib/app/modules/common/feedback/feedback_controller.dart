@@ -51,14 +51,18 @@ class FeedbackController extends GetxController {
       if (response.success) {
         subjectController.clear();
         messageController.clear();
-        AppFeedback.success('Submitted', response.message.isEmpty
-            ? 'Your feedback has been submitted successfully.'
-            : response.message);
+        AppFeedback.success(
+            'Submitted',
+            response.message.isEmpty
+                ? 'Your feedback has been submitted successfully.'
+                : response.message);
         await loadMyFeedback();
       } else {
-        AppFeedback.error('Error', response.message.isEmpty
-            ? 'Unable to submit feedback.'
-            : response.message);
+        AppFeedback.error(
+            'Error',
+            response.message.isEmpty
+                ? 'Unable to submit feedback.'
+                : response.message);
       }
     } catch (e) {
       AppFeedback.error('Error', 'Failed to submit feedback.');
@@ -103,7 +107,8 @@ class FeedbackController extends GetxController {
   }
 
   String readAdminResponse(Map<String, dynamic> item) {
-    return _readString(item, ['adminResponse', 'AdminResponse', 'response', 'Response']);
+    return _readString(
+        item, ['adminResponse', 'AdminResponse', 'response', 'Response']);
   }
 
   String readStatus(Map<String, dynamic> item) {
@@ -112,22 +117,27 @@ class FeedbackController extends GetxController {
   }
 
   String readCreatedAt(Map<String, dynamic> item) {
-    return _readString(item, ['createdAt', 'CreatedAt', 'submittedAt', 'SubmittedAt']);
+    return _readString(
+        item, ['createdAt', 'CreatedAt', 'submittedAt', 'SubmittedAt']);
   }
 
   String readUserName(Map<String, dynamic> item) {
-    return _readString(item, ['userName', 'UserName', 'fullName', 'FullName', 'name', 'Name'], fallback: 'User');
+    return _readString(
+        item, ['userName', 'UserName', 'fullName', 'FullName', 'name', 'Name'],
+        fallback: 'User');
   }
 
   String readUserRole(Map<String, dynamic> item) {
-    return _readString(item, ['role', 'Role', 'userRole', 'UserRole'], fallback: 'Student');
+    return _readString(item, ['role', 'Role', 'userRole', 'UserRole'],
+        fallback: 'Student');
   }
 
   String readTargetId(Map<String, dynamic> item) {
     return _readString(item, ['id', 'Id'], fallback: '');
   }
 
-  String _readString(Map<String, dynamic> item, List<String> keys, {String fallback = ''}) {
+  String _readString(Map<String, dynamic> item, List<String> keys,
+      {String fallback = ''}) {
     for (final key in keys) {
       final value = item[key];
       if (value != null) {

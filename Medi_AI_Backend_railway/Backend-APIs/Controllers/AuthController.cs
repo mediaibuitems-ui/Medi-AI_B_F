@@ -1,8 +1,10 @@
-using Backend_APIs.DTOs;
+﻿using Backend_APIs.DTOs;
+using Backend_APIs.Models;
 using Backend_APIs.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using System.Security.Claims;
 
@@ -209,7 +211,7 @@ namespace Backend_APIs.Controllers
         }
 
         /// <summary>
-        /// Request password reset — verifies email + phone number both match the same account,
+        /// Request password reset â€” verifies email + phone number both match the same account,
         /// then sends a 6-digit OTP to the registered email address.
         /// </summary>
         [HttpPost("forgot-password")]
@@ -326,18 +328,36 @@ namespace Backend_APIs.Controllers
         /// </summary>
         [HttpPost("logout")]
         [Authorize]
-        public IActionResult Logout([FromServices] IMemoryCache cache)
+        public async Task<IActionResult> Logout([FromServices] IMemoryCache cache, [FromServices] MediaidbContext dbContext)
         {
             var token = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
             
             if (!string.IsNullOrEmpty(token))
             {
+                var hashBytes = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token));
+                var tokenHash = Convert.ToHexString(hashBytes).ToLowerInvariant();
+
+                // Check if already revoked
+                var exists = await dbContext.RevokedTokens.AnyAsync(r => r.TokenHash == tokenHash);
+                if (!exists)
+                {
+                    // Add to database
+                    var revokedToken = new RevokedToken
+                    {
+                        TokenHash = tokenHash,
+                        ExpiresAt = DateTime.UtcNow.AddHours(24), // Max token lifetime
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    dbContext.RevokedTokens.Add(revokedToken);
+                    await dbContext.SaveChangesAsync();
+                }
+
                 // We'll cache the blacklisted token for 24 hours (maximum possible lifetime of our tokens)
                 var cacheOptions = new MemoryCacheEntryOptions
                 {
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24)
                 };
-                cache.Set($"Blacklist_{token}", true, cacheOptions);
+                cache.Set($"Blacklist_{tokenHash}", true, cacheOptions);
             }
 
             return Ok(new ApiResponse<object>
@@ -399,3 +419,4 @@ namespace Backend_APIs.Controllers
         }
     }
 }
+

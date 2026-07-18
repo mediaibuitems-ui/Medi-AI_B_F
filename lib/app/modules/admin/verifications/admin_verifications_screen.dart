@@ -26,7 +26,8 @@ class AdminVerificationsScreen extends GetView<AdminVerificationController> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.verified_user_outlined, size: 64, color: AppTheme.textSecondary.withOpacity(0.5)),
+                Icon(Icons.verified_user_outlined,
+                    size: 64, color: AppTheme.textSecondary.withOpacity(0.5)),
                 const SizedBox(height: 16),
                 const Text(
                   'No pending verifications',
@@ -41,14 +42,31 @@ class AdminVerificationsScreen extends GetView<AdminVerificationController> {
         }
 
         return RefreshIndicator(
-          onRefresh: controller.loadPendingVerifications,
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: controller.pendingUsers.length,
-            itemBuilder: (context, index) {
-              final user = controller.pendingUsers[index];
-              return _buildVerificationCard(user);
+          onRefresh: () => controller.loadPendingVerifications(refresh: true),
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (ScrollNotification scrollInfo) {
+              if (scrollInfo.metrics.pixels >=
+                  scrollInfo.metrics.maxScrollExtent - 200) {
+                controller.loadPendingVerifications();
+              }
+              return false;
             },
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: controller.pendingUsers.length + 1,
+              itemBuilder: (context, index) {
+                if (index == controller.pendingUsers.length) {
+                  return Obx(() => controller.isLoadingMore.value
+                      ? const Padding(
+                          padding: EdgeInsets.all(16.0),
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      : const SizedBox.shrink());
+                }
+                final user = controller.pendingUsers[index];
+                return _buildVerificationCard(user);
+              },
+            ),
           ),
         );
       }),
@@ -112,7 +130,8 @@ class AdminVerificationsScreen extends GetView<AdminVerificationController> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppTheme.warning.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -133,7 +152,8 @@ class AdminVerificationsScreen extends GetView<AdminVerificationController> {
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.calendar_today, size: 14, color: AppTheme.textSecondary),
+                const Icon(Icons.calendar_today,
+                    size: 14, color: AppTheme.textSecondary),
                 const SizedBox(width: 6),
                 Text(
                   'Joined: $date',
@@ -174,7 +194,8 @@ class AdminVerificationsScreen extends GetView<AdminVerificationController> {
     Get.dialog(
       AlertDialog(
         title: const Text('Reject User'),
-        content: Text('Are you sure you want to reject and delete ${user['fullName']}? This action cannot be undone.'),
+        content: Text(
+            'Are you sure you want to reject and delete ${user['fullName']}? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Get.back(),

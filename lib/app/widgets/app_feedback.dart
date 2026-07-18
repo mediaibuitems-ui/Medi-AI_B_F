@@ -51,9 +51,11 @@ class AppFeedback {
     Get.snackbar(
       title,
       message,
-      snackPosition: SnackPosition.TOP, // Top so gap is visible across all users
+      snackPosition:
+          SnackPosition.TOP, // Top so gap is visible across all users
       snackStyle: SnackStyle.FLOATING,
-      margin: const EdgeInsets.only(top: 24, left: 16, right: 16, bottom: 24), // Added a gap
+      margin: const EdgeInsets.only(
+          top: 24, left: 16, right: 16, bottom: 24), // Added a gap
       borderRadius: 16,
       colorText: Colors.white,
       backgroundColor: backgroundColor,

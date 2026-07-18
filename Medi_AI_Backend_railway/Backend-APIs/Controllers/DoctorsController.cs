@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 
 namespace Backend_APIs.Controllers
 {
@@ -14,6 +15,7 @@ namespace Backend_APIs.Controllers
     public class DoctorsController : ControllerBase
     {
         private readonly MediaidbContext _context;
+        private readonly ILogger<DoctorsController> _logger;
         private const string BookingSettingsPrefix = "DoctorBookingSettings:";
         private static readonly HashSet<int> AllowedSlotDurations = new() { 15, 20, 30, 45, 60 };
         private static readonly HashSet<string> AllowedDays = new(StringComparer.OrdinalIgnoreCase)
@@ -23,13 +25,14 @@ namespace Backend_APIs.Controllers
         private static readonly TimeOnly UniversityStartTime = new(8, 0);
         private static readonly TimeOnly UniversityEndTime = new(17, 0);
 
-        public DoctorsController(MediaidbContext context)
+        public DoctorsController(MediaidbContext context, ILogger<DoctorsController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // ==========================================
-        // 🚀 THE MAGIC FIX: Auto-Create Doctor Profile
+        // ðŸš€ THE MAGIC FIX: Auto-Create Doctor Profile
         // ==========================================
         private async Task<Doctor?> EnsureDoctorProfileExists(int userId)
         {
@@ -50,7 +53,7 @@ namespace Backend_APIs.Controllers
                         LicenseNumber = $"TEMP-{user.Id}-{DateTime.UtcNow.Ticks}",
                         Qualification = "MBBS",
                         Experience = 5,
-                        IsAvailable = true,
+                        IsAvailable = false,
                         Bio = "Experienced doctor available for consultation.",
                         AverageRating = 0,
                         TotalRatings = 0,
@@ -99,6 +102,7 @@ namespace Backend_APIs.Controllers
                         doctor.RoomNumber,
                         doctor.Bio,
                         doctor.IsAvailable,
+                        doctor.LicenseNumber,
                         User = new
                         {
                             doctor.User.FullName,
@@ -133,9 +137,18 @@ namespace Backend_APIs.Controllers
                 if (!string.IsNullOrEmpty(dto.FullName)) doctor.User.FullName = dto.FullName;
                 if (!string.IsNullOrEmpty(dto.PhoneNumber)) doctor.User.PhoneNumber = dto.PhoneNumber;
                 if (!string.IsNullOrEmpty(dto.Specialization)) doctor.Specialization = dto.Specialization;
+                if (!string.IsNullOrEmpty(dto.LicenseNumber)) doctor.LicenseNumber = dto.LicenseNumber;
                 if (!string.IsNullOrEmpty(dto.RoomNumber)) doctor.RoomNumber = dto.RoomNumber;
                 if (!string.IsNullOrEmpty(dto.Bio)) doctor.Bio = dto.Bio;
-                if (dto.IsAvailable.HasValue) doctor.IsAvailable = dto.IsAvailable;
+                
+                if (dto.IsAvailable.HasValue)
+                {
+                    if (dto.IsAvailable.Value && (doctor.LicenseNumber?.StartsWith("TEMP-") ?? false))
+                    {
+                        return BadRequest(new ApiResponse<object> { Success = false, Message = "Cannot mark as available until a real license number is provided." });
+                    }
+                    doctor.IsAvailable = dto.IsAvailable;
+                }
 
                 _context.Update(doctor);
                 await _context.SaveChangesAsync();
@@ -151,6 +164,7 @@ namespace Backend_APIs.Controllers
                         doctor.RoomNumber,
                         doctor.Bio,
                         doctor.IsAvailable,
+                        doctor.LicenseNumber,
                         User = new
                         {
                             doctor.User.FullName,
@@ -324,7 +338,7 @@ namespace Backend_APIs.Controllers
         /// Update doctor availability
         /// </summary>
         [HttpPatch("{id}/availability")]
-        [Authorize(Roles = "Doctor,Admin")]
+        [Authorize(Roles = Backend_APIs.Constants.UserRoles.Doctor + "," + Backend_APIs.Constants.UserRoles.Admin)]
         public async Task<IActionResult> UpdateAvailability(int id, [FromBody] bool isAvailable)
         {
             var doctor = await _context.Doctors.FindAsync(id);
@@ -357,7 +371,7 @@ namespace Backend_APIs.Controllers
         /// Update doctor profile
         /// </summary>
         [HttpPut("{id}")]
-        [Authorize(Roles = "Doctor,Admin")]
+        [Authorize(Roles = Backend_APIs.Constants.UserRoles.Doctor + "," + Backend_APIs.Constants.UserRoles.Admin)]
         public async Task<IActionResult> UpdateDoctor(int id, [FromBody] Doctor doctor)
         {
             if (id != doctor.Id)
@@ -419,7 +433,7 @@ namespace Backend_APIs.Controllers
         public async Task<ActionResult<object>> GetAvailableDoctors()
         {
             var doctorUsers = await _context.Users
-                .Where(u => (u.Role == "Doctor" || u.Role == "doctor") && !_context.Doctors.Any(d => d.UserId == u.Id))
+                .Where(u => (u.Role == Backend_APIs.Constants.UserRoles.Doctor) && !_context.Doctors.Any(d => d.UserId == u.Id))
                 .ToListAsync();
 
             if (doctorUsers.Any())
@@ -433,7 +447,7 @@ namespace Backend_APIs.Controllers
                         LicenseNumber = $"TEMP-{user.Id}-{DateTime.UtcNow.Ticks}",
                         Qualification = "MBBS",
                         Experience = 5,
-                        IsAvailable = true,
+                        IsAvailable = false,
                         Bio = "Experienced doctor available for consultation.",
                         AverageRating = 0,
                         TotalRatings = 0,
@@ -679,6 +693,8 @@ namespace Backend_APIs.Controllers
                 var slotDuration = bookingSettings.AppointmentDuration;
                 TimeOnly.TryParse(bookingSettings.BreakStartTime, out var breakStartTime);
                 TimeOnly.TryParse(bookingSettings.BreakEndTime, out var breakEndTime);
+                
+                var maxReached = existingAppointments.Count >= bookingSettings.MaxPatientsPerDay;
 
                 var currentTime = startTime;
                 while (currentTime < endTime)
@@ -694,7 +710,7 @@ namespace Backend_APIs.Controllers
                         continue;
                     }
 
-                    var isBooked = existingAppointments.Any(apt => apt == currentTime);
+                    var isBooked = maxReached || existingAppointments.Any(apt => apt == currentTime);
 
                     slots.Add(new AvailableSlotDto
                     {
@@ -804,7 +820,7 @@ namespace Backend_APIs.Controllers
         }
 
         [HttpGet("my-booking-settings")]
-        [Authorize(Roles = "Doctor")]
+        [Authorize(Roles = Backend_APIs.Constants.UserRoles.Doctor)]
         public async Task<IActionResult> GetMyBookingSettings()
         {
             try
@@ -837,7 +853,7 @@ namespace Backend_APIs.Controllers
         }
 
         [HttpPut("my-booking-settings")]
-        [Authorize(Roles = "Doctor")]
+        [Authorize(Roles = Backend_APIs.Constants.UserRoles.Doctor)]
         public async Task<IActionResult> UpdateMyBookingSettings([FromBody] DoctorBookingSettingsDto dto)
         {
             try
@@ -849,7 +865,16 @@ namespace Backend_APIs.Controllers
                 var doctor = await EnsureDoctorProfileExists(userId);
                 if (doctor == null) return NotFound("Doctor profile not found");
 
-                NormalizeBookingSettings(dto);
+                var errors = ValidateBookingSettings(dto);
+                if (errors.Count > 0)
+                {
+                    return BadRequest(new ApiResponse<object>
+                    {
+                        Success = false,
+                        Message = string.Join(" ", errors),
+                        Data = null
+                    });
+                }
 
                 var settingKey = $"{BookingSettingsPrefix}{doctor.Id}";
                 var existing = await _context.Systemsettings.FirstOrDefaultAsync(s => s.SettingKey == settingKey);
@@ -910,34 +935,57 @@ namespace Backend_APIs.Controllers
                     return defaults;
                 }
 
-                NormalizeBookingSettings(parsed);
+                var errors = ValidateBookingSettings(parsed);
+                if (errors.Count > 0)
+                {
+                    _logger.LogWarning("Existing booking settings for doctor {DoctorId} are invalid. Using defaults.", doctorId);
+                    return defaults;
+                }
                 return parsed;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogWarning(ex, "Failed to deserialize booking settings for doctor {DoctorId}", doctorId);
                 return defaults;
             }
         }
 
-        private static void NormalizeBookingSettings(DoctorBookingSettingsDto settings)
+        private static List<string> ValidateBookingSettings(DoctorBookingSettingsDto settings)
         {
+            var errors = new List<string>();
+
             if (!AllowedSlotDurations.Contains(settings.AppointmentDuration))
             {
-                settings.AppointmentDuration = 30;
+                errors.Add($"Invalid duration. Allowed values: {string.Join(", ", AllowedSlotDurations)}");
             }
 
-            settings.MaxPatientsPerDay = Math.Clamp(settings.MaxPatientsPerDay, 1, 50);
-            settings.ReminderNotificationMinutes = Math.Clamp(settings.ReminderNotificationMinutes, 5, 120);
-
-            if (!TimeOnly.TryParse(settings.BreakStartTime, out _))
+            if (settings.MaxPatientsPerDay <= 0 || settings.MaxPatientsPerDay > 100)
             {
-                settings.BreakStartTime = "12:00";
+                errors.Add("Max patients per day must be between 1 and 100.");
             }
 
-            if (!TimeOnly.TryParse(settings.BreakEndTime, out _))
+            if (settings.ReminderNotificationMinutes < 0)
             {
-                settings.BreakEndTime = "13:00";
+                errors.Add("Reminder notification minutes cannot be negative.");
             }
+
+            if (settings.EnableBreakTime)
+            {
+                if (!TimeOnly.TryParse(settings.BreakStartTime, out var breakStart))
+                {
+                    errors.Add("Invalid break start time.");
+                }
+                if (!TimeOnly.TryParse(settings.BreakEndTime, out var breakEnd))
+                {
+                    errors.Add("Invalid break end time.");
+                }
+                if (breakStart >= breakEnd)
+                {
+                    errors.Add("Break end time must be after break start time.");
+                }
+            }
+
+            return errors;
         }
 
         [HttpGet("appointments/today")]
@@ -990,7 +1038,7 @@ namespace Backend_APIs.Controllers
         /// Get all appointments for the logged-in doctor
         /// </summary>
         [HttpGet("appointments")]
-        [Authorize(Roles = "Doctor")]
+        [Authorize(Roles = Backend_APIs.Constants.UserRoles.Doctor)]
         public async Task<IActionResult> GetAllDoctorAppointments()
         {
             try
@@ -1041,7 +1089,7 @@ namespace Backend_APIs.Controllers
         /// Get all unique patients for the logged-in doctor
         /// </summary>
         [HttpGet("patients")]
-        [Authorize(Roles = "Doctor")]
+        [Authorize(Roles = Backend_APIs.Constants.UserRoles.Doctor)]
         public async Task<IActionResult> GetDoctorPatients()
         {
             try
@@ -1098,7 +1146,7 @@ namespace Backend_APIs.Controllers
         /// Get schedule for the logged-in doctor
         /// </summary>
         [HttpGet("my-schedule")]
-        [Authorize(Roles = "Doctor")]
+        [Authorize(Roles = Backend_APIs.Constants.UserRoles.Doctor)]
         public async Task<IActionResult> GetMySchedule()
         {
             try
@@ -1155,7 +1203,7 @@ namespace Backend_APIs.Controllers
         /// Update schedule for the logged-in doctor
         /// </summary>
         [HttpPost("schedule")]
-        [Authorize(Roles = "Doctor")]
+        [Authorize(Roles = Backend_APIs.Constants.UserRoles.Doctor)]
         public async Task<IActionResult> UpdateSchedule([FromBody] UpdateScheduleDto dto)
         {
             try
@@ -1363,7 +1411,7 @@ namespace Backend_APIs.Controllers
         /// Add a new leave for the logged-in doctor
         /// </summary>
         [HttpPost("leaves")]
-        [Authorize(Roles = "Doctor")]
+        [Authorize(Roles = Backend_APIs.Constants.UserRoles.Doctor)]
         public async Task<IActionResult> AddLeave([FromBody] AddLeaveDto dto)
         {
             try
@@ -1423,7 +1471,7 @@ namespace Backend_APIs.Controllers
         /// Get all leaves for the logged-in doctor
         /// </summary>
         [HttpGet("leaves")]
-        [Authorize(Roles = "Doctor")]
+        [Authorize(Roles = Backend_APIs.Constants.UserRoles.Doctor)]
         public async Task<IActionResult> GetMyLeaves()
         {
             try
@@ -1469,7 +1517,7 @@ namespace Backend_APIs.Controllers
         /// Update an existing leave for the logged-in doctor
         /// </summary>
         [HttpPut("leaves/{id}")]
-        [Authorize(Roles = "Doctor,Admin")]
+        [Authorize(Roles = Backend_APIs.Constants.UserRoles.Doctor + "," + Backend_APIs.Constants.UserRoles.Admin)]
         public async Task<IActionResult> UpdateLeave(int id, [FromBody] AddLeaveDto dto)
         {
             try
@@ -1520,7 +1568,7 @@ namespace Backend_APIs.Controllers
         /// Delete an existing leave
         /// </summary>
         [HttpDelete("leaves/{id}")]
-        [Authorize(Roles = "Doctor,Admin")]
+        [Authorize(Roles = Backend_APIs.Constants.UserRoles.Doctor + "," + Backend_APIs.Constants.UserRoles.Admin)]
         public async Task<IActionResult> DeleteLeave(int id)
         {
             try

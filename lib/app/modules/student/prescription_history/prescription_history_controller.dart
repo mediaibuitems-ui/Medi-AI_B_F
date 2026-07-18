@@ -33,23 +33,25 @@ class PrescriptionHistoryController extends GetxController {
         final list = response.data as List;
         prescriptionAppointments.value = list.map((item) {
           final json = item as Map<String, dynamic>;
-          
+
           // Build a detailed prescription string from Diagnosis, Notes and Medicines
-          String fullPrescription = 'Diagnosis: ${json["diagnosis"] ?? json["Diagnosis"] ?? "N/A"}\n';
+          String fullPrescription =
+              'Diagnosis: ${json["diagnosis"] ?? json["Diagnosis"] ?? "N/A"}\n';
           final notes = json["notes"] ?? json["Notes"];
           if (notes != null && notes.toString().isNotEmpty) {
             fullPrescription += 'Notes: $notes\n';
           }
-          
+
           fullPrescription += '\nMedicines:\n';
           final medicines = json["medicines"] ?? json["Medicines"];
           if (medicines != null && medicines is List && medicines.isNotEmpty) {
             for (var med in medicines) {
-              final medName = med["medicineName"] ?? med["MedicineName"] ?? "Unknown";
+              final medName =
+                  med["medicineName"] ?? med["MedicineName"] ?? "Unknown";
               final dosage = med["dosage"] ?? med["Dosage"] ?? "";
               final frequency = med["frequency"] ?? med["Frequency"] ?? "";
               fullPrescription += '• $medName $dosage - $frequency\n';
-              
+
               final instructions = med["instructions"] ?? med["Instructions"];
               if (instructions != null && instructions.toString().isNotEmpty) {
                 fullPrescription += '  Instructions: $instructions\n';
@@ -60,16 +62,26 @@ class PrescriptionHistoryController extends GetxController {
           }
 
           return Appointment(
-            id: json["appointmentId"]?.toString() ?? json["AppointmentId"]?.toString() ?? '',
+            id: json["appointmentId"]?.toString() ??
+                json["AppointmentId"]?.toString() ??
+                '',
             patientId: user.id,
             patientName: user.name,
             doctorId: '',
-            doctorName: json["doctorName"]?.toString() ?? json["DoctorName"]?.toString() ?? 'Unknown',
+            doctorName: json["doctorName"]?.toString() ??
+                json["DoctorName"]?.toString() ??
+                'Unknown',
             specialization: 'Doctor Consultation',
-            dateTime: DateTime.tryParse(json["appointmentDate"]?.toString() ?? json["AppointmentDate"]?.toString() ?? '') ?? DateTime.now(),
+            dateTime: DateTime.tryParse(json["appointmentDate"]?.toString() ??
+                    json["AppointmentDate"]?.toString() ??
+                    '') ??
+                DateTime.now(),
             status: 'Completed',
             prescription: fullPrescription.trim(),
-            createdAt: DateTime.tryParse(json["createdAt"]?.toString() ?? json["CreatedAt"]?.toString() ?? '') ?? DateTime.now(),
+            createdAt: DateTime.tryParse(json["createdAt"]?.toString() ??
+                    json["CreatedAt"]?.toString() ??
+                    '') ??
+                DateTime.now(),
           );
         }).toList();
       } else {

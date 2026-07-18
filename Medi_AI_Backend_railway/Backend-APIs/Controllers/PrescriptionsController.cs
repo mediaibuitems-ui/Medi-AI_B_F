@@ -1,4 +1,4 @@
-using Backend_APIs.DTOs;
+﻿using Backend_APIs.DTOs;
 using Backend_APIs.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -73,7 +73,7 @@ namespace Backend_APIs.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Doctor,Admin")]
+        [Authorize(Roles = Backend_APIs.Constants.UserRoles.Doctor + "," + Backend_APIs.Constants.UserRoles.Admin)]
         public async Task<IActionResult> CreatePrescription([FromBody] CreatePrescriptionDto dto)
         {
             try
@@ -146,3 +146,4 @@ namespace Backend_APIs.Controllers
         public string? Instructions { get; set; }
     }
 }
+

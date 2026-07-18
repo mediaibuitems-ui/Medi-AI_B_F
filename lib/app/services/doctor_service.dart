@@ -90,7 +90,8 @@ class DoctorService extends GetxService {
   }
 
   // Update schedule
-  Future<ApiResponse<Object>> updateSchedule(List<Map<String, dynamic>> schedules) async {
+  Future<ApiResponse<Object>> updateSchedule(
+      List<Map<String, dynamic>> schedules) async {
     return await _apiService.post<Object>(
       '${AppConfig.baseUrl}/Doctors/schedule',
       data: {'schedules': schedules},
@@ -128,7 +129,9 @@ class DoctorService extends GetxService {
   }
 
   // Update appointment status (e.g., Confirmed, Cancelled, Completed)
-  Future<ApiResponse<Object>> updateAppointmentStatus(String appointmentId, String status, [String? reason]) async {
+  Future<ApiResponse<Object>> updateAppointmentStatus(
+      String appointmentId, String status,
+      [String? reason]) async {
     final Map<String, dynamic> data = {'status': status};
     if (reason != null && reason.isNotEmpty) {
       data['cancellationReason'] = reason;
@@ -158,10 +161,11 @@ class DoctorService extends GetxService {
   }
 
   // Add prescription to appointment
-  Future<ApiResponse<Map<String, dynamic>>> addPrescription(String appointmentId, String prescription) async {
+  Future<ApiResponse<Map<String, dynamic>>> addPrescription(
+      String appointmentId, String prescription) async {
     return await _apiService.put<Map<String, dynamic>>(
       '${AppConfig.baseUrl}/Appointments/$appointmentId/prescription',
-      data: { 'prescription': prescription },
+      data: {'prescription': prescription},
       fromJson: (json) => json as Map<String, dynamic>,
     );
   }
@@ -190,12 +194,15 @@ class DoctorService extends GetxService {
     return await _apiService.post<Map<String, dynamic>>(
       '${AppConfig.baseUrl}/Prescriptions',
       data: payload,
-      fromJson: (json) => json is Map<String, dynamic> ? json : Map<String, dynamic>.from(json as Map),
+      fromJson: (json) => json is Map<String, dynamic>
+          ? json
+          : Map<String, dynamic>.from(json as Map),
     );
   }
 
   // Get a specific patient's medical history for doctor view
-  Future<ApiResponse<List<MedicalHistory>>> getPatientMedicalHistory(int patientId) async {
+  Future<ApiResponse<List<MedicalHistory>>> getPatientMedicalHistory(
+      int patientId) async {
     return await _apiService.get<List<MedicalHistory>>(
       '${AppConfig.baseUrl}/MedicalHistory/patient/$patientId',
       fromJson: (json) {
@@ -213,7 +220,8 @@ class DoctorService extends GetxService {
   }
 
   // Get a specific patient's emergency contacts for doctor view
-  Future<ApiResponse<List<Map<String, dynamic>>>> getPatientEmergencyContacts(int patientId) async {
+  Future<ApiResponse<List<Map<String, dynamic>>>> getPatientEmergencyContacts(
+      int patientId) async {
     return await _apiService.get<List<Map<String, dynamic>>>(
       '${AppConfig.baseUrl}/EmergencyContacts/user/$patientId',
       fromJson: (json) {
@@ -229,7 +237,8 @@ class DoctorService extends GetxService {
     );
   }
 
-  Future<ApiResponse<List<Map<String, dynamic>>>> getUnreadNotifications() async {
+  Future<ApiResponse<List<Map<String, dynamic>>>>
+      getUnreadNotifications() async {
     return await _apiService.get<List<Map<String, dynamic>>>(
       '${AppConfig.baseUrl}/Notifications/unread',
       fromJson: (json) {
@@ -278,7 +287,8 @@ class DoctorService extends GetxService {
   }
 
   // Update doctor's leave
-  Future<ApiResponse<Object>> updateLeave(int id, Map<String, dynamic> data) async {
+  Future<ApiResponse<Object>> updateLeave(
+      int id, Map<String, dynamic> data) async {
     return await _apiService.put<Object>(
       '${AppConfig.baseUrl}/Doctors/leaves/$id',
       data: data,

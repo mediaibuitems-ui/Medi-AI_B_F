@@ -22,8 +22,8 @@ class PatientsController extends GetxController {
       final response = await _doctorService.getPatients();
       if (response.success && response.data != null) {
         patients.value = response.data!
-          .map((item) => Map<String, dynamic>.from(item))
-          .toList();
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList();
         applySearch();
       }
     } catch (e) {
@@ -46,8 +46,9 @@ class PatientsController extends GetxController {
     }
 
     filteredPatients.value = patients.where((patient) {
-      final name =
-          (patient['fullName'] ?? patient['FullName'] ?? '').toString().toLowerCase();
+      final name = (patient['fullName'] ?? patient['FullName'] ?? '')
+          .toString()
+          .toLowerCase();
       final cms = (patient['registrationNumber'] ??
               patient['RegistrationNumber'] ??
               patient['cmsNumber'] ??

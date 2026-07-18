@@ -143,7 +143,8 @@ class RegisterEmailController extends GetxController {
     // Stop immediately if the form validator fails.
     if (!formKey.currentState!.validate()) {
       _logger.w('Form validation failed - check required fields');
-      AppFeedback.error('Validation error', 'Please fill in all required fields');
+      AppFeedback.error(
+          'Validation error', 'Please fill in all required fields');
       return;
     }
 
@@ -183,7 +184,8 @@ class RegisterEmailController extends GetxController {
       if (specializationController.text.trim().isEmpty ||
           licenseNumberController.text.trim().isEmpty ||
           qualificationController.text.trim().isEmpty) {
-        AppFeedback.error('Required', 'Please fill in all doctor-specific fields');
+        AppFeedback.error(
+            'Required', 'Please fill in all doctor-specific fields');
         return;
       }
     }
@@ -194,7 +196,8 @@ class RegisterEmailController extends GetxController {
 
     try {
       // Log the registration payload summary.
-      _logger.d('ðŸš€ Starting registration for: ${emailController.text.trim()}');
+      _logger
+          .d('ðŸš€ Starting registration for: ${emailController.text.trim()}');
       _logger.d('Form data:\n'
           '  - Role: ${selectedRole.value}\n'
           '  - Department: ${selectedDepartment.value}\n'
@@ -244,20 +247,22 @@ class RegisterEmailController extends GetxController {
             : null,
       );
 
-      _logger.d('Registration response - Success: ${response.success}, Message: ${response.message}');
+      _logger.d(
+          'Registration response - Success: ${response.success}, Message: ${response.message}');
 
       if (response.success) {
         if (response.message.contains("You can now login")) {
           // OTP is bypassed by the backend
           AppFeedback.success('Success', response.message);
-          
+
           // Wait briefly so the user sees the success message.
           await Future.delayed(const Duration(milliseconds: 1000));
-          
+
           isLoading.value = false; // Turn off loading before navigation
           // Send the user directly to the Login screen
           Get.offAllNamed(AppRoutes.login);
-          _logger.d('Navigation command sent to Login screen because OTP is bypassed');
+          _logger.d(
+              'Navigation command sent to Login screen because OTP is bypassed');
           return; // Exit early to skip finally block
         } else {
           // Capture a dev OTP if the backend returned one.
@@ -271,7 +276,8 @@ class RegisterEmailController extends GetxController {
           }
 
           // Show a short success snackbar before redirecting to OTP verification.
-          AppFeedback.success('Success', 'Registration successful. Please verify your email.');
+          AppFeedback.success(
+              'Success', 'Registration successful. Please verify your email.');
 
           // Wait briefly so the user sees the success message.
           await Future.delayed(const Duration(milliseconds: 500));

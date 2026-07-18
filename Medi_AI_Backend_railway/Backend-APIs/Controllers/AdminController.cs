@@ -3,18 +3,21 @@ using Backend_APIs.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Backend_APIs.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "admin,Admin")]
+    [Authorize(Roles = Backend_APIs.Constants.UserRoles.Admin)]
     public class AdminController : ControllerBase
     {
         private readonly MediaidbContext _context;
-        public AdminController(MediaidbContext context)
+        private readonly IMemoryCache _cache;
+        public AdminController(MediaidbContext context, IMemoryCache cache)
         {
             _context = context;
+            _cache = cache;
         }
 
         [HttpGet("system-settings")]
@@ -112,13 +115,11 @@ namespace Backend_APIs.Controllers
         [HttpPost("backup-database")]
         public IActionResult BackupDatabase()
         {
-            // Note: True database backup (like mysqldump) is highly environment specific.
-            // Returning a structured system log.
-            return Ok(new ApiResponse<object>
+            return StatusCode(501, new ApiResponse<object>
             {
-                Success = true,
-                Message = "Database backup routine initiated successfully. See logs for completion status.",
-                Data = new { BackupId = Guid.NewGuid(), StartedAt = DateTime.UtcNow, Status = "InProgress" }
+                Success = false,
+                Message = "Database backups are handled automatically by the hosting provider (Railway). Manual backups via this interface are not implemented.",
+                Data = null
             });
         }
 
@@ -127,24 +128,44 @@ namespace Backend_APIs.Controllers
         {
             try
             {
-                var totalUsers = await _context.Users.CountAsync();
-                var totalStudents = await _context.Users.CountAsync(u => u.Role == "Student");
-                var totalFaculty = await _context.Users.CountAsync(u => u.Role == "Faculty");
-                var totalDoctors = await _context.Doctors.CountAsync(); // Or Users with Role = Doctor
-                var totalAppointments = await _context.Appointments.CountAsync();
+                if (_cache.TryGetValue("AdminDashboardStats", out object? cachedStats))
+                {
+                    return Ok(new ApiResponse<object>
+                    {
+                        Success = true,
+                        Message = "Statistics loaded successfully (cached)",
+                        Data = cachedStats
+                    });
+                }
+
+                var usersGroupByRole = await _context.Users
+                    .GroupBy(u => u.Role)
+                    .Select(g => new { Role = g.Key, Count = g.Count() })
+                    .ToDictionaryAsync(x => x.Role ?? "Unknown", x => x.Count);
+
+                var totalUsers = usersGroupByRole.Values.Sum();
+                var totalStudents = usersGroupByRole.GetValueOrDefault(Backend_APIs.Constants.UserRoles.Student, 0);
+                var totalFaculty = usersGroupByRole.GetValueOrDefault(Backend_APIs.Constants.UserRoles.Faculty, 0);
+                var totalDoctors = await _context.Doctors.CountAsync();
+
+                var appointmentsGrouped = await _context.Appointments
+                    .GroupBy(a => a.Status)
+                    .Select(g => new { Status = g.Key, Count = g.Count() })
+                    .ToDictionaryAsync(x => x.Status ?? "Unknown", x => x.Count);
+
+                var totalAppointments = appointmentsGrouped.Values.Sum();
+                var completedAppointments = appointmentsGrouped.GetValueOrDefault("Completed", 0);
+                var cancelledAppointments = appointmentsGrouped.GetValueOrDefault("Cancelled", 0);
+                var pendingAppointments = appointmentsGrouped.GetValueOrDefault("Pending", 0);
 
                 var today = DateOnly.FromDateTime(DateTime.Today);
                 var todayAppointments = await _context.Appointments.CountAsync(a => a.AppointmentDate == today);
 
-                var completedAppointments = await _context.Appointments.CountAsync(a => a.Status == "Completed");
-                var cancelledAppointments = await _context.Appointments.CountAsync(a => a.Status == "Cancelled");
-                var pendingAppointments = await _context.Appointments.CountAsync(a => a.Status == "Pending");
-
                 var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
                 var newUsers = await _context.Users.CountAsync(u => u.CreatedAt >= thirtyDaysAgo);
                 var activeUsers = await _context.Users.CountAsync(u => u.IsActive == true);
-
                 var pendingVerifications = await _context.Users.CountAsync(u => u.IsEmailVerified == false || u.IsActive == false);
+                
                 var activeFeedbacks = await _context.Feedbacks.CountAsync(f => f.Status == "Pending" || f.Status == "Active");
                 var systemAlerts = await _context.Notifications.CountAsync(n => n.IsRead == false &&
                                                                                (n.User.Role == "Admin" || n.User.Role == "admin"));
@@ -162,7 +183,6 @@ namespace Backend_APIs.Controllers
                     })
                     .ToListAsync();
 
-                // Format as a list of { label: "Jan", value: 120 }
                 var monthlyTrends = new List<object>();
                 for (int i = 5; i >= 0; i--)
                 {
@@ -191,29 +211,33 @@ namespace Backend_APIs.Controllers
                     monthlyUserTrends.Add(new { label = targetMonth.ToString("MMM"), value = count });
                 }
 
+                var statsData = new
+                {
+                    totalUsers,
+                    totalStudents,
+                    totalFaculty,
+                    totalDoctors,
+                    totalAppointments,
+                    completedAppointments,
+                    cancelledAppointments,
+                    pendingAppointments,
+                    todayAppointments,
+                    newUsers,
+                    activeUsers,
+                    pendingVerifications,
+                    activeFeedbacks,
+                    systemAlerts,
+                    monthlyTrends,
+                    monthlyUserTrends
+                };
+
+                _cache.Set("AdminDashboardStats", statsData, TimeSpan.FromMinutes(1));
+
                 return Ok(new ApiResponse<object>
                 {
                     Success = true,
                     Message = "Statistics loaded successfully",
-                    Data = new
-                    {
-                        totalUsers,
-                        totalStudents,
-                        totalFaculty,
-                        totalDoctors,
-                        totalAppointments,
-                        completedAppointments,
-                        cancelledAppointments,
-                        pendingAppointments,
-                        todayAppointments,
-                        newUsers,
-                        activeUsers,
-                        pendingVerifications,
-                        activeFeedbacks,
-                        systemAlerts,
-                        monthlyTrends,
-                        monthlyUserTrends
-                    }
+                    Data = statsData
                 });
             }
             catch (Exception ex)
@@ -230,14 +254,20 @@ namespace Backend_APIs.Controllers
 
 
         [HttpGet("pending-verifications")]
-        public async Task<IActionResult> GetPendingVerifications()
+        public async Task<IActionResult> GetPendingVerifications([FromQuery] int page = 1, [FromQuery] int limit = 20)
         {
             try
             {
-                var pendingUsers = await _context.Users
+                var query = _context.Users
                     .AsNoTracking()
-                    .Where(u => u.IsEmailVerified == false || u.IsActive == false)
+                    .Where(u => u.IsEmailVerified == false || u.IsActive == false);
+
+                var totalCount = await query.CountAsync();
+
+                var pendingUsers = await query
                     .OrderByDescending(u => u.CreatedAt)
+                    .Skip((page - 1) * limit)
+                    .Take(limit)
                     .Select(u => new
                     {
                         u.Id,
@@ -254,7 +284,7 @@ namespace Backend_APIs.Controllers
                 {
                     Success = true,
                     Message = "Pending verifications loaded successfully",
-                    Data = pendingUsers
+                    Data = new { totalCount, items = pendingUsers }
                 });
             }
             catch (Exception ex)
@@ -316,10 +346,7 @@ namespace Backend_APIs.Controllers
                         ? $"{a.User.FullName}{(string.IsNullOrWhiteSpace(a.EntityType) ? string.Empty : $" • {a.EntityType}")}"
                         : a.Action,
                     Time = a.CreatedAt,
-                    Icon = a.Action.Contains("register", StringComparison.OrdinalIgnoreCase) ? "person_add" :
-                           a.Action.Contains("appointment", StringComparison.OrdinalIgnoreCase) ? "calendar_today" :
-                           a.Action.Contains("doctor", StringComparison.OrdinalIgnoreCase) ? "medical_services" :
-                           a.Action.Contains("report", StringComparison.OrdinalIgnoreCase) ? "assessment" : "history"
+                    Icon = string.IsNullOrWhiteSpace(a.IconKey) ? "history" : a.IconKey
                 })
                 .ToListAsync();
 
@@ -480,8 +507,7 @@ namespace Backend_APIs.Controllers
                 }
 
                 user.IsActive = !(user.IsActive ?? true);
-                if (user.IsActive == false) user.IsEmailVerified = false; // Example logic
-
+                
                 await _context.SaveChangesAsync();
 
                 return Ok(new ApiResponse<object>
@@ -573,7 +599,7 @@ namespace Backend_APIs.Controllers
             await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
 
-            if (dto.Role == "Doctor")
+            if (dto.Role == Backend_APIs.Constants.UserRoles.Doctor)
             {
                 var doctor = new Doctor
                 {
@@ -677,3 +703,5 @@ namespace Backend_APIs.Controllers
         }
     }
 }
+
+

@@ -110,7 +110,7 @@ class AdminDashboardScreen extends GetView<AdminDashboardController> {
             final user = controller.currentUser.value;
             final imageUrl = user?.profileImage;
             final hasValidImageUrl =
-              imageUrl != null && imageUrl.trim().isNotEmpty;
+                imageUrl != null && imageUrl.trim().isNotEmpty;
             return UserAccountsDrawerHeader(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
@@ -130,7 +130,7 @@ class AdminDashboardScreen extends GetView<AdminDashboardController> {
               currentAccountPicture: CircleAvatar(
                 backgroundColor: AppTheme.surface,
                 backgroundImage:
-                  hasValidImageUrl ? NetworkImage(imageUrl) : null,
+                    hasValidImageUrl ? NetworkImage(imageUrl) : null,
                 child: hasValidImageUrl
                     ? null
                     : const Icon(Icons.shield,
@@ -228,7 +228,8 @@ class AdminDashboardScreen extends GetView<AdminDashboardController> {
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.logout, color: AppTheme.error),
-            title: const Text('Logout', style: TextStyle(color: AppTheme.error)),
+            title:
+                const Text('Logout', style: TextStyle(color: AppTheme.error)),
             onTap: controller.logout,
           ),
           const SizedBox(height: 8),
@@ -512,9 +513,18 @@ class AdminDashboardScreen extends GetView<AdminDashboardController> {
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final activity = controller.recentActivities[index];
-                final title = (activity['title'] ?? activity['Title'] ?? 'Activity').toString();
-                final description = (activity['description'] ?? activity['Description'] ?? activity['message'] ?? activity['Message'] ?? '').toString();
-                final createdAt = (activity['createdAt'] ?? activity['CreatedAt'] ?? '').toString();
+                final title =
+                    (activity['title'] ?? activity['Title'] ?? 'Activity')
+                        .toString();
+                final description = (activity['description'] ??
+                        activity['Description'] ??
+                        activity['message'] ??
+                        activity['Message'] ??
+                        '')
+                    .toString();
+                final createdAt =
+                    (activity['createdAt'] ?? activity['CreatedAt'] ?? '')
+                        .toString();
 
                 return Container(
                   padding: const EdgeInsets.all(16),
@@ -614,7 +624,7 @@ class AdminDashboardScreen extends GetView<AdminDashboardController> {
         child: Column(
           children: [
             Icon(Icons.notifications_off_outlined,
-              size: 64, color: AppTheme.textSecondary.withOpacity(0.18)),
+                size: 64, color: AppTheme.textSecondary.withOpacity(0.18)),
             const SizedBox(height: 16),
             Text(
               message,
@@ -724,8 +734,9 @@ class AdminDashboardScreen extends GetView<AdminDashboardController> {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                    Icon(Icons.notifications_off_outlined,
-                      size: 48, color: AppTheme.textSecondary.withOpacity(0.18)),
+                  Icon(Icons.notifications_off_outlined,
+                      size: 48,
+                      color: AppTheme.textSecondary.withOpacity(0.18)),
                   const SizedBox(height: 16),
                   const Text('No notifications'),
                 ],
@@ -748,7 +759,8 @@ class AdminDashboardScreen extends GetView<AdminDashboardController> {
                             notification['createdAt'] ??
                             '')
                         .toString(),
-                    style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                    style: const TextStyle(
+                        fontSize: 12, color: AppTheme.textSecondary),
                   ),
                 );
               },
@@ -767,7 +779,8 @@ class AdminDashboardScreen extends GetView<AdminDashboardController> {
 
   Widget _buildTrendsCharts() {
     return Obx(() {
-      if (controller.monthlyTrends.isEmpty && controller.monthlyUserTrends.isEmpty) {
+      if (controller.monthlyTrends.isEmpty &&
+          controller.monthlyUserTrends.isEmpty) {
         return const SizedBox.shrink();
       }
       return Column(
@@ -795,20 +808,31 @@ class AdminDashboardScreen extends GetView<AdminDashboardController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (controller.monthlyTrends.isNotEmpty) ...[
-                  const Text('Appointments (Last 6 Months)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+                  const Text('Appointments (Last 6 Months)',
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimary)),
                   const SizedBox(height: 24),
                   SizedBox(
                     height: 160,
-                    child: _buildLineChart(controller.monthlyTrends, AppTheme.primary),
+                    child: _buildLineChart(
+                        controller.monthlyTrends, AppTheme.primary),
                   ),
                 ],
                 if (controller.monthlyUserTrends.isNotEmpty) ...[
-                  if (controller.monthlyTrends.isNotEmpty) const SizedBox(height: 40),
-                  const Text('Registered Users (Last 6 Months)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+                  if (controller.monthlyTrends.isNotEmpty)
+                    const SizedBox(height: 40),
+                  const Text('Registered Users (Last 6 Months)',
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimary)),
                   const SizedBox(height: 24),
                   SizedBox(
                     height: 160,
-                    child: _buildLineChart(controller.monthlyUserTrends, AppTheme.success),
+                    child: _buildLineChart(
+                        controller.monthlyUserTrends, AppTheme.success),
                   ),
                 ],
               ],
@@ -849,8 +873,10 @@ class AdminDashboardScreen extends GetView<AdminDashboardController> {
         ),
         titlesData: FlTitlesData(
           show: true,
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles:
+              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
@@ -915,5 +941,3 @@ class AdminDashboardScreen extends GetView<AdminDashboardController> {
     );
   }
 }
-
-

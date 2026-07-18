@@ -47,7 +47,8 @@ class PrescriptionHistoryScreen extends GetView<PrescriptionHistoryController> {
                 const SizedBox(height: 8),
                 Text(
                   'Your past prescriptions will appear here',
-                  style: TextStyle(color: AppTheme.textSecondary.withOpacity(0.7)),
+                  style:
+                      TextStyle(color: AppTheme.textSecondary.withOpacity(0.7)),
                 ),
               ],
             ),
@@ -62,7 +63,7 @@ class PrescriptionHistoryScreen extends GetView<PrescriptionHistoryController> {
             itemBuilder: (context, index) {
               final appointment = controller.prescriptionAppointments[index];
               final dateFormat = DateFormat('MMM dd, yyyy');
-              
+
               return Card(
                 elevation: 2,
                 margin: const EdgeInsets.only(bottom: 16),
@@ -89,7 +90,8 @@ class PrescriptionHistoryScreen extends GetView<PrescriptionHistoryController> {
                               children: [
                                 const CircleAvatar(
                                   backgroundColor: AppTheme.primary,
-                                  child: Icon(Icons.person, color: AppTheme.surface),
+                                  child: Icon(Icons.person,
+                                      color: AppTheme.surface),
                                 ),
                                 const SizedBox(width: 12),
                                 Column(
@@ -142,7 +144,8 @@ class PrescriptionHistoryScreen extends GetView<PrescriptionHistoryController> {
                           decoration: BoxDecoration(
                             color: AppTheme.primary.withOpacity(0.05),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: AppTheme.primary.withOpacity(0.1)),
+                            border: Border.all(
+                                color: AppTheme.primary.withOpacity(0.1)),
                           ),
                           child: Text(
                             appointment.prescription ?? 'No details provided.',

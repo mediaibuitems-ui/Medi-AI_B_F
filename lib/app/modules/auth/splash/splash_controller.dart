@@ -19,15 +19,16 @@ class SplashController extends GetxController {
   Future<void> _initializeApp() async {
     try {
       // 1. Start a 2.5 second timer. We want the user to see your logo!
-      final minimumSplashTime = Future.delayed(const Duration(milliseconds: 2500));
+      final minimumSplashTime =
+          Future.delayed(const Duration(milliseconds: 2500));
 
       // 2. Load all your services in the background while the timer counts down
       Get.put(await StorageService().init(), permanent: true);
       Get.put(await ApiService().init(), permanent: true);
-      
+
       final authService = await AuthService().init();
       Get.put(authService, permanent: true);
-      
+
       final notificationService = await NotificationService().init();
       Get.put(notificationService, permanent: true);
       Get.put(await MedicineReminderService().init(), permanent: true);
@@ -40,9 +41,10 @@ class SplashController extends GetxController {
       await minimumSplashTime;
 
       // 4. Check the cache to see if they are logged in
-      if (authService.isAuthenticated.value && authService.currentUser.value != null) {
+      if (authService.isAuthenticated.value &&
+          authService.currentUser.value != null) {
         final user = authService.currentUser.value!;
-        
+
         // Route them to the correct dashboard based on role
         if (user.isDoctor) {
           Get.offAllNamed(AppRoutes.doctorDashboard);
@@ -57,7 +59,6 @@ class SplashController extends GetxController {
         // If they aren't logged in, send them to Login
         Get.offAllNamed(AppRoutes.login);
       }
-      
     } catch (e) {
       print('Error in splash: $e');
       // Safety net: If anything crashes, just send them to login

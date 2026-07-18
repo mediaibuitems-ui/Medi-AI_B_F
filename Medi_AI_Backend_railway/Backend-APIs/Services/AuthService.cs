@@ -1,4 +1,4 @@
-using Backend_APIs.DTOs;
+﻿using Backend_APIs.DTOs;
 using Backend_APIs.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -61,10 +61,10 @@ namespace Backend_APIs.Services
                 var role = (registerDto.Role ?? string.Empty).Trim();
                 role = role.ToLower() switch
                 {
-                    "student" => "Student",
-                    "faculty" => "Faculty",
-                    "doctor" => "Doctor",
-                    "admin" => "Admin",
+                    "student" => Backend_APIs.Constants.UserRoles.Student,
+                    "faculty" => Backend_APIs.Constants.UserRoles.Faculty,
+                    "doctor" => Backend_APIs.Constants.UserRoles.Doctor,
+                    "admin" => Backend_APIs.Constants.UserRoles.Admin,
                     _ => string.Empty
                 };
 
@@ -80,7 +80,7 @@ namespace Backend_APIs.Services
                     return (false, "Email already registered");
                 }
 
-                if (role == "Doctor")
+                if (role == Backend_APIs.Constants.UserRoles.Doctor)
                 {
                     if (string.IsNullOrWhiteSpace(specialization) ||
                         string.IsNullOrWhiteSpace(licenseNumber) ||
@@ -127,7 +127,7 @@ namespace Backend_APIs.Services
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
 
-                if (role == "Doctor")
+                if (role == Backend_APIs.Constants.UserRoles.Doctor)
                 {
                     var doctor = new Doctor
                     {
@@ -486,7 +486,7 @@ namespace Backend_APIs.Services
 
                 await _emailService.SendEmailAsync(user.Email, subject, body);
 
-                // Return token directly — no email sent
+                // Return token directly â€” no email sent
                 return (true, "OTP sent to your email. Please check your inbox.", null);
             }
             catch (Exception ex)
@@ -736,3 +736,4 @@ namespace Backend_APIs.Services
         }
     }
 }
+

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../data/models/app_roles.dart';
 import 'package:get/get.dart';
 import '../../../../config/app_theme.dart';
 import 'manage_users_controller.dart';
@@ -9,7 +10,6 @@ class ManageUsersScreen extends GetView<ManageUsersController> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
@@ -78,7 +78,7 @@ class ManageUsersScreen extends GetView<ManageUsersController> {
                       const SizedBox(width: 8),
                       _buildFilterChip(controller, 'Faculty'),
                       const SizedBox(width: 8),
-                      _buildFilterChip(controller, 'Admin'),
+                      _buildFilterChip(controller, AppRoles.admin),
                     ],
                   ),
                 ),
@@ -121,7 +121,8 @@ class ManageUsersScreen extends GetView<ManageUsersController> {
                 child: ListView.builder(
                   controller: controller.scrollController,
                   padding: const EdgeInsets.all(16),
-                  itemCount: controller.filteredUsers.length + 1, // +1 for loading indicator
+                  itemCount: controller.filteredUsers.length +
+                      1, // +1 for loading indicator
                   itemBuilder: (context, index) {
                     if (index == controller.filteredUsers.length) {
                       return Obx(() {
@@ -131,7 +132,8 @@ class ManageUsersScreen extends GetView<ManageUsersController> {
                             child: Center(child: CircularProgressIndicator()),
                           );
                         }
-                        if (!controller.hasMore.value && controller.filteredUsers.isNotEmpty) {
+                        if (!controller.hasMore.value &&
+                            controller.filteredUsers.isNotEmpty) {
                           return const Padding(
                             padding: EdgeInsets.symmetric(vertical: 16.0),
                             child: Center(child: Text('No more users')),
@@ -140,7 +142,7 @@ class ManageUsersScreen extends GetView<ManageUsersController> {
                         return const SizedBox.shrink();
                       });
                     }
-                    
+
                     final user = controller.filteredUsers[index];
                     return _buildUserCard(context, controller, user);
                   },
@@ -172,7 +174,9 @@ class ManageUsersScreen extends GetView<ManageUsersController> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: BorderSide(
-            color: isSelected ? AppTheme.primary : AppTheme.border.withOpacity(0.25),
+            color: isSelected
+                ? AppTheme.primary
+                : AppTheme.border.withOpacity(0.25),
           ),
         ),
       );
@@ -241,7 +245,7 @@ class ManageUsersScreen extends GetView<ManageUsersController> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$role • $email',
+                      '$role â€¢ $email',
                       style: TextStyle(
                         color: AppTheme.textSecondary,
                         fontSize: 12,
@@ -255,14 +259,17 @@ class ManageUsersScreen extends GetView<ManageUsersController> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.contact_phone, color: AppTheme.primary),
-                    onPressed: () => _showEmergencyContactsDialog(context, controller, id, name),
+                    icon: const Icon(Icons.contact_phone,
+                        color: AppTheme.primary),
+                    onPressed: () => _showEmergencyContactsDialog(
+                        context, controller, id, name),
                     tooltip: 'Emergency Contacts',
                   ),
                   IconButton(
                     icon: Icon(
                       isActive ? Icons.check_circle : Icons.cancel,
-                      color: isActive ? AppTheme.success : AppTheme.textSecondary,
+                      color:
+                          isActive ? AppTheme.success : AppTheme.textSecondary,
                     ),
                     onPressed: () => controller.toggleUserStatus(id),
                     tooltip: isActive ? 'Deactivate' : 'Activate',
@@ -294,12 +301,14 @@ class ManageUsersScreen extends GetView<ManageUsersController> {
     );
   }
 
-  void _showEmergencyContactsDialog(BuildContext context, ManageUsersController controller, int userId, String userName) {
+  void _showEmergencyContactsDialog(BuildContext context,
+      ManageUsersController controller, int userId, String userName) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('$userName\'s Emergency Contacts', style: const TextStyle(fontSize: 18)),
+          title: Text('$userName\'s Emergency Contacts',
+              style: const TextStyle(fontSize: 18)),
           backgroundColor: AppTheme.surface,
           content: SizedBox(
             width: double.maxFinite,
@@ -326,20 +335,30 @@ class ManageUsersScreen extends GetView<ManageUsersController> {
                   itemCount: contacts.length,
                   itemBuilder: (context, index) {
                     final contact = contacts[index];
-                    final name = contact['contactName'] ?? contact['ContactName'] ?? 'Unknown';
-                    final relation = contact['relationship'] ?? contact['Relationship'] ?? 'N/A';
-                    final phone = contact['phoneNumber'] ?? contact['PhoneNumber'] ?? 'N/A';
-                    
+                    final name = contact['contactName'] ??
+                        contact['ContactName'] ??
+                        'Unknown';
+                    final relation = contact['relationship'] ??
+                        contact['Relationship'] ??
+                        'N/A';
+                    final phone = contact['phoneNumber'] ??
+                        contact['PhoneNumber'] ??
+                        'N/A';
+
                     return Card(
                       color: AppTheme.background,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        side: BorderSide(color: AppTheme.border.withOpacity(0.1)),
+                        side:
+                            BorderSide(color: AppTheme.border.withOpacity(0.1)),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: ListTile(
-                        leading: const Icon(Icons.contact_phone, color: AppTheme.primary),
-                        title: Text('$name ($relation)', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        leading: const Icon(Icons.contact_phone,
+                            color: AppTheme.primary),
+                        title: Text('$name ($relation)',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
                         subtitle: Text(phone),
                       ),
                     );
@@ -358,6 +377,4 @@ class ManageUsersScreen extends GetView<ManageUsersController> {
       },
     );
   }
-
 }
-

@@ -128,7 +128,8 @@ class BookAppointmentController extends GetxController {
           if (response.message?.toLowerCase().contains('leave') == true) {
             Get.defaultDialog(
               title: 'Doctor Unavailable',
-              middleText: 'The selected doctor is on leave during this date. Please select another date.',
+              middleText:
+                  'The selected doctor is on leave during this date. Please select another date.',
               textConfirm: 'Okay',
               confirmTextColor: Colors.white,
               buttonColor: const Color(0xFF2563EB), // AppTheme.primary
@@ -197,13 +198,27 @@ class BookAppointmentController extends GetxController {
             colorText: Colors.white,
             snackPosition: SnackPosition.BOTTOM);
       } else {
-        Get.snackbar(
-          'Booking Failed', 
-          response.message,
-          backgroundColor: Colors.red.withOpacity(0.1),
-          colorText: Colors.red,
-          duration: const Duration(seconds: 4),
-        );
+        final lowerMsg = response.message?.toLowerCase() ?? '';
+        if (lowerMsg.contains('already booked') || lowerMsg.contains('taken') || lowerMsg.contains('maximum appointments')) {
+          // It's a race condition or slot became unavailable
+          selectedSlot.value = null;
+          await fetchAvailableSlots();
+          Get.snackbar(
+            'Slot Unavailable',
+            'This slot was just taken or max capacity reached. Please pick another slot.',
+            backgroundColor: Colors.orange,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 4),
+          );
+        } else {
+          Get.snackbar(
+            'Booking Failed',
+            response.message,
+            backgroundColor: Colors.red.withOpacity(0.1),
+            colorText: Colors.red,
+            duration: const Duration(seconds: 4),
+          );
+        }
       }
     } catch (e) {
       // Save locally for offline sync
@@ -215,12 +230,12 @@ class BookAppointmentController extends GetxController {
         if (existingJson != null) {
           offlineList = jsonDecode(existingJson);
         }
-        
+
         final currentUser = await _authService.getCurrentUser();
         final dateStr = DateFormat('yyyy-MM-dd').format(selectedDate.value!);
         final timeStr = selectedSlot.value!['time'];
         final dateTimeStr = '${dateStr}T$timeStr:00';
-        
+
         offlineList.add({
           'patientId': currentUser?.id.toString(),
           'doctorId': selectedDoctorId.value,
@@ -230,16 +245,18 @@ class BookAppointmentController extends GetxController {
           'status': 'Pending',
           'offlineId': DateTime.now().millisecondsSinceEpoch.toString(),
         });
-        
+
         await prefs.setString(offlineKey, jsonEncode(offlineList));
-        
+
         Get.back();
-        Get.snackbar('Offline Mode', 'Appointment saved locally. Will sync when online.',
+        Get.snackbar(
+            'Offline Mode', 'Appointment saved locally. Will sync when online.',
             backgroundColor: Colors.orange,
             colorText: Colors.white,
             snackPosition: SnackPosition.BOTTOM);
       } catch (innerErr) {
-        Get.snackbar('Error', 'Failed to book appointment and failed to save offline');
+        Get.snackbar(
+            'Error', 'Failed to book appointment and failed to save offline');
       }
     } finally {
       isLoading.value = false;

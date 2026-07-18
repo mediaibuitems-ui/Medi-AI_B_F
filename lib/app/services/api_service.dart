@@ -142,7 +142,8 @@ class ApiService extends GetxService {
         }
       }
 
-      final response = await _dio.delete(endpoint, data: data, options: options);
+      final response =
+          await _dio.delete(endpoint, data: data, options: options);
       return _handleResponse<T>(response, fromJson);
     } on DioException catch (e) {
       return _handleError<T>(e);
@@ -234,7 +235,9 @@ class ApiService extends GetxService {
       // ignore
     }
 
-    _logger.e('API Error: $message | uri=${uri ?? 'unknown'} | type=${errType ?? 'unknown'}', error: error);
+    _logger.e(
+        'API Error: $message | uri=${uri ?? 'unknown'} | type=${errType ?? 'unknown'}',
+        error: error);
 
     return ApiResponse<T>(
       success: false,
@@ -312,7 +315,8 @@ class _AuthInterceptor extends Interceptor {
       final req = err.requestOptions;
 
       // Don't attempt refresh if the failing request was the refresh call itself
-      if (req.path.contains('refresh-token') || req.uri.path.contains('refresh-token')) {
+      if (req.path.contains('refresh-token') ||
+          req.uri.path.contains('refresh-token')) {
         await _storageService.clearAuthData();
         Get.offAllNamed('/login');
         return;

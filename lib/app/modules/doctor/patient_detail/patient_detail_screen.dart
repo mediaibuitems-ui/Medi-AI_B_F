@@ -44,18 +44,22 @@ class PatientDetailScreen extends StatelessWidget {
         (args['lastVisit'] ?? args['LastVisit'] ?? '').toString().split('T')[0];
     final lastVisitDisplay =
         lastVisitRaw.isEmpty ? 'N/A' : _formatDate(lastVisitRaw);
-    final department = (args['department'] ?? args['Department'] ?? 'Patient').toString();
+    final department =
+        (args['department'] ?? args['Department'] ?? 'Patient').toString();
     final subtitleInfo = [
-      if (registrationNumber.isNotEmpty && registrationNumber != 'N/A') registrationNumber,
+      if (registrationNumber.isNotEmpty && registrationNumber != 'N/A')
+        registrationNumber,
       if (department.isNotEmpty && department != 'Patient') department
     ].join(' • ');
-    final displaySubtitle = subtitleInfo.isEmpty ? 'Active Patient' : subtitleInfo;
+    final displaySubtitle =
+        subtitleInfo.isEmpty ? 'Active Patient' : subtitleInfo;
 
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppTheme.surface),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              color: AppTheme.surface),
           tooltip: 'Back',
           onPressed: () => Get.back(),
         ),
@@ -434,7 +438,8 @@ class PatientDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons(Map<String, dynamic> args, int? patientIdInt, String patientName) {
+  Widget _buildActionButtons(
+      Map<String, dynamic> args, int? patientIdInt, String patientName) {
     return Row(
       children: [
         Expanded(
@@ -459,7 +464,8 @@ class PatientDetailScreen extends StatelessWidget {
         Expanded(
           child: ElevatedButton.icon(
             onPressed: () {
-              final appointmentId = args['appointmentId'] ?? args['AppointmentId'];
+              final appointmentId =
+                  args['appointmentId'] ?? args['AppointmentId'];
               if (appointmentId == null) {
                 Get.snackbar(
                   'Action Unavailable',

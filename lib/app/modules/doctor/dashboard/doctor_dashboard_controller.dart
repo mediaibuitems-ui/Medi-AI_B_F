@@ -38,20 +38,15 @@ class DoctorDashboardController extends GetxController {
     }
     return _allTodayAppointments;
   }
-  
-  final RxBool isLoading = false.obs;
-  final RxList<Map<String, dynamic>> unreadNotifications = <Map<String, dynamic>>[].obs;
 
+  final RxBool isLoading = false.obs;
+  final RxList<Map<String, dynamic>> unreadNotifications =
+      <Map<String, dynamic>>[].obs;
   // Statistics
   final RxInt totalPatientsToday = 0.obs;
   final RxInt completedToday = 0.obs;
   final RxInt pendingToday = 0.obs;
   final RxInt totalPatients = 0.obs;
-
-  Timer? _notificationTimer;
-  DateTime _lastCheckTime = DateTime.now();
-  final Set<int> _shownNotificationIds = <int>{};
-  final Set<String> _shownNotificationKeys = <String>{};
 
   StreamSubscription? _eventSubscription;
 
@@ -59,7 +54,6 @@ class DoctorDashboardController extends GetxController {
   void onInit() {
     super.onInit();
     loadDashboardData();
-    _startNotificationPolling();
 
     // Listen for appointment events and refresh immediately when they occur
     final eventService = Get.isRegistered<AppointmentEventService>()
@@ -77,130 +71,10 @@ class DoctorDashboardController extends GetxController {
   @override
   void onClose() {
     _eventSubscription?.cancel();
-    _notificationTimer?.cancel();
     super.onClose();
   }
 
-  void _startNotificationPolling() {
-    // Check every 30 seconds for new appointments
-    _notificationTimer =
-        Timer.periodic(const Duration(seconds: 30), (timer) async {
-      final prefs = await SharedPreferences.getInstance();
-      final notificationsEnabled = prefs.getBool('pushNotifications') ?? true;
 
-      if (notificationsEnabled) {
-        await _checkForNewAppointments();
-        await _loadUnreadNotifications(showPopups: true);
-      }
-    });
-  }
-
-  Future<void> _checkForNewAppointments() async {
-    try {
-      // Check for appointments created since last check
-      final response = await _doctorService.getUpcomingAppointments();
-      if (response.success && response.data != null) {
-        final newAppointments = response.data!
-            .where((apt) => apt.createdAt.isAfter(_lastCheckTime))
-            .toList();
-
-        if (newAppointments.isNotEmpty) {
-          Get.snackbar(
-            'New appointment',
-            'You have ${newAppointments.length} new appointment(s)',
-            snackPosition: SnackPosition.TOP,
-            backgroundColor: Colors.blue,
-            colorText: Colors.white,
-            duration: const Duration(seconds: 5),
-            onTap: (_) => viewAllAppointments(),
-          );
-
-          // Refresh data
-          await loadDashboardData();
-        }
-      }
-      // Always update check time to avoid re-notifying (though logic above handles it via creation time)
-      // Actually, if we update check time ONLY on success, we might miss some if we fetch late?
-      // No, we want to know about appointments created AFTER the last time we checked successfully.
-      // So update _lastCheckTime to now ONLY if we successfully checked.
-      _lastCheckTime = DateTime.now();
-    } catch (e) {
-      print('Error checking for new appointments: $e');
-    }
-  }
-
-  Future<void> _loadUnreadNotifications({bool showPopups = false}) async {
-    try {
-      final response = await _doctorService.getUnreadNotifications();
-      if (!response.success || response.data == null) {
-        return;
-      }
-
-      unreadNotifications.value = response.data!;
-
-      final uniqueNotifications = <Map<String, dynamic>>[];
-      final seenKeys = <String>{};
-
-      for (final item in unreadNotifications) {
-        final dedupeKey = _buildNotificationKey(item);
-        if (seenKeys.add(dedupeKey)) {
-          uniqueNotifications.add(item);
-        }
-      }
-
-      unreadNotifications.value = uniqueNotifications;
-
-      if (!showPopups) {
-        return;
-      }
-
-      for (final item in unreadNotifications) {
-        final id = int.tryParse((item['id'] ?? item['Id'] ?? '').toString());
-        final key = _buildNotificationKey(item);
-        if ((_shownNotificationKeys.contains(key)) ||
-            (id != null && _shownNotificationIds.contains(id))) {
-          continue;
-        }
-
-        final notificationId = id ?? (key.hashCode & 0x7fffffff);
-
-        if (id != null) {
-          _shownNotificationIds.add(id);
-        }
-        _shownNotificationKeys.add(key);
-
-        final title = (item['title'] ?? item['Title'] ?? 'New Notification').toString();
-        final message = (item['message'] ?? item['Message'] ?? '').toString();
-
-        await _notificationService.showNotification(
-          id: notificationId,
-          title: title,
-          body: message,
-          payload: notificationId.toString(),
-        );
-      }
-    } catch (e) {
-      print('Error loading unread notifications: $e');
-    }
-  }
-
-  String _buildNotificationKey(Map<String, dynamic> item) {
-    final appointmentId = (item['appointmentId'] ??
-            item['AppointmentId'] ??
-            item['appointment_id'] ??
-            item['AppointmentID'] ??
-            '')
-        .toString()
-        .trim();
-    final title = (item['title'] ?? item['Title'] ?? '').toString().trim();
-    final message = (item['message'] ?? item['Message'] ?? '').toString().trim();
-
-    if (appointmentId.isNotEmpty) {
-      return 'appointment:$appointmentId';
-    }
-
-    return 'content:$title|$message';
-  }
 
   Future<void> loadDashboardData() async {
     isLoading.value = true;
@@ -210,7 +84,7 @@ class DoctorDashboardController extends GetxController {
         loadTodayAppointments(),
         loadUpcomingAppointments(),
         loadStatistics(),
-        _loadUnreadNotifications(showPopups: true),
+        loadUnreadNotifications(),
       ]);
     } catch (e) {
       print('Error loading dashboard: $e');
@@ -228,18 +102,14 @@ class DoctorDashboardController extends GetxController {
         // Calculate today's statistics
         totalPatientsToday.value = _allTodayAppointments.length;
         // Match backend status values: Pending, Scheduled, Completed, Checked
-        completedToday.value = _allTodayAppointments
-            .where((apt) {
-              final s = apt.status.toLowerCase();
-              return s == 'completed' || s == 'checked';
-            })
-            .length;
-        pendingToday.value = _allTodayAppointments
-            .where((apt) {
-              final s = apt.status.toLowerCase();
-              return s == 'pending' || s == 'scheduled' || s == 'confirmed';
-            })
-            .length;
+        completedToday.value = _allTodayAppointments.where((apt) {
+          final s = apt.status.toLowerCase();
+          return s == 'completed' || s == 'checked';
+        }).length;
+        pendingToday.value = _allTodayAppointments.where((apt) {
+          final s = apt.status.toLowerCase();
+          return s == 'pending' || s == 'scheduled' || s == 'confirmed';
+        }).length;
       }
     } catch (e) {
       print('Error loading today appointments: $e');
@@ -267,9 +137,7 @@ class DoctorDashboardController extends GetxController {
           totalPatients.value = data['totalPatients'];
         }
 
-        // Use backend values if available (from new API), otherwise fallback to local calculation
         if (data['todayTotal'] != null) {
-          // If the API returns it, use it directly
           totalPatientsToday.value = data['todayTotal'];
         }
         if (data['completedToday'] != null) {
@@ -281,6 +149,17 @@ class DoctorDashboardController extends GetxController {
       }
     } catch (e) {
       print('Error loading statistics: $e');
+    }
+  }
+
+  Future<void> loadUnreadNotifications() async {
+    try {
+      final response = await _doctorService.getUnreadNotifications();
+      if (response.success && response.data != null) {
+        unreadNotifications.value = response.data!;
+      }
+    } catch (e) {
+      print('Error loading unread notifications: $e');
     }
   }
 
@@ -342,10 +221,12 @@ class DoctorDashboardController extends GetxController {
   }
 
   /// Update appointment status (Confirmed or Cancelled) from dashboard
-  Future<void> updateAppointmentStatus(String appointmentId, String status, [String? reason]) async {
+  Future<void> updateAppointmentStatus(String appointmentId, String status,
+      [String? reason]) async {
     isLoading.value = true;
     try {
-      final response = await _doctorService.updateAppointmentStatus(appointmentId, status, reason);
+      final response = await _doctorService.updateAppointmentStatus(
+          appointmentId, status, reason);
       if (response.success) {
         Get.snackbar('Success', 'Appointment updated');
         await loadDashboardData();
@@ -361,7 +242,8 @@ class DoctorDashboardController extends GetxController {
     await updateAppointmentStatus(appointmentId, 'Confirmed');
   }
 
-  Future<void> declineAppointment(String appointmentId, [String? reason]) async {
+  Future<void> declineAppointment(String appointmentId,
+      [String? reason]) async {
     await updateAppointmentStatus(appointmentId, 'Cancelled', reason);
   }
 

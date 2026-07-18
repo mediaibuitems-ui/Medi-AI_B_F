@@ -1,4 +1,4 @@
-﻿import 'package:get/get.dart';
+import 'package:get/get.dart';
 import '../../../../data/models/appointment.dart';
 import '../../../../services/doctor_service.dart';
 import '../../../../services/api_service.dart';
@@ -61,4 +61,3 @@ class TodayAppointmentsController extends GetxController {
 
   // NOTE: localized status helper removed — not referenced anywhere.
 }
-

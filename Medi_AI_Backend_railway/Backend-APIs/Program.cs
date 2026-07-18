@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -210,8 +212,29 @@ namespace Backend_APIs
                 if (!string.IsNullOrEmpty(token))
                 {
                     var cache = context.RequestServices.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
-                    if (cache.TryGetValue($"Blacklist_{token}", out _))
+                    var dbContext = context.RequestServices.GetRequiredService<MediaidbContext>();
+                    
+                    var hashBytes = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token));
+                    var tokenHash = Convert.ToHexString(hashBytes).ToLowerInvariant();
+
+                    if (cache.TryGetValue($"Blacklist_{tokenHash}", out _))
                     {
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        context.Response.ContentType = "application/json";
+                        await context.Response.WriteAsync("{\"success\":false,\"message\":\"Token is invalid or revoked\",\"data\":null}");
+                        return;
+                    }
+                    
+                    // Fallback to DB check
+                    var isRevoked = await dbContext.RevokedTokens.AnyAsync(r => r.TokenHash == tokenHash && r.ExpiresAt > DateTime.UtcNow);
+                    if (isRevoked)
+                    {
+                        var cacheOptions = new Microsoft.Extensions.Caching.Memory.MemoryCacheEntryOptions
+                        {
+                            AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24)
+                        };
+                        cache.Set($"Blacklist_{tokenHash}", true, cacheOptions);
+                        
                         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                         context.Response.ContentType = "application/json";
                         await context.Response.WriteAsync("{\"success\":false,\"message\":\"Token is invalid or revoked\",\"data\":null}");
@@ -238,6 +261,18 @@ namespace Backend_APIs
                 {
                     var context = services.GetRequiredService<MediaidbContext>();
                     context.Database.Migrate(); // This is likely where the crash happens
+                    
+                    // Preload unexpired revoked tokens into cache
+                    var cache = services.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
+                    var unexpiredTokens = context.RevokedTokens.Where(t => t.ExpiresAt > DateTime.UtcNow).ToList();
+                    foreach (var token in unexpiredTokens)
+                    {
+                        var cacheOptions = new Microsoft.Extensions.Caching.Memory.MemoryCacheEntryOptions
+                        {
+                            AbsoluteExpiration = token.ExpiresAt
+                        };
+                        cache.Set($"Blacklist_{token.TokenHash}", true, cacheOptions);
+                    }
                 }
                 catch (Exception ex)
                 {

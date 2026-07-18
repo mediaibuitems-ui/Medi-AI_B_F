@@ -15,6 +15,7 @@ import 'medicine_reminder_service.dart';
 import 'api_service.dart';
 import 'auth_service.dart';
 import '../../config/app_config.dart';
+import 'appointment_event_service.dart';
 
 class NotificationService extends GetxService {
   final _logger = Logger();
@@ -77,7 +78,7 @@ class NotificationService extends GetxService {
 
   Future<void> _checkUnreadNotifications() async {
     if (_isMuted()) return;
-    
+
     try {
       final authService = Get.find<AuthService>();
       if (!authService.isAuthenticated.value) return;
@@ -95,13 +96,27 @@ class NotificationService extends GetxService {
             .toList();
 
         for (var notif in notifications) {
-          final id = int.tryParse((notif['id'] ?? notif['Id'] ?? '').toString());
+          final id =
+              int.tryParse((notif['id'] ?? notif['Id'] ?? '').toString());
           if (id != null && !_notifiedIds.contains(id)) {
             _notifiedIds.add(id);
-            
-            final title = (notif['title'] ?? notif['Title'] ?? 'Notification').toString();
-            final message = (notif['message'] ?? notif['Message'] ?? '').toString();
-            
+
+            final title =
+                (notif['title'] ?? notif['Title'] ?? 'Notification').toString();
+            final message =
+                (notif['message'] ?? notif['Message'] ?? '').toString();
+            final typeStr =
+                (notif['type'] ?? notif['Type'] ?? '').toString();
+
+            // Emit appointment event for real-time dashboard updates
+            if (typeStr.toLowerCase().contains('appointment') || 
+                title.toLowerCase().contains('appointment')) {
+              try {
+                Get.find<AppointmentEventService>()
+                    .emit(AppointmentEvent(id.toString(), 'refresh'));
+              } catch (_) {}
+            }
+
             await showNotification(
               id: id,
               title: title,
@@ -227,7 +242,8 @@ class NotificationService extends GetxService {
         importance: Importance.max,
         priority: Priority.high,
         enableVibration: true,
-        vibrationPattern: Int64List.fromList([0, 1000, 500, 1000, 500, 1000, 500, 1000, 500, 1000]),
+        vibrationPattern: Int64List.fromList(
+            [0, 1000, 500, 1000, 500, 1000, 500, 1000, 500, 1000]),
       ),
     );
 
@@ -248,9 +264,10 @@ class NotificationService extends GetxService {
       final errorText = e.toString().toLowerCase();
       if (errorText.contains('exact_alarms_not_permitted') ||
           errorText.contains('exact alarms not permitted')) {
-        _logger.w('Exact alarms not permitted. Requesting permission and retrying.');
-        final androidImplementation =
-            _flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
+        _logger.w(
+            'Exact alarms not permitted. Requesting permission and retrying.');
+        final androidImplementation = _flutterLocalNotificationsPlugin
+            .resolvePlatformSpecificImplementation<
                 AndroidFlutterLocalNotificationsPlugin>();
         await _requestExactAlarmPermissionIfNeeded(androidImplementation);
         await _flutterLocalNotificationsPlugin.zonedSchedule(
@@ -326,7 +343,8 @@ class NotificationService extends GetxService {
       }
 
       final List<dynamic> decoded = jsonDecode(remindersJson);
-      _logger.i('Found ${decoded.length} reminders to reschedule for key: $key');
+      _logger
+          .i('Found ${decoded.length} reminders to reschedule for key: $key');
 
       for (final reminderMap in decoded) {
         try {
@@ -381,7 +399,8 @@ class NotificationService extends GetxService {
       // Schedule each time
       for (int i = 0; i < timesApp.length; i++) {
         try {
-          final timeStr = timesApp[i].replaceAll(RegExp(r'[\[\]"\\/]'), '').trim();
+          final timeStr =
+              timesApp[i].replaceAll(RegExp(r'[\[\]"\\/]'), '').trim();
           final format = DateFormat('hh:mm a');
           final dt = format.parse(timeStr);
           final timeOfDay = TimeOfDay(hour: dt.hour, minute: dt.minute);

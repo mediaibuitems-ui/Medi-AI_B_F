@@ -63,14 +63,16 @@ class _FacultyMedicineRemindersScreenState
       }
 
       // Fetch from backend
-      final response = await _apiService.get<dynamic>('${AppConfig.baseUrl}/MedicineReminders');
+      final response = await _apiService
+          .get<dynamic>('${AppConfig.baseUrl}/MedicineReminders');
       if (response.success && response.data is List) {
         final List<dynamic> dbReminders = response.data;
         if (dbReminders.isNotEmpty) {
-           reminders.clear();
-           reminders.addAll(dbReminders.map((e) => _mapApiReminder(Map<String, dynamic>.from(e))));
-           
-           await prefs.setString(_storageKey, jsonEncode(reminders));
+          reminders.clear();
+          reminders.addAll(dbReminders
+              .map((e) => _mapApiReminder(Map<String, dynamic>.from(e))));
+
+          await prefs.setString(_storageKey, jsonEncode(reminders));
         }
       }
     } catch (e) {
@@ -85,12 +87,16 @@ class _FacultyMedicineRemindersScreenState
 
     String times;
     if (timesRaw is List) {
-      times = timesRaw.map((e) => e.toString().replaceAll(RegExp(r'[\[\]"]'), '')).join(',');
+      times = timesRaw
+          .map((e) => e.toString().replaceAll(RegExp(r'[\[\]"]'), ''))
+          .join(',');
     } else if (timesRaw is String) {
       if (timesRaw.trim().startsWith('[')) {
         try {
           final List<dynamic> parsed = jsonDecode(timesRaw);
-          times = parsed.map((e) => e.toString().replaceAll(RegExp(r'[\[\]"]'), '')).join(',');
+          times = parsed
+              .map((e) => e.toString().replaceAll(RegExp(r'[\[\]"]'), ''))
+              .join(',');
         } catch (_) {
           times = timesRaw.replaceAll(RegExp(r'[\[\]"]'), '');
         }
@@ -142,7 +148,7 @@ class _FacultyMedicineRemindersScreenState
   Future<void> _persistOfflineCache() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_storageKey, jsonEncode(reminders));
-    
+
     // Sync with backend DB
     try {
       await _medicineReminderService.syncReminders(reminders);
@@ -151,7 +157,8 @@ class _FacultyMedicineRemindersScreenState
       }
       await prefs.setString(_storageKey, jsonEncode(reminders));
     } catch (e) {
-      print('Warning: Failed to sync medicine reminders to DB (Offline Mode): $e');
+      print(
+          'Warning: Failed to sync medicine reminders to DB (Offline Mode): $e');
       for (var r in reminders) {
         if (r['isSynced'] == null) r['isSynced'] = false;
       }
@@ -264,8 +271,8 @@ class _FacultyMedicineRemindersScreenState
                   children: [
                     TextField(
                       controller: nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Reminder Name'),
+                      decoration:
+                          const InputDecoration(labelText: 'Reminder Name'),
                     ),
                     const SizedBox(height: 16),
                     TextField(
@@ -357,7 +364,8 @@ class _FacultyMedicineRemindersScreenState
                       );
                       Navigator.of(context).pop();
                     } else if (currentTimes.isEmpty) {
-                      AppFeedback.error('Error', 'Please add at least one time');
+                      AppFeedback.error(
+                          'Error', 'Please add at least one time');
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -532,11 +540,14 @@ class _FacultyMedicineRemindersScreenState
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.alarm, size: 64, color: AppTheme.textSecondary.withOpacity(0.18)),
+                      Icon(Icons.alarm,
+                          size: 64,
+                          color: AppTheme.textSecondary.withOpacity(0.18)),
                       const SizedBox(height: 16),
                       Text(
                         'No reminders set',
-                        style: TextStyle(fontSize: 18, color: AppTheme.textSecondary),
+                        style: TextStyle(
+                            fontSize: 18, color: AppTheme.textSecondary),
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -567,7 +578,8 @@ class _FacultyMedicineRemindersScreenState
                       decoration: BoxDecoration(
                         color: AppTheme.surface,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppTheme.border.withOpacity(0.08)),
+                        border: Border.all(
+                            color: AppTheme.border.withOpacity(0.08)),
                         boxShadow: [
                           BoxShadow(
                             color: AppTheme.textPrimary.withOpacity(0.03),
@@ -612,8 +624,8 @@ class _FacultyMedicineRemindersScreenState
                                       const SizedBox(height: 4),
                                       Text(
                                         '${reminder['dosage'] ?? ''}',
-                                        style:
-                                          const TextStyle(color: AppTheme.textSecondary),
+                                        style: const TextStyle(
+                                            color: AppTheme.textSecondary),
                                       ),
                                     ],
                                   ),
@@ -646,7 +658,8 @@ class _FacultyMedicineRemindersScreenState
                               const SizedBox(height: 12),
                               Text(
                                 'Notes: ${reminder['notes']}',
-                                style: const TextStyle(color: AppTheme.textSecondary),
+                                style: const TextStyle(
+                                    color: AppTheme.textSecondary),
                               ),
                             ],
                             const SizedBox(height: 12),
@@ -658,14 +671,14 @@ class _FacultyMedicineRemindersScreenState
                                       _showAddReminderDialog(reminder, index),
                                   child: const Text('Edit'),
                                 ),
-                                  TextButton(
-                                    onPressed: () =>
-                                        _deleteReminder(reminder['id']),
-                                    style: TextButton.styleFrom(
-                                      foregroundColor: AppTheme.error,
-                                    ),
-                                    child: const Text('Delete'),
+                                TextButton(
+                                  onPressed: () =>
+                                      _deleteReminder(reminder['id']),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: AppTheme.error,
                                   ),
+                                  child: const Text('Delete'),
+                                ),
                               ],
                             ),
                           ],

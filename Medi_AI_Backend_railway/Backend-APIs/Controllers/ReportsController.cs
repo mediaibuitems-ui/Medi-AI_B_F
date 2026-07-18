@@ -1,4 +1,4 @@
-using Backend_APIs.DTOs;
+﻿using Backend_APIs.DTOs;
 using Backend_APIs.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +9,7 @@ namespace Backend_APIs.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin,admin")]
+    [Authorize(Roles = Backend_APIs.Constants.UserRoles.Admin)]
     public class ReportsController : ControllerBase
     {
         private readonly MediaidbContext _context;
@@ -99,3 +99,4 @@ namespace Backend_APIs.Controllers
         }
     }
 }
+

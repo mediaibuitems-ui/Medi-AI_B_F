@@ -16,7 +16,8 @@ class AppointmentDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final arg = Get.arguments as Map<String, dynamic>?;
-    final Appointment? appointment = arg != null ? arg['appointment'] as Appointment? : null;
+    final Appointment? appointment =
+        arg != null ? arg['appointment'] as Appointment? : null;
 
     if (appointment == null) {
       return Scaffold(
@@ -46,9 +47,12 @@ class AppointmentDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Patient: ${appointment.patientName}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            Text('Patient: ${appointment.patientName}',
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
             const SizedBox(height: 8),
-            Text('Doctor: Dr. ${appointment.doctorName}', style: const TextStyle(fontSize: 16)),
+            Text('Doctor: Dr. ${appointment.doctorName}',
+                style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 8),
             Text('Reason: ${appointment.reason}'),
             const SizedBox(height: 8),
@@ -61,7 +65,8 @@ class AppointmentDetailScreen extends StatelessWidget {
             Text('Symptoms: ${appointment.symptoms ?? '-'}'),
             const SizedBox(height: 12),
             Text('Notes: ${appointment.notes ?? '-'}'),
-            if (appointment.prescription != null && appointment.prescription!.isNotEmpty) ...[
+            if (appointment.prescription != null &&
+                appointment.prescription!.isNotEmpty) ...[
               const SizedBox(height: 16),
               PrescriptionCard(rawPrescription: appointment.prescription!),
             ],
@@ -100,8 +105,12 @@ class AppointmentDetailScreen extends StatelessWidget {
   void _cancelAppointment(Appointment appointment) async {
     try {
       // try student controller
-      final studentCtrl = Get.isRegistered<StudentDashboardController>() ? Get.find<StudentDashboardController>() : null;
-      final facultyCtrl = Get.isRegistered<FacultyDashboardController>() ? Get.find<FacultyDashboardController>() : null;
+      final studentCtrl = Get.isRegistered<StudentDashboardController>()
+          ? Get.find<StudentDashboardController>()
+          : null;
+      final facultyCtrl = Get.isRegistered<FacultyDashboardController>()
+          ? Get.find<FacultyDashboardController>()
+          : null;
 
       if (studentCtrl != null) {
         await studentCtrl.cancelAppointment(appointment.id);
@@ -109,7 +118,8 @@ class AppointmentDetailScreen extends StatelessWidget {
         await facultyCtrl.cancelAppointment(appointment.id);
       } else {
         final api = Get.find<ApiService>();
-        final response = await api.delete('${AppConfig.baseUrl}/Appointments/${appointment.id}');
+        final response = await api
+            .delete('${AppConfig.baseUrl}/Appointments/${appointment.id}');
         if (response.success) {
           Get.snackbar('Success', 'Appointment cancelled');
         } else {
@@ -123,10 +133,14 @@ class AppointmentDetailScreen extends StatelessWidget {
   }
 
   void _showEditDialog(BuildContext context, Appointment appointment) {
-    final dateController = TextEditingController(text: DateFormat('yyyy-MM-dd').format(appointment.appointmentDate));
-    final timeController = TextEditingController(text: DateFormat('HH:mm').format(appointment.appointmentDate));
-    final symptomsController = TextEditingController(text: appointment.symptoms ?? '');
-    final notesController = TextEditingController(text: appointment.notes ?? '');
+    final dateController = TextEditingController(
+        text: DateFormat('yyyy-MM-dd').format(appointment.appointmentDate));
+    final timeController = TextEditingController(
+        text: DateFormat('HH:mm').format(appointment.appointmentDate));
+    final symptomsController =
+        TextEditingController(text: appointment.symptoms ?? '');
+    final notesController =
+        TextEditingController(text: appointment.notes ?? '');
 
     DateTime selectedDate = appointment.appointmentDate;
 
@@ -139,7 +153,8 @@ class AppointmentDetailScreen extends StatelessWidget {
             children: [
               TextField(
                 controller: dateController,
-                decoration: const InputDecoration(labelText: 'Date', suffixIcon: Icon(Icons.calendar_today)),
+                decoration: const InputDecoration(
+                    labelText: 'Date', suffixIcon: Icon(Icons.calendar_today)),
                 readOnly: true,
                 onTap: () async {
                   final date = await showDatePicker(
@@ -157,11 +172,14 @@ class AppointmentDetailScreen extends StatelessWidget {
               const SizedBox(height: 16),
               TextField(
                 controller: timeController,
-                decoration: const InputDecoration(labelText: 'Time', suffixIcon: Icon(Icons.access_time)),
+                decoration: const InputDecoration(
+                    labelText: 'Time', suffixIcon: Icon(Icons.access_time)),
                 readOnly: true,
                 onTap: () async {
-                  final currentT = TimeOfDay.fromDateTime(appointment.appointmentDate);
-                  final time = await showTimePicker(context: context, initialTime: currentT);
+                  final currentT =
+                      TimeOfDay.fromDateTime(appointment.appointmentDate);
+                  final time = await showTimePicker(
+                      context: context, initialTime: currentT);
                   if (time != null) {
                     final dt = DateTime(0, 0, 0, time.hour, time.minute);
                     timeController.text = DateFormat('HH:mm').format(dt);
@@ -169,9 +187,15 @@ class AppointmentDetailScreen extends StatelessWidget {
                 },
               ),
               const SizedBox(height: 16),
-              TextField(controller: symptomsController, decoration: const InputDecoration(labelText: 'Symptoms'), maxLines: 2),
+              TextField(
+                  controller: symptomsController,
+                  decoration: const InputDecoration(labelText: 'Symptoms'),
+                  maxLines: 2),
               const SizedBox(height: 16),
-              TextField(controller: notesController, decoration: const InputDecoration(labelText: 'Notes'), maxLines: 2),
+              TextField(
+                  controller: notesController,
+                  decoration: const InputDecoration(labelText: 'Notes'),
+                  maxLines: 2),
             ],
           ),
         ),
@@ -180,8 +204,12 @@ class AppointmentDetailScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () async {
               // delegate to controller if available
-              final studentCtrl = Get.isRegistered<StudentDashboardController>() ? Get.find<StudentDashboardController>() : null;
-              final facultyCtrl = Get.isRegistered<FacultyDashboardController>() ? Get.find<FacultyDashboardController>() : null;
+              final studentCtrl = Get.isRegistered<StudentDashboardController>()
+                  ? Get.find<StudentDashboardController>()
+                  : null;
+              final facultyCtrl = Get.isRegistered<FacultyDashboardController>()
+                  ? Get.find<FacultyDashboardController>()
+                  : null;
 
               if (studentCtrl != null) {
                 await studentCtrl.updateAppointment(
@@ -203,13 +231,16 @@ class AppointmentDetailScreen extends StatelessWidget {
                 );
               } else {
                 final api = Get.find<ApiService>();
-                final dateTimeStr = '${DateFormat('yyyy-MM-dd').format(selectedDate)}T${timeController.text}:00';
-                final response = await api.put('${AppConfig.baseUrl}/Appointments/${appointment.id}', data: {
-                  'doctorId': appointment.doctorId,
-                  'dateTime': dateTimeStr,
-                  'symptoms': symptomsController.text,
-                  'notes': notesController.text,
-                });
+                final dateTimeStr =
+                    '${DateFormat('yyyy-MM-dd').format(selectedDate)}T${timeController.text}:00';
+                final response = await api.put(
+                    '${AppConfig.baseUrl}/Appointments/${appointment.id}',
+                    data: {
+                      'doctorId': appointment.doctorId,
+                      'dateTime': dateTimeStr,
+                      'symptoms': symptomsController.text,
+                      'notes': notesController.text,
+                    });
                 if (response.success) {
                   Get.snackbar('Success', 'Appointment updated');
                 } else {

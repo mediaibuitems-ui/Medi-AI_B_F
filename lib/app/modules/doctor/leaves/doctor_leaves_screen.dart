@@ -10,9 +10,12 @@ class DoctorLeavesScreen extends GetView<DoctorLeavesController> {
   void _showLeaveDialog(BuildContext context, {Map<String, dynamic>? leave}) {
     final isEdit = leave != null;
     final formKey = GlobalKey<FormState>();
-    final reasonController = TextEditingController(text: isEdit ? leave['reason'] : '');
-    DateTime? selectedStartDate = isEdit ? DateTime.parse(leave['startDate']) : null;
-    DateTime? selectedEndDate = isEdit ? DateTime.parse(leave['endDate']) : null;
+    final reasonController =
+        TextEditingController(text: isEdit ? leave['reason'] : '');
+    DateTime? selectedStartDate =
+        isEdit ? DateTime.parse(leave['startDate']) : null;
+    DateTime? selectedEndDate =
+        isEdit ? DateTime.parse(leave['endDate']) : null;
 
     Get.dialog(
       Dialog(
@@ -36,27 +39,32 @@ class DoctorLeavesScreen extends GetView<DoctorLeavesController> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    
+
                     // Start Date Picker
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Start Date'),
                       subtitle: Text(selectedStartDate == null
                           ? 'Select start date'
-                          : DateFormat('MMM dd, yyyy').format(selectedStartDate!)),
-                      trailing: const Icon(Icons.calendar_today, color: AppTheme.primary),
+                          : DateFormat('MMM dd, yyyy')
+                              .format(selectedStartDate!)),
+                      trailing: const Icon(Icons.calendar_today,
+                          color: AppTheme.primary),
                       onTap: () async {
                         final date = await showDatePicker(
                           context: context,
-                          initialDate: selectedStartDate ?? DateTime.now().add(const Duration(days: 1)),
+                          initialDate: selectedStartDate ??
+                              DateTime.now().add(const Duration(days: 1)),
                           firstDate: DateTime.now(),
-                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                          lastDate:
+                              DateTime.now().add(const Duration(days: 365)),
                         );
                         if (date != null) {
                           setState(() {
                             selectedStartDate = date;
                             // Reset end date if it's before start date
-                            if (selectedEndDate != null && selectedEndDate!.isBefore(date)) {
+                            if (selectedEndDate != null &&
+                                selectedEndDate!.isBefore(date)) {
                               selectedEndDate = null;
                             }
                           });
@@ -71,18 +79,22 @@ class DoctorLeavesScreen extends GetView<DoctorLeavesController> {
                       title: const Text('End Date'),
                       subtitle: Text(selectedEndDate == null
                           ? 'Select end date'
-                          : DateFormat('MMM dd, yyyy').format(selectedEndDate!)),
-                      trailing: const Icon(Icons.calendar_today, color: AppTheme.primary),
+                          : DateFormat('MMM dd, yyyy')
+                              .format(selectedEndDate!)),
+                      trailing: const Icon(Icons.calendar_today,
+                          color: AppTheme.primary),
                       onTap: () async {
                         if (selectedStartDate == null) {
-                          Get.snackbar('Notice', 'Please select start date first');
+                          Get.snackbar(
+                              'Notice', 'Please select start date first');
                           return;
                         }
                         final date = await showDatePicker(
                           context: context,
                           initialDate: selectedEndDate ?? selectedStartDate!,
                           firstDate: selectedStartDate!,
-                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                          lastDate:
+                              DateTime.now().add(const Duration(days: 365)),
                         );
                         if (date != null) {
                           setState(() => selectedEndDate = date);
@@ -120,11 +132,13 @@ class DoctorLeavesScreen extends GetView<DoctorLeavesController> {
                         const SizedBox(width: 12),
                         ElevatedButton(
                           onPressed: () {
-                            if (selectedStartDate == null || selectedEndDate == null) {
+                            if (selectedStartDate == null ||
+                                selectedEndDate == null) {
                               Get.snackbar(
                                 'Error',
                                 'Please select both start and end dates',
-                                backgroundColor: AppTheme.error.withOpacity(0.1),
+                                backgroundColor:
+                                    AppTheme.error.withOpacity(0.1),
                                 colorText: AppTheme.error,
                               );
                               return;
@@ -223,7 +237,9 @@ class DoctorLeavesScreen extends GetView<DoctorLeavesController> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                   side: BorderSide(
-                    color: isPast ? Colors.grey.withOpacity(0.3) : AppTheme.primary.withOpacity(0.3),
+                    color: isPast
+                        ? Colors.grey.withOpacity(0.3)
+                        : AppTheme.primary.withOpacity(0.3),
                   ),
                 ),
                 child: Padding(
@@ -239,7 +255,8 @@ class DoctorLeavesScreen extends GetView<DoctorLeavesController> {
                               children: [
                                 Icon(
                                   Icons.calendar_month,
-                                  color: isPast ? Colors.grey : AppTheme.primary,
+                                  color:
+                                      isPast ? Colors.grey : AppTheme.primary,
                                   size: 20,
                                 ),
                                 const SizedBox(width: 8),
@@ -258,9 +275,12 @@ class DoctorLeavesScreen extends GetView<DoctorLeavesController> {
                           ),
                           const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: isPast ? Colors.grey.withOpacity(0.1) : AppTheme.primary.withOpacity(0.1),
+                              color: isPast
+                                  ? Colors.grey.withOpacity(0.1)
+                                  : AppTheme.primary.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -295,7 +315,8 @@ class DoctorLeavesScreen extends GetView<DoctorLeavesController> {
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             TextButton.icon(
-                              onPressed: () => _showLeaveDialog(context, leave: leave),
+                              onPressed: () =>
+                                  _showLeaveDialog(context, leave: leave),
                               icon: const Icon(Icons.edit, size: 18),
                               label: const Text('Edit'),
                             ),
@@ -304,7 +325,8 @@ class DoctorLeavesScreen extends GetView<DoctorLeavesController> {
                               onPressed: () {
                                 Get.defaultDialog(
                                   title: 'Delete Leave',
-                                  middleText: 'Are you sure you want to delete this leave?',
+                                  middleText:
+                                      'Are you sure you want to delete this leave?',
                                   textConfirm: 'Delete',
                                   textCancel: 'Cancel',
                                   confirmTextColor: Colors.white,
@@ -315,8 +337,10 @@ class DoctorLeavesScreen extends GetView<DoctorLeavesController> {
                                   },
                                 );
                               },
-                              icon: const Icon(Icons.delete, size: 18, color: AppTheme.error),
-                              label: const Text('Delete', style: TextStyle(color: AppTheme.error)),
+                              icon: const Icon(Icons.delete,
+                                  size: 18, color: AppTheme.error),
+                              label: const Text('Delete',
+                                  style: TextStyle(color: AppTheme.error)),
                             ),
                           ],
                         ),
@@ -333,7 +357,8 @@ class DoctorLeavesScreen extends GetView<DoctorLeavesController> {
         onPressed: () => _showLeaveDialog(context),
         backgroundColor: AppTheme.primary,
         icon: const Icon(Icons.add, color: AppTheme.surface),
-        label: const Text('Add Leave', style: TextStyle(color: AppTheme.surface)),
+        label:
+            const Text('Add Leave', style: TextStyle(color: AppTheme.surface)),
       ),
     );
   }

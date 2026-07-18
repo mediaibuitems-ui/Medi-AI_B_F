@@ -1,4 +1,4 @@
-﻿import 'package:get/get.dart';
+import 'package:get/get.dart';
 import '../../../services/doctor_service.dart';
 
 class ScheduleController extends GetxController {
@@ -44,14 +44,20 @@ class ScheduleController extends GetxController {
     isLoading.value = true;
     try {
       final response = await _doctorService.getMySchedule();
-      if (response.success && response.data != null && response.data!.isNotEmpty) {
+      if (response.success &&
+          response.data != null &&
+          response.data!.isNotEmpty) {
         final serverSchedule = response.data!
-          .map((item) => Map<String, dynamic>.from(item as Map))
-          .toList();
+            .map((item) => Map<String, dynamic>.from(item as Map))
+            .toList();
 
         schedule.value = weekDays.map((day) {
           final existing = serverSchedule.firstWhere(
-            (item) => (item['dayOfWeek'] ?? item['DayOfWeek'] ?? '').toString().toLowerCase() == day.toLowerCase(),
+            (item) =>
+                (item['dayOfWeek'] ?? item['DayOfWeek'] ?? '')
+                    .toString()
+                    .toLowerCase() ==
+                day.toLowerCase(),
             orElse: () => <String, dynamic>{
               'dayOfWeek': day,
               'startTime': '09:00',
@@ -63,9 +69,11 @@ class ScheduleController extends GetxController {
           return {
             'scheduleId': existing['scheduleId'] ?? existing['ScheduleId'],
             'dayOfWeek': existing['dayOfWeek'] ?? existing['DayOfWeek'] ?? day,
-            'startTime': existing['startTime'] ?? existing['StartTime'] ?? '09:00',
+            'startTime':
+                existing['startTime'] ?? existing['StartTime'] ?? '09:00',
             'endTime': existing['endTime'] ?? existing['EndTime'] ?? '17:00',
-            'isAvailable': existing['isAvailable'] ?? existing['IsAvailable'] ?? false,
+            'isAvailable':
+                existing['isAvailable'] ?? existing['IsAvailable'] ?? false,
           };
         }).toList();
       } else {
@@ -86,7 +94,8 @@ class ScheduleController extends GetxController {
     schedule[index] = item;
   }
 
-  void updateDayTime(int index, {required bool isStart, required String value}) {
+  void updateDayTime(int index,
+      {required bool isStart, required String value}) {
     final item = Map<String, dynamic>.from(schedule[index]);
     if (isStart) {
       item['startTime'] = value;
@@ -106,14 +115,16 @@ class ScheduleController extends GetxController {
                 'dayOfWeek': item['dayOfWeek'] ?? item['DayOfWeek'],
                 'startTime': item['startTime'] ?? item['StartTime'] ?? '09:00',
                 'endTime': item['endTime'] ?? item['EndTime'] ?? '17:00',
-                'isAvailable': item['isAvailable'] == true || item['IsAvailable'] == true,
+                'isAvailable':
+                    item['isAvailable'] == true || item['IsAvailable'] == true,
               })
           .toList();
 
       final response = await _doctorService.updateSchedule(payload);
       if (response.success) {
         Get.snackbar('Success', 'Schedule updated successfully',
-          backgroundColor: Get.theme.primaryColor, colorText: Get.theme.canvasColor);
+            backgroundColor: Get.theme.primaryColor,
+            colorText: Get.theme.canvasColor);
       } else {
         Get.snackbar('error', response.message);
       }
@@ -124,4 +135,3 @@ class ScheduleController extends GetxController {
     }
   }
 }
-

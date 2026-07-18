@@ -20,11 +20,14 @@ class DoctorProfileController extends GetxController {
   final specializationController = TextEditingController();
   final roomController = TextEditingController();
   final bioController = TextEditingController();
+  final licenseNumberController = TextEditingController();
 
   final RxBool isAvailable = false.obs;
   final RxBool isEditMode = false.obs;
   final RxBool showPasswordSection = false.obs;
   final RxBool isLoading = false.obs;
+  
+  bool get hasTempLicense => licenseNumberController.text.startsWith('TEMP-');
 
   @override
   void onInit() {
@@ -51,6 +54,7 @@ class DoctorProfileController extends GetxController {
         specializationController.text = data['specialization'] ?? '';
         roomController.text = data['roomNumber'] ?? '';
         bioController.text = data['bio'] ?? '';
+        licenseNumberController.text = data['licenseNumber'] ?? '';
         isAvailable.value = data['isAvailable'] == true;
       }
     } catch (e) {
@@ -83,6 +87,7 @@ class DoctorProfileController extends GetxController {
         'Specialization': specializationController.text,
         'RoomNumber': roomController.text,
         'Bio': bioController.text,
+        'LicenseNumber': licenseNumberController.text,
         'IsAvailable': isAvailable.value,
       };
 
@@ -112,7 +117,8 @@ class DoctorProfileController extends GetxController {
       return;
     }
 
-    if (currentPasswordController.text.isEmpty || newPasswordController.text.isEmpty) {
+    if (currentPasswordController.text.isEmpty ||
+        newPasswordController.text.isEmpty) {
       AppFeedback.error('Error', 'Please fill out all password fields');
       return;
     }

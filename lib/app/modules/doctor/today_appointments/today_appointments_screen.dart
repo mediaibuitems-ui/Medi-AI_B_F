@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../config/app_theme.dart';
 import 'controllers/today_appointments_controller.dart';
@@ -32,7 +32,8 @@ class TodayAppointmentsScreen extends GetView<TodayAppointmentsController> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.event_available, size: 80, color: AppTheme.textSecondary.withOpacity(0.18)),
+                Icon(Icons.event_available,
+                    size: 80, color: AppTheme.textSecondary.withOpacity(0.18)),
                 const SizedBox(height: 16),
                 Text(
                   'No appointments for today',
@@ -84,7 +85,8 @@ class TodayAppointmentsScreen extends GetView<TodayAppointmentsController> {
                     const Divider(height: 24),
                     Text(
                       'Patient name',
-                      style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                      style: TextStyle(
+                          fontSize: 12, color: AppTheme.textSecondary),
                     ),
                     Text(
                       appointment.patientName,
@@ -94,7 +96,8 @@ class TodayAppointmentsScreen extends GetView<TodayAppointmentsController> {
                     const SizedBox(height: 8),
                     Text(
                       'Symptoms',
-                      style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                      style: TextStyle(
+                          fontSize: 12, color: AppTheme.textSecondary),
                     ),
                     Text(
                       appointment.symptoms ?? 'No symptoms specified',
@@ -110,7 +113,7 @@ class TodayAppointmentsScreen extends GetView<TodayAppointmentsController> {
                             onPressed: () => controller.updateStatus(
                                 appointment.id.toString(), 'Cancelled'),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: AppTheme.error),
+                                foregroundColor: AppTheme.error),
                             child: const Text('Cancel'),
                           ),
                           const SizedBox(width: 8),
@@ -118,8 +121,8 @@ class TodayAppointmentsScreen extends GetView<TodayAppointmentsController> {
                             onPressed: () => controller.updateStatus(
                                 appointment.id.toString(), 'Confirmed'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.primary,
-                              foregroundColor: AppTheme.surface),
+                                backgroundColor: AppTheme.primary,
+                                foregroundColor: AppTheme.surface),
                             child: const Text('Confirm'),
                           ),
                         ] else if (appointment.status == 'Confirmed') ...[
@@ -127,14 +130,15 @@ class TodayAppointmentsScreen extends GetView<TodayAppointmentsController> {
                             onPressed: () => controller.updateStatus(
                                 appointment.id.toString(), 'Completed'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.success,
-                              foregroundColor: AppTheme.surface),
+                                backgroundColor: AppTheme.success,
+                                foregroundColor: AppTheme.surface),
                             child: const Text('Mark as checked'),
                           ),
                         ] else if (appointment.status == 'Completed') ...[
-                            Chip(
+                          Chip(
                               label: const Text('Completed'),
-                              backgroundColor: AppTheme.success.withOpacity(0.15)),
+                              backgroundColor:
+                                  AppTheme.success.withOpacity(0.15)),
                         ],
                       ],
                     ),
@@ -182,6 +186,4 @@ class TodayAppointmentsScreen extends GetView<TodayAppointmentsController> {
       ),
     );
   }
-
 }
-

@@ -8,7 +8,6 @@ import '../../../data/models/appointment.dart';
 import '../../../widgets/dashboard_stat_card.dart';
 import '../../../widgets/dashboard_quick_action.dart';
 
-
 class StudentDashboardScreen extends GetView<StudentDashboardController> {
   const StudentDashboardScreen({super.key});
 
@@ -27,25 +26,26 @@ class StudentDashboardScreen extends GetView<StudentDashboardController> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Obx(() {
-  // Show loader if the app is working OR if we don't have a valid User ID yet
-  bool isMissingId = (controller.currentUser.value?.id ?? "").isEmpty;
-  
-  if (controller.isLoading.value || isMissingId) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 40),
-      child: Center(
-        child: Column(
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 10),
-            Text("Loading your health data..."),
-          ],
-        ),
-      ),
-    );
-  }
-  return const SizedBox.shrink();
-}),
+                // Show loader if the app is working OR if we don't have a valid User ID yet
+                bool isMissingId =
+                    (controller.currentUser.value?.id ?? "").isEmpty;
+
+                if (controller.isLoading.value || isMissingId) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 40),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 10),
+                          Text("Loading your health data..."),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              }),
               _buildWelcomeCard(),
               const SizedBox(height: 20),
               _buildStatisticsCards(),
@@ -95,7 +95,8 @@ class StudentDashboardScreen extends GetView<StudentDashboardController> {
           Obx(() {
             final user = controller.currentUser.value;
             final profileImage = user?.profileImage;
-            final hasImage = profileImage != null && profileImage.trim().isNotEmpty;
+            final hasImage =
+                profileImage != null && profileImage.trim().isNotEmpty;
             return UserAccountsDrawerHeader(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
@@ -113,7 +114,7 @@ class StudentDashboardScreen extends GetView<StudentDashboardController> {
                 style: AppTheme.dashboardDrawerEmail,
               ),
               currentAccountPicture: CircleAvatar(
-              backgroundColor: AppTheme.surface,
+                backgroundColor: AppTheme.surface,
                 backgroundImage: hasImage ? NetworkImage(profileImage) : null,
                 child: hasImage
                     ? null
@@ -212,7 +213,8 @@ class StudentDashboardScreen extends GetView<StudentDashboardController> {
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.logout, color: AppTheme.error),
-            title: const Text('Logout', style: TextStyle(color: AppTheme.error)),
+            title:
+                const Text('Logout', style: TextStyle(color: AppTheme.error)),
             onTap: controller.logout,
           ),
           const SizedBox(height: 8),
@@ -231,89 +233,89 @@ class StudentDashboardScreen extends GetView<StudentDashboardController> {
         borderRadius: BorderRadius.circular(16),
         child: Container(
           clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppTheme.primary, AppTheme.primaryDark],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.textPrimary.withOpacity(0.04),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [AppTheme.primary, AppTheme.primaryDark],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              right: -18,
-              top: -18,
-                child: Icon(
-                Icons.school_rounded,
-                size: 132,
-                color: AppTheme.surface.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.textPrimary.withOpacity(0.04),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
               ),
-            ),
-            Positioned(
-              left: 18,
-              bottom: 18,
-                child: Container(
-                width: 84,
-                height: 84,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppTheme.surface.withOpacity(0.08),
+            ],
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -18,
+                top: -18,
+                child: Icon(
+                  Icons.school_rounded,
+                  size: 132,
+                  color: AppTheme.surface.withOpacity(0.12),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundColor: AppTheme.surface.withOpacity(0.18),
-                    backgroundImage:
-                        hasImage ? NetworkImage(profileImage) : null,
-                    child: hasImage
-                        ? null
-                        : Icon(
-                            Icons.school_rounded,
-                            size: 32,
-                            color: AppTheme.surface,
-                          ),
+              Positioned(
+                left: 18,
+                bottom: 18,
+                child: Container(
+                  width: 84,
+                  height: 84,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppTheme.surface.withOpacity(0.08),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          controller.getGreeting(),
-                          style: AppTheme.dashboardWelcomeGreeting,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          user?.name ?? 'Student',
-                          style: AppTheme.dashboardWelcomeName,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          user?.department ?? 'BUITEMS Student',
-                          style: AppTheme.dashboardWelcomeSubtitle,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: AppTheme.surface.withOpacity(0.18),
+                      backgroundImage:
+                          hasImage ? NetworkImage(profileImage) : null,
+                      child: hasImage
+                          ? null
+                          : Icon(
+                              Icons.school_rounded,
+                              size: 32,
+                              color: AppTheme.surface,
+                            ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            controller.getGreeting(),
+                            style: AppTheme.dashboardWelcomeGreeting,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            user?.name ?? 'Student',
+                            style: AppTheme.dashboardWelcomeName,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            user?.department ?? 'BUITEMS Student',
+                            style: AppTheme.dashboardWelcomeSubtitle,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
       );
     });
   }
@@ -327,7 +329,8 @@ class StudentDashboardScreen extends GetView<StudentDashboardController> {
                 value: controller.totalAppointments.value.toString(),
                 icon: Icons.calendar_today,
                 color: AppTheme.info,
-                onTap: () => Get.toNamed(AppRoutes.myAppointments, arguments: {'filter': 'All'}),
+                onTap: () => Get.toNamed(AppRoutes.myAppointments,
+                    arguments: {'filter': 'All'}),
               ),
             ),
             const SizedBox(width: 12),
@@ -337,7 +340,8 @@ class StudentDashboardScreen extends GetView<StudentDashboardController> {
                 value: controller.completedAppointments.value.toString(),
                 icon: Icons.check_circle,
                 color: AppTheme.success,
-                onTap: () => Get.toNamed(AppRoutes.myAppointments, arguments: {'filter': 'Completed'}),
+                onTap: () => Get.toNamed(AppRoutes.myAppointments,
+                    arguments: {'filter': 'Completed'}),
               ),
             ),
             const SizedBox(width: 12),
@@ -347,14 +351,13 @@ class StudentDashboardScreen extends GetView<StudentDashboardController> {
                 value: controller.upcomingCount.value.toString(),
                 icon: Icons.pending,
                 color: AppTheme.warning,
-                onTap: () => Get.toNamed(AppRoutes.myAppointments, arguments: {'filter': 'Upcoming'}),
+                onTap: () => Get.toNamed(AppRoutes.myAppointments,
+                    arguments: {'filter': 'Upcoming'}),
               ),
             ),
           ],
         ));
   }
-
-
 
   Widget _buildQuickActions() {
     return Column(
@@ -430,8 +433,6 @@ class StudentDashboardScreen extends GetView<StudentDashboardController> {
     );
   }
 
-
-
   Widget _buildUpcomingAppointments() {
     return Obx(() {
       if (controller.isLoading.value) {
@@ -446,7 +447,7 @@ class StudentDashboardScreen extends GetView<StudentDashboardController> {
             children: [
               Expanded(
                 child: Text(
-                    'Upcoming Appointments',
+                  'Upcoming Appointments',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTheme.dashboardSectionTitle,
@@ -455,7 +456,7 @@ class StudentDashboardScreen extends GetView<StudentDashboardController> {
               if (controller.upcomingAppointments.isNotEmpty)
                 TextButton(
                   onPressed: controller.goToMyAppointments,
-                    child: const Text('View All'),
+                  child: const Text('View All'),
                 ),
             ],
           ),
@@ -465,7 +466,7 @@ class StudentDashboardScreen extends GetView<StudentDashboardController> {
             style: AppTheme.bodySmall,
           ),
           const SizedBox(height: 12),
-            controller.upcomingAppointments.isEmpty
+          controller.upcomingAppointments.isEmpty
               ? _buildEmptyState()
               : ListView.separated(
                   shrinkWrap: true,
@@ -486,8 +487,6 @@ class StudentDashboardScreen extends GetView<StudentDashboardController> {
       );
     });
   }
-
-
 
   Widget _buildEmptyState() {
     return Container(
@@ -828,4 +827,3 @@ class StudentDashboardScreen extends GetView<StudentDashboardController> {
     );
   }
 }
-

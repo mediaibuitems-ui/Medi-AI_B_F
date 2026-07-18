@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../config/app_theme.dart';
 import 'schedule_controller.dart';
@@ -27,7 +27,9 @@ class ScheduleScreen extends GetView<ScheduleController> {
     final item = controller.schedule[index];
     final key = isStart ? 'startTime' : 'endTime';
     final fallback = isStart ? '09:00' : '17:00';
-    final raw = (item[key] ?? item[isStart ? 'StartTime' : 'EndTime'] ?? fallback).toString();
+    final raw =
+        (item[key] ?? item[isStart ? 'StartTime' : 'EndTime'] ?? fallback)
+            .toString();
 
     final picked = await showTimePicker(
       context: context,
@@ -36,7 +38,8 @@ class ScheduleScreen extends GetView<ScheduleController> {
 
     if (picked == null) return;
 
-    controller.updateDayTime(index, isStart: isStart, value: _formatTime(picked));
+    controller.updateDayTime(index,
+        isStart: isStart, value: _formatTime(picked));
   }
 
   @override
@@ -124,19 +127,26 @@ class ScheduleScreen extends GetView<ScheduleController> {
                 itemCount: controller.schedule.length,
                 itemBuilder: (context, index) {
                   final item = controller.schedule[index];
-                  final day = (item['dayOfWeek'] ?? item['DayOfWeek'] ?? '').toString();
-                  final start = (item['startTime'] ?? item['StartTime'] ?? '').toString();
-                  final end = (item['endTime'] ?? item['EndTime'] ?? '').toString();
-                  final available = item['isAvailable'] == true || item['IsAvailable'] == true;
-                  final availabilityLabel = available ? 'Available' : 'Not available';
-                  final availabilityColor = available ? AppTheme.success : AppTheme.textSecondary;
+                  final day =
+                      (item['dayOfWeek'] ?? item['DayOfWeek'] ?? '').toString();
+                  final start =
+                      (item['startTime'] ?? item['StartTime'] ?? '').toString();
+                  final end =
+                      (item['endTime'] ?? item['EndTime'] ?? '').toString();
+                  final available = item['isAvailable'] == true ||
+                      item['IsAvailable'] == true;
+                  final availabilityLabel =
+                      available ? 'Available' : 'Not available';
+                  final availabilityColor =
+                      available ? AppTheme.success : AppTheme.textSecondary;
 
                   return Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
                       color: available ? AppTheme.surface : AppTheme.background,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppTheme.border.withOpacity(0.08)),
+                      border:
+                          Border.all(color: AppTheme.border.withOpacity(0.08)),
                       boxShadow: [
                         BoxShadow(
                           color: AppTheme.textPrimary.withOpacity(0.03),
@@ -156,7 +166,8 @@ class ScheduleScreen extends GetView<ScheduleController> {
                                 value: available,
                                 activeColor: AppTheme.primary,
                                 onChanged: (val) {
-                                  controller.updateDayAvailability(index, val ?? false);
+                                  controller.updateDayAvailability(
+                                      index, val ?? false);
                                 },
                               ),
                               Text(_translateDay(day),
@@ -165,7 +176,8 @@ class ScheduleScreen extends GetView<ScheduleController> {
                                       fontSize: 16)),
                               const Spacer(),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: availabilityColor.withOpacity(0.12),
                                   borderRadius: BorderRadius.circular(20),
@@ -183,15 +195,18 @@ class ScheduleScreen extends GetView<ScheduleController> {
                           ),
                           const SizedBox(height: 8),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
                             child: Row(
                               children: [
                                 Icon(Icons.access_time,
-                                  size: 16, color: AppTheme.textSecondary),
+                                    size: 16, color: AppTheme.textSecondary),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    start.isNotEmpty && end.isNotEmpty ? '$start - $end' : 'No timing set',
+                                    start.isNotEmpty && end.isNotEmpty
+                                        ? '$start - $end'
+                                        : 'No timing set',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w600,
                                       color: AppTheme.textPrimary,
@@ -199,14 +214,17 @@ class ScheduleScreen extends GetView<ScheduleController> {
                                   ),
                                 ),
                                 TextButton.icon(
-                                  onPressed: () => _pickTime(context, index, true),
+                                  onPressed: () =>
+                                      _pickTime(context, index, true),
                                   icon: const Icon(Icons.schedule, size: 16),
                                   label: const Text('Start'),
                                 ),
                                 const SizedBox(width: 4),
                                 TextButton.icon(
-                                  onPressed: () => _pickTime(context, index, false),
-                                  icon: const Icon(Icons.schedule_outlined, size: 16),
+                                  onPressed: () =>
+                                      _pickTime(context, index, false),
+                                  icon: const Icon(Icons.schedule_outlined,
+                                      size: 16),
                                   label: const Text('End'),
                                 ),
                               ],
@@ -217,7 +235,7 @@ class ScheduleScreen extends GetView<ScheduleController> {
                               padding: EdgeInsets.only(left: 16.0, top: 6.0),
                               child: Text(
                                 'Timing saved while the day is disabled',
-                                  style: TextStyle(
+                                style: TextStyle(
                                   color: AppTheme.textSecondary,
                                   fontStyle: FontStyle.italic,
                                 ),
@@ -282,4 +300,3 @@ class ScheduleScreen extends GetView<ScheduleController> {
     controller.saveSchedule();
   }
 }
-

@@ -38,7 +38,7 @@ namespace Backend_APIs.Controllers
         /// Get all appointments (Admin only)
         /// </summary>
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = Backend_APIs.Constants.UserRoles.Admin)]
         public async Task<IActionResult> GetAllAppointments()
         {
             try
@@ -88,10 +88,10 @@ namespace Backend_APIs.Controllers
             }
         }
         /// <summary>
-        /// Get student/patient appointment history
+        /// Get user appointment history
         /// </summary>
-        [HttpGet("student/{studentId}/history")]
-        public async Task<IActionResult> GetStudentAppointmentHistory(string studentId, [FromQuery] int page = 1, [FromQuery] int limit = 20)
+        [HttpGet("user/{userId}/history")]
+        public async Task<IActionResult> GetUserAppointmentHistory(string userId, [FromQuery] int page = 1, [FromQuery] int limit = 20)
         {
             try
             {
@@ -107,12 +107,22 @@ namespace Backend_APIs.Controllers
                     });
                 }
 
-                if (!int.TryParse(studentId, out int patientId))
+                if (!int.TryParse(userId, out int patientId))
                 {
                     return BadRequest(new ApiResponse<object>
                     {
                         Success = false,
-                        Message = "Invalid student ID",
+                        Message = "Invalid user ID",
+                        Data = null
+                    });
+                }
+
+                if (userIdClaim.Value != patientId.ToString() && !User.IsInRole(Backend_APIs.Constants.UserRoles.Admin))
+                {
+                    return StatusCode(403, new ApiResponse<object>
+                    {
+                        Success = false,
+                        Message = "Forbidden: Cannot access another user's appointments",
                         Data = null
                     });
                 }
@@ -527,10 +537,10 @@ namespace Backend_APIs.Controllers
         }
 
         /// <summary>
-        /// Get student/patient upcoming appointments
+        /// Get user upcoming appointments
         /// </summary>
-        [HttpGet("student/{studentId}/upcoming")]
-        public async Task<IActionResult> GetStudentUpcomingAppointments(string studentId)
+        [HttpGet("user/{userId}/upcoming")]
+        public async Task<IActionResult> GetUserUpcomingAppointments(string userId)
         {
             try
             {
@@ -546,12 +556,22 @@ namespace Backend_APIs.Controllers
                     });
                 }
 
-                if (!int.TryParse(studentId, out int patientId))
+                if (!int.TryParse(userId, out int patientId))
                 {
                     return BadRequest(new ApiResponse<object>
                     {
                         Success = false,
-                        Message = "Invalid student ID",
+                        Message = "Invalid user ID",
+                        Data = null
+                    });
+                }
+
+                if (userIdClaim.Value != patientId.ToString() && !User.IsInRole(Backend_APIs.Constants.UserRoles.Admin))
+                {
+                    return StatusCode(403, new ApiResponse<object>
+                    {
+                        Success = false,
+                        Message = "Forbidden: Cannot access another user's appointments",
                         Data = null
                     });
                 }
@@ -604,87 +624,7 @@ namespace Backend_APIs.Controllers
             }
         }
 
-        /// <summary>
-        /// Get faculty/doctor appointments
-        /// </summary>
-        [HttpGet("Faculty/appointments")]
-        [Authorize(Roles = "Doctor,Faculty,Admin")]
-        public async Task<IActionResult> GetFacultyAppointments()
-        {
-            try
-            {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim == null)
-                {
-                    return Unauthorized(new ApiResponse<object>
-                    {
-                        Success = false,
-                        Message = "Invalid token",
-                        Data = null
-                    });
-                }
 
-                var userId = int.Parse(userIdClaim.Value);
-
-                // Find doctor profile
-                var doctor = await _context.Doctors
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(d => d.UserId == userId);
-                if (doctor == null)
-                {
-                    return NotFound(new ApiResponse<object>
-                    {
-                        Success = false,
-                        Message = "Doctor profile not found",
-                        Data = null
-                    });
-                }
-
-                var appointmentList = await _context.Appointments
-                    .AsNoTracking()
-                    .Include(a => a.Patient)
-                    .Include(a => a.Doctor)
-                        .ThenInclude(d => d.User)
-                    .Include(a => a.Prescriptions)
-                    .Where(a => a.DoctorId == doctor.Id)
-                    .OrderByDescending(a => a.AppointmentDate)
-                    .ThenByDescending(a => a.AppointmentTime)
-                    .ToListAsync();
-
-                var appointments = appointmentList.Select(a => new AppointmentResponseDto
-                {
-                    Id = a.Id.ToString(),
-                    PatientId = a.PatientId.ToString(),
-                    PatientName = a.Patient.FullName,
-                    DoctorId = a.DoctorId.ToString(),
-                    DoctorName = a.Doctor.User.FullName,
-                    Specialization = a.Doctor.Specialization,
-                    DateTime = new DateTime(a.AppointmentDate.Year, a.AppointmentDate.Month, a.AppointmentDate.Day,
-                                          a.AppointmentTime.Hour, a.AppointmentTime.Minute, a.AppointmentTime.Second).ToString("o"),
-                    Status = a.Status,
-                    Symptoms = a.Symptoms,
-                    Notes = a.Notes,
-                    Prescription = a.Prescriptions.OrderByDescending(p => p.CreatedAt).FirstOrDefault()?.Notes,
-                    CreatedAt = a.CreatedAt.HasValue ? a.CreatedAt.Value.ToString("o") : null
-                }).ToList();
-
-                return Ok(new ApiResponse<List<AppointmentResponseDto>>
-                {
-                    Success = true,
-                    Message = "Appointments retrieved successfully",
-                    Data = appointments
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new ApiResponse<object>
-                {
-                    Success = false,
-                    Message = $"Failed to retrieve appointments: {ex.Message}",
-                    Data = null
-                });
-            }
-        }
 
         /// <summary>
         /// Get appointment by ID
@@ -761,7 +701,7 @@ namespace Backend_APIs.Controllers
         /// Update appointment status
         /// </summary>
         [HttpPut("{appointmentId}/status")]
-        [Authorize(Roles = "Doctor,Faculty,Admin")]
+        [Authorize(Roles = Backend_APIs.Constants.UserRoles.Doctor + "," + Backend_APIs.Constants.UserRoles.Faculty + "," + Backend_APIs.Constants.UserRoles.Admin)]
         public async Task<IActionResult> UpdateAppointmentStatus(string appointmentId, [FromBody] UpdateAppointmentStatusDto statusDto)
         {
             try
@@ -789,6 +729,15 @@ namespace Backend_APIs.Controllers
                         Message = "Appointment not found",
                         Data = null
                     });
+                }
+
+                var role = User.FindFirst(ClaimTypes.Role)?.Value ?? "";
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                var userId = userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
+
+                if (role != "Admin" && appointment.PatientId != userId && appointment.Doctor.UserId != userId)
+                {
+                    return Forbid();
                 }
 
                 var validStatuses = new[] { "Pending", "Confirmed", "Completed", "Cancelled" };
@@ -935,6 +884,18 @@ namespace Backend_APIs.Controllers
                     {
                         Success = false,
                         Message = "Appointment not found",
+                        Data = null
+                    });
+                }
+
+                // SECURITY CHECK: Ensure user owns the appointment or is an admin
+                var isAdmin = User.IsInRole(Backend_APIs.Constants.UserRoles.Admin);
+                if (appointment.PatientId != userId && appointment.Doctor.UserId != userId && !isAdmin)
+                {
+                    return StatusCode(403, new ApiResponse<object>
+                    {
+                        Success = false,
+                        Message = "You do not have permission to cancel this appointment",
                         Data = null
                     });
                 }
@@ -1191,7 +1152,7 @@ namespace Backend_APIs.Controllers
         /// Add prescription to appointment
         /// </summary>
         [HttpPut("{appointmentId}/prescription")]
-        [Authorize(Roles = "Doctor,Faculty,Admin")]
+        [Authorize(Roles = Backend_APIs.Constants.UserRoles.Doctor + "," + Backend_APIs.Constants.UserRoles.Faculty + "," + Backend_APIs.Constants.UserRoles.Admin)]
         public async Task<IActionResult> AddPrescription(string appointmentId, [FromBody] AddPrescriptionDto prescriptionDto)
         {
             try
@@ -1306,3 +1267,4 @@ namespace Backend_APIs.Controllers
         public string? Notes { get; set; }
     }
 }
+

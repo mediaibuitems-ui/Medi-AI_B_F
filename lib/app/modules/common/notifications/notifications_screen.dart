@@ -55,20 +55,32 @@ class NotificationsScreen extends GetView<AppNotificationsController> {
             separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final item = controller.notifications[index];
-              final id = int.tryParse((item['id'] ?? item['Id'] ?? '').toString());
-              final type = (item['type'] ?? item['Type'] ?? '').toString().toLowerCase();
+              final id =
+                  int.tryParse((item['id'] ?? item['Id'] ?? '').toString());
+              final type =
+                  (item['type'] ?? item['Type'] ?? '').toString().toLowerCase();
               final title = controller.displayTitle(item).toLowerCase();
-              
+
               Color iconColor = AppTheme.primary;
               IconData iconData = Icons.notifications;
-              
-              if (type.contains('alert') || type.contains('danger') || title.contains('cancel') || title.contains('error') || title.contains('failed')) {
+
+              if (type.contains('alert') ||
+                  type.contains('danger') ||
+                  title.contains('cancel') ||
+                  title.contains('error') ||
+                  title.contains('failed')) {
                 iconColor = AppTheme.error;
                 iconData = Icons.error_outline;
-              } else if (type.contains('warning') || type.contains('system') || title.contains('pending') || title.contains('warning')) {
+              } else if (type.contains('warning') ||
+                  type.contains('system') ||
+                  title.contains('pending') ||
+                  title.contains('warning')) {
                 iconColor = AppTheme.warning;
                 iconData = Icons.warning_amber_rounded;
-              } else if (type.contains('success') || title.contains('confirm') || title.contains('success') || title.contains('safe')) {
+              } else if (type.contains('success') ||
+                  title.contains('confirm') ||
+                  title.contains('success') ||
+                  title.contains('safe')) {
                 iconColor = AppTheme.success;
                 iconData = Icons.check_circle_outline;
               }
@@ -76,9 +88,11 @@ class NotificationsScreen extends GetView<AppNotificationsController> {
               return Card(
                 elevation: 1,
                 margin: const EdgeInsets.only(bottom: 4),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
                 child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   leading: CircleAvatar(
                     backgroundColor: iconColor.withOpacity(0.1),
                     child: Icon(iconData, color: iconColor),

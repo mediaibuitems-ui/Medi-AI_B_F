@@ -54,12 +54,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
             'newUsers': data['newUsers'] ?? 0,
             'activeUsers': data['activeUsers'] ?? 0,
           };
-          
+
           if (data['monthlyTrends'] != null && data['monthlyTrends'] is List) {
-            monthlyTrends = List<Map<String, dynamic>>.from(data['monthlyTrends']);
+            monthlyTrends =
+                List<Map<String, dynamic>>.from(data['monthlyTrends']);
           }
-          if (data['monthlyUserTrends'] != null && data['monthlyUserTrends'] is List) {
-            monthlyUserTrends = List<Map<String, dynamic>>.from(data['monthlyUserTrends']);
+          if (data['monthlyUserTrends'] != null &&
+              data['monthlyUserTrends'] is List) {
+            monthlyUserTrends =
+                List<Map<String, dynamic>>.from(data['monthlyUserTrends']);
           }
 
           isLoading = false;
@@ -72,26 +75,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     }
   }
 
-  final List<Map<String, dynamic>> recentReports = [
-    {
-      'name': 'Monthly appointments report',
-      'date': DateTime(2024, 11, 30),
-      'type': 'Appointments',
-      'status': 'generated',
-    },
-    {
-      'name': 'User registration report',
-      'date': DateTime(2024, 11, 28),
-      'type': 'Users',
-      'status': 'generated',
-    },
-    {
-      'name': 'Doctor performance report',
-      'date': DateTime(2024, 11, 25),
-      'type': 'Doctors',
-      'status': 'generated',
-    },
-  ];
 
   void _generateReport(String reportType) {
     Get.dialog(
@@ -213,12 +196,19 @@ class _ReportsScreenState extends State<ReportsScreen> {
         for (var appt in appointments) {
           final dateTimeStr = appt['dateTime']?.toString() ?? '';
           final dateTime = DateTime.tryParse(dateTimeStr);
-          final date = dateTime != null ? DateFormat('yyyy-MM-dd').format(dateTime) : '';
-          final time = dateTime != null ? DateFormat('HH:mm').format(dateTime) : '';
-          
-          final patient = (appt['patientName'] ?? 'Unknown').toString().replaceAll('"', '""');
-          final doctor = (appt['doctorName'] ?? 'Unknown').toString().replaceAll('"', '""');
-          final status = (appt['status'] ?? 'Unknown').toString().replaceAll('"', '""');
+          final date =
+              dateTime != null ? DateFormat('yyyy-MM-dd').format(dateTime) : '';
+          final time =
+              dateTime != null ? DateFormat('HH:mm').format(dateTime) : '';
+
+          final patient = (appt['patientName'] ?? 'Unknown')
+              .toString()
+              .replaceAll('"', '""');
+          final doctor = (appt['doctorName'] ?? 'Unknown')
+              .toString()
+              .replaceAll('"', '""');
+          final status =
+              (appt['status'] ?? 'Unknown').toString().replaceAll('"', '""');
 
           csv += '"$date","$patient","$doctor","$status","$time"\n';
         }
@@ -231,7 +221,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
       if (response.success && response.data != null) {
         final List<dynamic> users = response.data;
         for (var user in users) {
-          final name = (user['fullName'] ?? '').toString().replaceAll('"', '""');
+          final name =
+              (user['fullName'] ?? '').toString().replaceAll('"', '""');
           final email = (user['email'] ?? '').toString().replaceAll('"', '""');
           final role = (user['role'] ?? '').toString().replaceAll('"', '""');
           final status = (user['isActive'] == true) ? 'Active' : 'Inactive';
@@ -251,8 +242,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
       if (response.success && response.data != null) {
         final List<dynamic> doctors = response.data;
         for (var doc in doctors) {
-          final name = (doc['user']?['fullName'] ?? doc['doctorName'] ?? '').toString().replaceAll('"', '""');
-          final spec = (doc['specialization'] ?? '').toString().replaceAll('"', '""');
+          final name = (doc['user']?['fullName'] ?? doc['doctorName'] ?? '')
+              .toString()
+              .replaceAll('"', '""');
+          final spec =
+              (doc['specialization'] ?? '').toString().replaceAll('"', '""');
           final rating = doc['averageRating']?.toString() ?? '0.0';
           final status =
               (doc['isAvailable'] == true) ? 'Available' : 'Unavailable';
@@ -280,7 +274,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (isLoading)
-              const Center(child: Padding(
+              const Center(
+                  child: Padding(
                 padding: EdgeInsets.all(32.0),
                 child: CircularProgressIndicator(),
               ))
@@ -288,238 +283,184 @@ class _ReportsScreenState extends State<ReportsScreen> {
               // Statistics Overview
               Text(
                 'Overview',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.5,
-              children: [
-                _buildStatCard(
-                  'Total appointments',
-                  reportData['totalAppointments'].toString(),
-                  Icons.calendar_today,
-                  AppTheme.primary,
-                ),
-                _buildStatCard(
-                  'Completed',
-                  reportData['completedAppointments'].toString(),
-                  Icons.check_circle,
-                  AppTheme.success,
-                ),
-                _buildStatCard(
-                  'Active users',
-                  reportData['activeUsers'].toString(),
-                  Icons.people,
-                  AppTheme.warning,
-                ),
-                _buildStatCard(
-                  'New users',
-                  reportData['newUsers'].toString(),
-                  Icons.person_add,
-                  AppTheme.secondary,
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-
-            // Monthly Trends (Mock)
-            Text(
-              'Monthly Trends',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppTheme.surface,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.textPrimary.withOpacity(0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
+              const SizedBox(height: 16),
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 1.5,
                 children: [
-                  const Text('Appointments per Month', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    height: 160,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: monthlyTrends.isEmpty
-                          ? [const Text('No data available')]
-                          : monthlyTrends.map((trend) {
-                              final label = trend['label']?.toString() ?? '';
-                              final value = double.tryParse(trend['value']?.toString() ?? '0') ?? 0;
-                              final maxValue = monthlyTrends.map((t) => double.tryParse(t['value']?.toString() ?? '0') ?? 0).reduce((a, b) => a > b ? a : b);
-                              final scaleMax = maxValue > 0 ? maxValue : 100.0;
-                              return _buildBar(label, value, scaleMax, AppTheme.primary);
-                            }).toList(),
-                    ),
+                  _buildStatCard(
+                    'Total appointments',
+                    reportData['totalAppointments'].toString(),
+                    Icons.calendar_today,
+                    AppTheme.primary,
                   ),
-                  const SizedBox(height: 32),
-                  const Text('Registered Users per Month', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    height: 160,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: monthlyUserTrends.isEmpty
-                          ? [const Text('No data available')]
-                          : monthlyUserTrends.map((trend) {
-                              final label = trend['label']?.toString() ?? '';
-                              final value = double.tryParse(trend['value']?.toString() ?? '0') ?? 0;
-                              final maxValue = monthlyUserTrends.map((t) => double.tryParse(t['value']?.toString() ?? '0') ?? 0).reduce((a, b) => a > b ? a : b);
-                              final scaleMax = maxValue > 0 ? maxValue : 100.0;
-                              return _buildBar(label, value, scaleMax, AppTheme.success);
-                            }).toList(),
-                    ),
+                  _buildStatCard(
+                    'Completed',
+                    reportData['completedAppointments'].toString(),
+                    Icons.check_circle,
+                    AppTheme.success,
+                  ),
+                  _buildStatCard(
+                    'Active users',
+                    reportData['activeUsers'].toString(),
+                    Icons.people,
+                    AppTheme.warning,
+                  ),
+                  _buildStatCard(
+                    'New users',
+                    reportData['newUsers'].toString(),
+                    Icons.person_add,
+                    AppTheme.secondary,
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 32),
+              const SizedBox(height: 32),
 
-            // Generate Reports
-            Text(
-              'Generate reports',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
+              // Monthly Trends (Mock)
+              Text(
+                'Monthly Trends',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.3,
-              children: [
-                _buildReportCard(
-                  'Appointments',
-                  Icons.calendar_month,
-                  AppTheme.primary,
-                  () => _generateReport('Appointments'),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.textPrimary.withOpacity(0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                _buildReportCard(
-                  'Users',
-                  Icons.people,
-                  AppTheme.success,
-                  () => _generateReport('Users'),
-                ),
-                _buildReportCard(
-                  'Doctors',
-                  Icons.medical_services,
-                  AppTheme.warning,
-                  () => _generateReport('Doctors'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-
-            // Recent Reports
-            Text(
-              'Recent reports',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: recentReports.length,
-              itemBuilder: (context, index) {
-                final report = recentReports[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppTheme.border.withOpacity(0.08)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.textPrimary.withOpacity(0.03),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: AppTheme.primary.withOpacity(0.1),
-                      child: const Icon(
-                        Icons.description,
-                        color: AppTheme.primary,
+                child: Column(
+                  children: [
+                    const Text('Appointments per Month',
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textPrimary)),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 160,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: monthlyTrends.isEmpty
+                            ? [const Text('No data available')]
+                            : monthlyTrends.map((trend) {
+                                final label = trend['label']?.toString() ?? '';
+                                final value = double.tryParse(
+                                        trend['value']?.toString() ?? '0') ??
+                                    0;
+                                final maxValue = monthlyTrends
+                                    .map((t) =>
+                                        double.tryParse(
+                                            t['value']?.toString() ?? '0') ??
+                                        0)
+                                    .reduce((a, b) => a > b ? a : b);
+                                final scaleMax =
+                                    maxValue > 0 ? maxValue : 100.0;
+                                return _buildBar(
+                                    label, value, scaleMax, AppTheme.primary);
+                              }).toList(),
                       ),
                     ),
-                    title: Text(
-                      report['name'].toString(),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    const SizedBox(height: 32),
+                    const Text('Registered Users per Month',
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textPrimary)),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 160,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: monthlyUserTrends.isEmpty
+                            ? [const Text('No data available')]
+                            : monthlyUserTrends.map((trend) {
+                                final label = trend['label']?.toString() ?? '';
+                                final value = double.tryParse(
+                                        trend['value']?.toString() ?? '0') ??
+                                    0;
+                                final maxValue = monthlyUserTrends
+                                    .map((t) =>
+                                        double.tryParse(
+                                            t['value']?.toString() ?? '0') ??
+                                        0)
+                                    .reduce((a, b) => a > b ? a : b);
+                                final scaleMax =
+                                    maxValue > 0 ? maxValue : 100.0;
+                                return _buildBar(
+                                    label, value, scaleMax, AppTheme.success);
+                              }).toList(),
+                      ),
                     ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
-                        Text(
-                          DateFormat('MMM dd, yyyy').format(report['date']),
-                        ),
-                        const SizedBox(height: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.primary.withOpacity(0.08),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            _reportTypeLabel(report['type'].toString()),
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: AppTheme.primary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.download),
-                      onPressed: () {
-                        // Create a copy of the report map to avoid issues if we modify it
-                        final reportCopy = Map<String, dynamic>.from(report);
-                        _downloadReport(reportCopy);
-                      },
-                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // Generate Reports
+              Text(
+                'Generate reports',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 1.3,
+                children: [
+                  _buildReportCard(
+                    'Appointments',
+                    Icons.calendar_month,
+                    AppTheme.primary,
+                    () => _generateReport('Appointments'),
                   ),
-                );
-              },
-            ),
-          ],
+                  _buildReportCard(
+                    'Users',
+                    Icons.people,
+                    AppTheme.success,
+                    () => _generateReport('Users'),
+                  ),
+                  _buildReportCard(
+                    'Doctors',
+                    Icons.medical_services,
+                    AppTheme.warning,
+                    () => _generateReport('Doctors'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
+
+
+            ],
           ],
         ),
       ),
@@ -663,9 +604,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        Text(label, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+        Text(label,
+            style:
+                const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
       ],
     );
   }
 }
-

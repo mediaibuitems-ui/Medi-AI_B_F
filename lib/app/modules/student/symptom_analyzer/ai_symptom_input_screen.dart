@@ -15,7 +15,7 @@ class AiSymptomInputScreen extends GetView<AiSymptomInputController> {
           IconButton(
             icon: const Icon(Icons.history),
             onPressed: () {
-              // Handle history
+              Get.toNamed('/symptom-analyzer-history');
             },
           ),
         ],
@@ -40,12 +40,15 @@ class AiSymptomInputScreen extends GetView<AiSymptomInputController> {
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700),
+                              Icon(Icons.warning_amber_rounded,
+                                  color: Colors.orange.shade700),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   'This tool provides general guidance, not medical advice. Consult a doctor for accurate diagnosis.',
-                                  style: TextStyle(color: Colors.orange.shade900, fontSize: 13),
+                                  style: TextStyle(
+                                      color: Colors.orange.shade900,
+                                      fontSize: 13),
                                 ),
                               ),
                             ],
@@ -54,27 +57,37 @@ class AiSymptomInputScreen extends GetView<AiSymptomInputController> {
                         const SizedBox(height: 24),
 
                         // Section 1: Symptoms
-                        Text('1. Select Your Symptoms', style: Get.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                        Text('1. Select Your Symptoms',
+                            style: Get.textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 12),
                         Wrap(
                           spacing: 8.0,
                           runSpacing: 8.0,
                           children: controller.commonSymptoms.map((symptom) {
-                            final isSelected = controller.selectedSymptoms.contains(symptom);
+                            final isSelected =
+                                controller.selectedSymptoms.contains(symptom);
                             return FilterChip(
                               label: Text(symptom),
                               selected: isSelected,
-                              onSelected: (_) => controller.toggleSymptom(symptom),
+                              onSelected: (_) =>
+                                  controller.toggleSymptom(symptom),
                               selectedColor: Colors.blue.shade50,
                               checkmarkColor: Colors.blue.shade700,
                               labelStyle: TextStyle(
-                                color: isSelected ? Colors.blue.shade700 : Colors.black87,
-                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                color: isSelected
+                                    ? Colors.blue.shade700
+                                    : Colors.black87,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
                               ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                                 side: BorderSide(
-                                  color: isSelected ? Colors.blue.shade200 : Colors.grey.shade300,
+                                  color: isSelected
+                                      ? Colors.blue.shade200
+                                      : Colors.grey.shade300,
                                 ),
                               ),
                             );
@@ -83,25 +96,35 @@ class AiSymptomInputScreen extends GetView<AiSymptomInputController> {
                         const SizedBox(height: 24),
 
                         // Section 2: Severity
-                        Text('2. How severe are your symptoms?', style: Get.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                        Text('2. How severe are your symptoms?',
+                            style: Get.textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 12),
                         Wrap(
                           spacing: 8.0,
                           children: controller.severityLevels.map((severity) {
-                            final isSelected = controller.selectedSeverity.value == severity;
+                            final isSelected =
+                                controller.selectedSeverity.value == severity;
                             return ChoiceChip(
                               label: Text(severity),
                               selected: isSelected,
-                              onSelected: (_) => controller.selectSeverity(severity),
+                              onSelected: (_) =>
+                                  controller.selectSeverity(severity),
                               selectedColor: Colors.green.shade50,
                               labelStyle: TextStyle(
-                                color: isSelected ? Colors.green.shade700 : Colors.black87,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                color: isSelected
+                                    ? Colors.green.shade700
+                                    : Colors.black87,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
                               ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                                 side: BorderSide(
-                                  color: isSelected ? Colors.green.shade300 : Colors.grey.shade300,
+                                  color: isSelected
+                                      ? Colors.green.shade300
+                                      : Colors.grey.shade300,
                                 ),
                               ),
                             );
@@ -110,14 +133,18 @@ class AiSymptomInputScreen extends GetView<AiSymptomInputController> {
                         const SizedBox(height: 24),
 
                         // Section 3: Duration
-                        Text('3. How long have you had these symptoms?', style: Get.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                        Text('3. How long have you had these symptoms?',
+                            style: Get.textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 12),
                         TextFormField(
                           controller: controller.durationController,
                           decoration: InputDecoration(
                             hintText: 'e.g., 3 days, 1 week',
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
@@ -129,15 +156,19 @@ class AiSymptomInputScreen extends GetView<AiSymptomInputController> {
                         const SizedBox(height: 24),
 
                         // Section 4: Other Symptoms
-                        Text('4. Any other symptoms or context?', style: Get.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                        Text('4. Any other symptoms or context?',
+                            style: Get.textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 12),
                         TextFormField(
                           controller: controller.otherSymptomsController,
                           maxLines: 3,
                           decoration: InputDecoration(
                             hintText: 'Type any additional details here...',
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
                           ),
                         ),
                         const SizedBox(height: 80), // Padding for button
@@ -158,21 +189,27 @@ class AiSymptomInputScreen extends GetView<AiSymptomInputController> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Obx(() => ElevatedButton(
-              onPressed: controller.isLoading.value ? null : () => controller.analyzeSymptoms(),
+              onPressed: controller.isLoading.value
+                  ? null
+                  : () => controller.analyzeSymptoms(),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
                 elevation: 0,
               ),
               child: controller.isLoading.value
                   ? const SizedBox(
                       height: 24,
                       width: 24,
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                          color: Colors.white, strokeWidth: 2),
                     )
-                  : const Text('Analyze Symptoms', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  : const Text('Analyze Symptoms',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             )),
       ),
     );

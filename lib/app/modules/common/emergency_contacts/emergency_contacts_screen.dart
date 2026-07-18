@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:medi_ai/app/modules/student/emergency_contacts/emergency_contacts_controller.dart';
+import 'emergency_contacts_controller.dart';
 import 'package:medi_ai/config/app_theme.dart';
 
 class EmergencyContactsScreen extends GetView<EmergencyContactsController> {

@@ -37,11 +37,13 @@ class Appointment {
     final patientName = _readString(json, ['patientName', 'PatientName']);
     final doctorId = _readString(json, ['doctorId', 'DoctorId']);
     final doctorName = _readString(json, ['doctorName', 'DoctorName']);
-    final specialization = _readString(json, ['specialization', 'Specialization']);
+    final specialization =
+        _readString(json, ['specialization', 'Specialization']);
     final status = _readString(json, ['status', 'Status'], fallback: 'Pending');
     final symptoms = _readNullableString(json, ['symptoms', 'Symptoms']);
     final notes = _readNullableString(json, ['notes', 'Notes']);
-    final prescription = _readNullableString(json, ['prescription', 'Prescription']);
+    final prescription =
+        _readNullableString(json, ['prescription', 'Prescription']);
     final dateTimeText = _readString(json, ['dateTime', 'DateTime']);
     final createdAtText = _readString(
       json,

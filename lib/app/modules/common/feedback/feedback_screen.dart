@@ -201,7 +201,8 @@ class FeedbackScreen extends GetView<FeedbackController> {
                           decoration: BoxDecoration(
                             color: Colors.teal.withOpacity(0.08),
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: Colors.teal.withOpacity(0.18)),
+                            border: Border.all(
+                                color: Colors.teal.withOpacity(0.18)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,7 +258,9 @@ class FeedbackScreen extends GetView<FeedbackController> {
 
   Widget _statusChip(String status) {
     final responded = status.toLowerCase() == 'responded';
-    final background = responded ? Colors.teal.withOpacity(0.12) : Colors.orange.withOpacity(0.12);
+    final background = responded
+        ? Colors.teal.withOpacity(0.12)
+        : Colors.orange.withOpacity(0.12);
     final foreground = responded ? Colors.teal : Colors.orange;
 
     return Container(

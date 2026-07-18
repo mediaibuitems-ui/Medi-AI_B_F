@@ -31,13 +31,15 @@ class SettingsScreen extends GetView<SettingsController> {
           ),
           const SizedBox(height: 16),
           Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Column(
               children: [
                 Obx(
                   () => SwitchListTile(
                     title: const Text('Mute Notifications'),
-                    subtitle: const Text('Temporarily disable all medicine reminders'),
+                    subtitle: const Text(
+                        'Temporarily disable all medicine reminders'),
                     value: controller.isNotificationsMuted.value,
                     onChanged: controller.toggleNotifications,
                     activeColor: AppTheme.primary,
@@ -77,23 +79,28 @@ class SettingsScreen extends GetView<SettingsController> {
           ),
           const SizedBox(height: 16),
           Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.info_outline, color: AppTheme.primary),
+                  leading:
+                      const Icon(Icons.info_outline, color: AppTheme.primary),
                   title: const Text('Version'),
-                  trailing: const Text('1.0.0', style: TextStyle(color: Colors.grey)),
+                  trailing:
+                      const Text('1.0.0', style: TextStyle(color: Colors.grey)),
                 ),
                 const Divider(height: 1),
                 ListTile(
-                  leading: const Icon(Icons.medical_services_outlined, color: AppTheme.primary),
+                  leading: const Icon(Icons.medical_services_outlined,
+                      color: AppTheme.primary),
                   title: const Text('Medi-AI Healthcare Platform'),
                   subtitle: const Text('Final Year Project - BUITEMS'),
                 ),
                 const Divider(height: 1),
                 ListTile(
-                  leading: const Icon(Icons.email_outlined, color: AppTheme.primary),
+                  leading:
+                      const Icon(Icons.email_outlined, color: AppTheme.primary),
                   title: const Text('Contact Developer'),
                   onTap: controller.contactDeveloper,
                 ),

@@ -29,7 +29,8 @@ class ManageFeedbackScreen extends GetView<ManageFeedbackController> {
               padding: const EdgeInsets.all(16),
               children: [
                 const SizedBox(height: 72),
-                Icon(Icons.mark_email_read_outlined, size: 72, color: AppTheme.textSecondary.withOpacity(0.18)),
+                Icon(Icons.mark_email_read_outlined,
+                    size: 72, color: AppTheme.textSecondary.withOpacity(0.18)),
                 const SizedBox(height: 16),
                 const Text(
                   'No feedback available',
@@ -85,11 +86,11 @@ class ManageFeedbackScreen extends GetView<ManageFeedbackController> {
                         children: [
                           CircleAvatar(
                             radius: 20,
-                            backgroundColor:
-                                AppTheme.primary.withOpacity(0.12),
+                            backgroundColor: AppTheme.primary.withOpacity(0.12),
                             child: Text(
                               controller.readUserName(item).isNotEmpty
-                                  ? controller.readUserName(item)[0]
+                                  ? controller
+                                      .readUserName(item)[0]
                                       .toUpperCase()
                                   : 'U',
                               style: const TextStyle(
@@ -212,10 +213,11 @@ class ManageFeedbackScreen extends GetView<ManageFeedbackController> {
       backgroundColor: Colors.transparent,
       builder: (_) {
         return Padding(
-          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          padding:
+              EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
           child: Container(
             decoration: const BoxDecoration(
-                  color: AppTheme.surface,
+              color: AppTheme.surface,
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
             padding: const EdgeInsets.all(16),
@@ -236,7 +238,8 @@ class ManageFeedbackScreen extends GetView<ManageFeedbackController> {
                 const SizedBox(height: 16),
                 Text(
                   controller.readSubject(item),
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -307,8 +310,9 @@ class ManageFeedbackScreen extends GetView<ManageFeedbackController> {
 
   Widget _statusChip(String status) {
     final pending = status.toLowerCase() == 'pending';
-    final background =
-      pending ? AppTheme.warning.withOpacity(0.12) : AppTheme.info.withOpacity(0.12);
+    final background = pending
+        ? AppTheme.warning.withOpacity(0.12)
+        : AppTheme.info.withOpacity(0.12);
     final foreground = pending ? AppTheme.warning : AppTheme.info;
 
     return Container(

@@ -21,8 +21,10 @@ class AdminDashboardController extends GetxController {
   final RxInt pendingVerifications = 0.obs;
   final RxInt systemAlerts = 0.obs;
 
-  final RxList<Map<String, dynamic>> monthlyTrends = <Map<String, dynamic>>[].obs;
-  final RxList<Map<String, dynamic>> monthlyUserTrends = <Map<String, dynamic>>[].obs;
+  final RxList<Map<String, dynamic>> monthlyTrends =
+      <Map<String, dynamic>>[].obs;
+  final RxList<Map<String, dynamic>> monthlyUserTrends =
+      <Map<String, dynamic>>[].obs;
 
   // Recent activities
   final RxList<Map<String, dynamic>> recentActivities =
@@ -55,32 +57,35 @@ class AdminDashboardController extends GetxController {
   }
 
   Future<void> loadStatistics() async {
-      try {
-        final response = await _apiService.get('/Admin/dashboard-stats');
+    try {
+      final response = await _apiService.get('/Admin/dashboard-stats');
       if (response.success && response.data != null) {
         final data = _asMap(response.data);
-          totalUsers.value = _asInt(data['totalUsers'] ?? data['TotalUsers']);
-          totalStudents.value =
+        totalUsers.value = _asInt(data['totalUsers'] ?? data['TotalUsers']);
+        totalStudents.value =
             _asInt(data['totalStudents'] ?? data['TotalStudents']);
-          totalFaculty.value =
+        totalFaculty.value =
             _asInt(data['totalFaculty'] ?? data['TotalFaculty']);
-          totalDoctors.value =
+        totalDoctors.value =
             _asInt(data['totalDoctors'] ?? data['TotalDoctors']);
-          totalAppointments.value = _asInt(
-            data['totalAppointments'] ?? data['TotalAppointments']);
-          todayAppointments.value =
+        totalAppointments.value =
+            _asInt(data['totalAppointments'] ?? data['TotalAppointments']);
+        todayAppointments.value =
             _asInt(data['todayAppointments'] ?? data['TodayAppointments']);
-          pendingVerifications.value = _asInt(
+        pendingVerifications.value = _asInt(
             data['pendingVerifications'] ?? data['PendingVerifications']);
-          systemAlerts.value =
+        systemAlerts.value =
             _asInt(data['systemAlerts'] ?? data['SystemAlerts']);
 
-          if (data['monthlyTrends'] != null && data['monthlyTrends'] is List) {
-            monthlyTrends.value = List<Map<String, dynamic>>.from(data['monthlyTrends']);
-          }
-          if (data['monthlyUserTrends'] != null && data['monthlyUserTrends'] is List) {
-            monthlyUserTrends.value = List<Map<String, dynamic>>.from(data['monthlyUserTrends']);
-          }
+        if (data['monthlyTrends'] != null && data['monthlyTrends'] is List) {
+          monthlyTrends.value =
+              List<Map<String, dynamic>>.from(data['monthlyTrends']);
+        }
+        if (data['monthlyUserTrends'] != null &&
+            data['monthlyUserTrends'] is List) {
+          monthlyUserTrends.value =
+              List<Map<String, dynamic>>.from(data['monthlyUserTrends']);
+        }
       }
     } catch (e) {
       print('Error loading statistics: $e');
@@ -162,7 +167,8 @@ class AdminDashboardController extends GetxController {
 
   // Navigation methods
   void manageUsers([String? role]) {
-    Get.toNamed(AppRoutes.manageUsers, arguments: role != null ? {'role': role} : null);
+    Get.toNamed(AppRoutes.manageUsers,
+        arguments: role != null ? {'role': role} : null);
   }
 
   void manageDoctors() {

@@ -8,7 +8,6 @@ class ManageDoctorsScreen extends GetView<ManageDoctorsController> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
@@ -236,13 +235,13 @@ class ManageDoctorsScreen extends GetView<ManageDoctorsController> {
                         ),
                         const SizedBox(width: 12),
                         Icon(Icons.email_outlined,
-                          size: 16, color: AppTheme.textSecondary),
+                            size: 16, color: AppTheme.textSecondary),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             email,
                             style: const TextStyle(
-                              color: AppTheme.textSecondary, fontSize: 12),
+                                color: AppTheme.textSecondary, fontSize: 12),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -263,8 +262,8 @@ class ManageDoctorsScreen extends GetView<ManageDoctorsController> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: isAvailable
-          ? AppTheme.success.withOpacity(0.1)
-          : AppTheme.error.withOpacity(0.1),
+            ? AppTheme.success.withOpacity(0.1)
+            : AppTheme.error.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
@@ -389,4 +388,3 @@ class ManageDoctorsScreen extends GetView<ManageDoctorsController> {
     );
   }
 }
-

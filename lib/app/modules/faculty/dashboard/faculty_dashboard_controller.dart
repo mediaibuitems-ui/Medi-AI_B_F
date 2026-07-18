@@ -58,7 +58,7 @@ class FacultyDashboardController extends GetxController {
       // SAFETY CHECK: If the ID is missing, the cache is corrupted!
       if (user == null || user.id.isEmpty) {
         print('⛔ Error: User data corrupted. Forcing auto-logout.');
-        await logout(); 
+        await logout();
         return;
       }
 
@@ -88,7 +88,7 @@ class FacultyDashboardController extends GetxController {
   Future<void> loadAppointments() async {
     try {
       final response = await _apiService.get(
-        '${AppConfig.baseUrl}/Appointments/student/${currentUser.value?.id}/upcoming',
+        '${AppConfig.baseUrl}/appointments/user/${currentUser.value?.id}/upcoming',
       );
       if (response.success && response.data is List) {
         final list = response.data as List;
@@ -109,7 +109,7 @@ class FacultyDashboardController extends GetxController {
   Future<void> loadRecentAppointments() async {
     try {
       final response = await _apiService.get(
-        '${AppConfig.baseUrl}/Appointments/student/${currentUser.value?.id}/history',
+        '${AppConfig.baseUrl}/appointments/user/${currentUser.value?.id}/history',
       );
       if (response.success && response.data != null) {
         final Map<String, dynamic> data = response.data as Map<String, dynamic>;

@@ -31,7 +31,7 @@ class MedicineReminderService extends GetxService {
     );
   }
 
-  Future<void> syncReminders(List<Map<String, dynamic>> reminders) async {
+  Future<List<int>> syncReminders(List<Map<String, dynamic>> reminders) async {
     final mapped = reminders.map((r) {
       final timesRaw = (r['times'] ?? '').toString();
       final startDateRaw = (r['startDate'] ?? '').toString().trim();
@@ -46,6 +46,8 @@ class MedicineReminderService extends GetxService {
       // Prevent int32 overflow in C# backend (offline generated IDs are millisecondsSinceEpoch)
       if (parsedId != null && parsedId > 2147483647) {
         parsedId = null;
+      } else if (parsedId != null && parsedId < 0) {
+        parsedId = null; // Negative IDs are also temporary offline IDs
       }
 
       return {
@@ -71,28 +73,43 @@ class MedicineReminderService extends GetxService {
     if (!response.success) {
       throw Exception(response.message);
     }
+    
+    final data = response.data;
+    if (data is Map && data['reminderIds'] != null) {
+      final List<dynamic> ids = data['reminderIds'];
+      return ids.map((e) => int.parse(e.toString())).toList();
+    }
+    return [];
   }
 
   Future<void> syncPendingReminders() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final keys = prefs.getKeys().where((k) => k.startsWith('offline_medicine_reminders_') || k.startsWith('offline_faculty_medicine_reminders_'));
-      
+      final keys = prefs.getKeys().where((k) =>
+          k.startsWith('offline_medicine_reminders_') ||
+          k.startsWith('offline_faculty_medicine_reminders_'));
+
       for (final key in keys) {
         final String? remindersJson = prefs.getString(key);
         if (remindersJson == null || remindersJson.isEmpty) continue;
 
         final List<dynamic> decoded = jsonDecode(remindersJson);
-        final List<Map<String, dynamic>> reminders = decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-        
+        final List<Map<String, dynamic>> reminders =
+            decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+
         // Find unsynced
         final unsynced = reminders.where((r) => r['isSynced'] != true).toList();
         if (unsynced.isNotEmpty) {
           try {
-            await syncReminders(unsynced);
-            // If successful, update local storage
-            for (var r in reminders) {
-              r['isSynced'] = true;
+            final resultIds = await syncReminders(unsynced);
+            // If successful, update local storage and reconcile IDs
+            for (int i = 0; i < unsynced.length; i++) {
+              unsynced[i]['isSynced'] = true;
+              if (i < resultIds.length) {
+                // If the old ID was temporary (negative or string-based timestamp), update it.
+                // We keep the logic simple: always use the server's ID.
+                unsynced[i]['id'] = resultIds[i].toString();
+              }
             }
             await prefs.setString(key, jsonEncode(reminders));
           } catch (e) {

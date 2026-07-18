@@ -5,6 +5,7 @@ import '../data/models/api_response.dart';
 import 'api_service.dart';
 import 'storage_service.dart';
 import '../widgets/app_feedback.dart';
+import '../data/models/app_roles.dart';
 
 class AuthService extends GetxService {
   final _apiService = Get.find<ApiService>();
@@ -142,7 +143,8 @@ class AuthService extends GetxService {
       await _storageService.saveAccessToken(token);
       _logger.d('Access token saved successfully.');
     } else {
-      _logger.w('No valid access token found in auth response. Keys: ${data.keys.toList()}');
+      _logger.w(
+          'No valid access token found in auth response. Keys: ${data.keys.toList()}');
     }
     if (refreshToken is String && refreshToken.isNotEmpty) {
       await _storageService.saveRefreshToken(refreshToken);
@@ -173,7 +175,6 @@ class AuthService extends GetxService {
                 data['IsEmailVerified'] ??
                 false) ==
             true,
-
         cmsId: (data['registrationNumber'] ??
                 data['RegistrationNumber'] ??
                 data['cmsId'])
@@ -199,12 +200,12 @@ class AuthService extends GetxService {
     currentUser.value = null;
     isAuthenticated.value = false;
     AppFeedback.info('Signed out', 'You have been logged out successfully.');
-    
+
     // Clear all GetX controllers and services to prevent state/data leakage
     // Removing Get.deleteAll because it destroys services and currently active controllers
     // before the route transition completes, causing UI crashes and 'used after dispose' errors.
     // Get.offAllNamed naturally clears non-permanent controllers bound to the removed routes.
-    
+
     // Reroute to splash to re-initialize core services fresh
     Get.offAllNamed('/login'); // Redirect to login directly, or splash
   }
@@ -266,8 +267,8 @@ class AuthService extends GetxService {
     return response;
   }
 
-  /// Forgot Password — verifies email + phone number + CMS/registration number against DB.
-  /// Returns reset token directly in response.data['resetToken'] — no email sent.
+  /// Forgot Password â€” verifies email + phone number + CMS/registration number against DB.
+  /// Returns reset token directly in response.data['resetToken'] â€” no email sent.
   Future<ApiResponse<Map<String, dynamic>>> forgotPassword({
     required String email,
     required String phoneNumber,
@@ -284,7 +285,7 @@ class AuthService extends GetxService {
     );
   }
 
-  /// Reset Password — submit the token received from forgot-password + new password.
+  /// Reset Password â€” submit the token received from forgot-password + new password.
   Future<ApiResponse<void>> resetPassword({
     required String email,
     required String token,
@@ -301,7 +302,7 @@ class AuthService extends GetxService {
     );
   }
 
-  bool get isStudent => currentUser.value?.isStudent ?? false;
-  bool get isDoctor => currentUser.value?.isDoctor ?? false;
-  bool get isAdmin => currentUser.value?.isAdmin ?? false;
+  bool get isStudent => currentUser.value?.role == AppRoles.student;
+  bool get isDoctor => currentUser.value?.role == AppRoles.doctor;
+  bool get isAdmin => currentUser.value?.role == AppRoles.admin;
 }

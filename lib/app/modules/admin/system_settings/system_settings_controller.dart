@@ -65,7 +65,7 @@ class SystemSettingsController extends GetxController {
         supportEmailController.text = settings.supportEmail;
       }
     } catch (e) {
-        AppFeedback.error('Error', 'Failed to load settings: $e');
+      AppFeedback.error('Error', 'Failed to load settings: $e');
     } finally {
       isLoading.value = false;
     }
@@ -95,12 +95,12 @@ class SystemSettingsController extends GetxController {
       );
 
       if (response.success) {
-          AppFeedback.success('Success', 'System settings saved successfully');
+        AppFeedback.success('Success', 'System settings saved successfully');
       } else {
-          AppFeedback.error('Error', response.message);
+        AppFeedback.error('Error', response.message);
       }
     } catch (e) {
-        AppFeedback.error('Error', 'Failed to save settings: $e');
+      AppFeedback.error('Error', 'Failed to save settings: $e');
     } finally {
       isLoading.value = false;
     }
@@ -109,15 +109,16 @@ class SystemSettingsController extends GetxController {
   Future<void> backupDatabase() async {
     isLoading.value = true;
     try {
-      final response = await _apiService.post<dynamic>('/admin/backup-database');
-      
+      final response =
+          await _apiService.post<dynamic>('/admin/backup-database');
+
       if (response.success) {
-          AppFeedback.success('Backup Started', response.message);
+        AppFeedback.success('Backup Started', response.message);
       } else {
-          AppFeedback.error('Error', response.message);
+        AppFeedback.error('Error', response.message);
       }
     } catch (e) {
-        AppFeedback.error('Error', 'Failed to contact backup service: $e');
+      AppFeedback.error('Error', 'Failed to contact backup service: $e');
     } finally {
       isLoading.value = false;
     }
@@ -126,39 +127,39 @@ class SystemSettingsController extends GetxController {
   Future<void> clearCache() async {
     Get.dialog(
       AlertDialog(
-          title: const Text('Clear cache'),
+        title: const Text('Clear cache'),
         content: Text(
-            'This will clear all cached data. Continue?',
+          'This will clear all cached data. Continue?',
         ),
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-             child: const Text('Cancel'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
               Get.back();
               isLoading.value = true;
               try {
-                final response = await _apiService.post<dynamic>('/admin/clear-cache');
-                
+                final response =
+                    await _apiService.post<dynamic>('/admin/clear-cache');
+
                 if (response.success) {
-                    AppFeedback.success('Success', response.message);
+                  AppFeedback.success('Success', response.message);
                 } else {
-                    AppFeedback.error('Error', response.message);
+                  AppFeedback.error('Error', response.message);
                 }
               } catch (e) {
-                  AppFeedback.error('Error', 'Failed to clear cache: $e');
+                AppFeedback.error('Error', 'Failed to clear cache: $e');
               } finally {
                 isLoading.value = false;
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-             child: const Text('Clear'),
+            child: const Text('Clear'),
           ),
         ],
       ),
     );
   }
 }
-

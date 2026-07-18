@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'register_email_controller.dart';
 import '../../../../config/app_theme.dart';
@@ -427,7 +427,8 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
                 size: 18, color: isSelected ? Colors.white : Colors.grey[600]),
             const SizedBox(width: 8),
             Text(_translateRole(role),
-                style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
+                style:
+                    const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
           ],
         ),
         selected: isSelected,
@@ -490,12 +491,12 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
                     style: TextStyle(color: Colors.grey[500], fontSize: 14),
                   ),
                   isExpanded: true,
-                  icon: Icon(Icons.arrow_drop_down,
-                      color: Colors.grey[500]),
+                  icon: Icon(Icons.arrow_drop_down, color: Colors.grey[500]),
                   items: departments.map((dept) {
                     return DropdownMenuItem(
                       value: dept,
-                      child: Text(_translateDepartment(dept),
+                      child: Text(
+                        _translateDepartment(dept),
                         style: const TextStyle(fontSize: 14),
                       ),
                     );
@@ -553,7 +554,8 @@ class RegisterEmailScreen extends GetView<RegisterEmailController> {
                 size: 16, color: isSelected ? Colors.white : Colors.grey[600]),
             const SizedBox(width: 6),
             Text(_translateGender(gender),
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                style:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
           ],
         ),
         selected: isSelected,

@@ -1,4 +1,4 @@
-using Backend_APIs.DTOs;
+﻿using Backend_APIs.DTOs;
 using Backend_APIs.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -65,7 +65,7 @@ namespace Backend_APIs.Controllers
 
         // GET: api/MedicalHistory/patient/{patientId}
         [HttpGet("patient/{patientId:int}")]
-        [Authorize(Roles = "Doctor,Admin")]
+        [Authorize(Roles = Backend_APIs.Constants.UserRoles.Doctor + "," + Backend_APIs.Constants.UserRoles.Admin)]
         public async Task<ActionResult<ApiResponse<IEnumerable<MedicalHistoryDto>>>> GetPatientMedicalHistory(int patientId)
         {
             try
@@ -235,3 +235,4 @@ namespace Backend_APIs.Controllers
         }
     }
 }
+

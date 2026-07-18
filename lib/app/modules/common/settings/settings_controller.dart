@@ -9,7 +9,8 @@ import '../../../routes/app_routes.dart';
 
 class SettingsController extends GetxController {
   final StorageService _storageService = Get.find<StorageService>();
-  final NotificationService _notificationService = Get.find<NotificationService>();
+  final NotificationService _notificationService =
+      Get.find<NotificationService>();
   final AuthService _authService = Get.find<AuthService>();
 
   final RxBool isNotificationsMuted = false.obs;
@@ -32,13 +33,15 @@ class SettingsController extends GetxController {
   Future<void> toggleNotifications(bool value) async {
     isNotificationsMuted.value = value;
     await _storageService.setNotificationsMuted(value);
-    
+
     if (value) {
       await _notificationService.cancelAllNotifications();
-      Get.snackbar('Settings updated', 'All local notifications muted', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('Settings updated', 'All local notifications muted',
+          snackPosition: SnackPosition.BOTTOM);
     } else {
       await _notificationService.rescheduleSavedReminders();
-      Get.snackbar('Settings updated', 'Local notifications unmuted', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('Settings updated', 'Local notifications unmuted',
+          snackPosition: SnackPosition.BOTTOM);
     }
   }
 
@@ -74,10 +77,12 @@ class SettingsController extends GetxController {
     );
     try {
       if (!await launchUrl(emailLaunchUri)) {
-        Get.snackbar('Error', 'Could not open email client', snackPosition: SnackPosition.BOTTOM);
+        Get.snackbar('Error', 'Could not open email client',
+            snackPosition: SnackPosition.BOTTOM);
       }
     } catch (e) {
-      Get.snackbar('Error', 'Could not open email client', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('Error', 'Could not open email client',
+          snackPosition: SnackPosition.BOTTOM);
     }
   }
 

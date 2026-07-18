@@ -58,7 +58,7 @@ class BookingSettingsScreen extends GetView<BookingSettingsController> {
                 ],
               ),
               const SizedBox(height: 16),
-              
+
               // Break Time Settings Section
               _buildSectionCard(
                 'Break Time Configuration',
@@ -90,7 +90,7 @@ class BookingSettingsScreen extends GetView<BookingSettingsController> {
                 ],
               ),
               const SizedBox(height: 16),
-              
+
               // Reminder Settings Section
               _buildSectionCard(
                 'Reminder & Notification Settings',
@@ -114,7 +114,7 @@ class BookingSettingsScreen extends GetView<BookingSettingsController> {
                 ],
               ),
               const SizedBox(height: 32),
-              
+
               // Save Button
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -128,7 +128,8 @@ class BookingSettingsScreen extends GetView<BookingSettingsController> {
                       backgroundColor: AppTheme.primary,
                       foregroundColor: AppTheme.surface,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      disabledBackgroundColor: AppTheme.border.withOpacity(0.35),
+                      disabledBackgroundColor:
+                          AppTheme.border.withOpacity(0.35),
                     ),
                     child: controller.isSaving.value
                         ? const SizedBox(
@@ -150,7 +151,7 @@ class BookingSettingsScreen extends GetView<BookingSettingsController> {
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // Error Message
               if (controller.errorMessage.isNotEmpty)
                 Padding(
@@ -160,7 +161,8 @@ class BookingSettingsScreen extends GetView<BookingSettingsController> {
                     decoration: BoxDecoration(
                       color: AppTheme.error.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppTheme.error.withOpacity(0.2)),
+                      border:
+                          Border.all(color: AppTheme.error.withOpacity(0.2)),
                     ),
                     child: Text(
                       controller.errorMessage.value,
@@ -310,12 +312,12 @@ class BookingSettingsScreen extends GetView<BookingSettingsController> {
         ),
         const SizedBox(width: 12),
         Obx(() => Switch(
-          value: observable.value,
-          activeColor: AppTheme.primary,
-          onChanged: (value) {
-            observable.value = value;
-          },
-        )),
+              value: observable.value,
+              activeColor: AppTheme.primary,
+              onChanged: (value) {
+                observable.value = value;
+              },
+            )),
       ],
     );
   }
@@ -371,7 +373,8 @@ class BookingSettingsScreen extends GetView<BookingSettingsController> {
                 ),
               ],
             ),
-            Icon(Icons.access_time, color: AppTheme.textSecondary.withOpacity(0.5)),
+            Icon(Icons.access_time,
+                color: AppTheme.textSecondary.withOpacity(0.5)),
           ],
         ),
       ),

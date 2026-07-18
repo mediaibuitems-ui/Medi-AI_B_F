@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../data/models/app_roles.dart';
 import '../../../services/api_service.dart';
 
 class ManageUsersController extends GetxController {
@@ -30,7 +31,8 @@ class ManageUsersController extends GetxController {
     loadUsers();
 
     scrollController.addListener(() {
-      if (scrollController.position.pixels >= scrollController.position.maxScrollExtent - 50) {
+      if (scrollController.position.pixels >=
+          scrollController.position.maxScrollExtent - 50) {
         loadMoreUsers();
       }
     });
@@ -48,9 +50,13 @@ class ManageUsersController extends GetxController {
     hasMore.value = true;
     isLoading.value = true;
     try {
-      final role = selectedFilter.value != 'All' ? '&role=${selectedFilter.value}' : '';
-      final search = searchController.text.isNotEmpty ? '&search=${searchController.text}' : '';
-      final response = await _apiService.get('/Admin/users?page=$_page&limit=$_limit$role$search');
+      final role =
+          selectedFilter.value != 'All' ? '&role=${selectedFilter.value}' : '';
+      final search = searchController.text.isNotEmpty
+          ? '&search=${searchController.text}'
+          : '';
+      final response = await _apiService
+          .get('/Admin/users?page=$_page&limit=$_limit$role$search');
 
       if (response.success && response.data != null) {
         final Map<String, dynamic> data = response.data as Map<String, dynamic>;
@@ -60,7 +66,7 @@ class ManageUsersController extends GetxController {
         users.value = items
             .map((item) => Map<String, dynamic>.from(item as Map))
             .toList();
-        
+
         hasMore.value = users.length < totalCount;
         filterUsers();
       } else {
@@ -80,9 +86,13 @@ class ManageUsersController extends GetxController {
     isLoadingMore.value = true;
     _page++;
     try {
-      final role = selectedFilter.value != 'All' ? '&role=${selectedFilter.value}' : '';
-      final search = searchController.text.isNotEmpty ? '&search=${searchController.text}' : '';
-      final response = await _apiService.get('/Admin/users?page=$_page&limit=$_limit$role$search');
+      final role =
+          selectedFilter.value != 'All' ? '&role=${selectedFilter.value}' : '';
+      final search = searchController.text.isNotEmpty
+          ? '&search=${searchController.text}'
+          : '';
+      final response = await _apiService
+          .get('/Admin/users?page=$_page&limit=$_limit$role$search');
 
       if (response.success && response.data != null) {
         final Map<String, dynamic> data = response.data as Map<String, dynamic>;
@@ -92,7 +102,7 @@ class ManageUsersController extends GetxController {
         final newUsers = items
             .map((item) => Map<String, dynamic>.from(item as Map))
             .toList();
-        
+
         users.addAll(newUsers);
         hasMore.value = users.length < totalCount;
         filterUsers();
@@ -175,7 +185,8 @@ class ManageUsersController extends GetxController {
   Future<void> updateUser(int id, Map<String, dynamic> userData) async {
     isLoading.value = true;
     try {
-      final response = await _apiService.put('/Admin/users/$id', data: userData);
+      final response =
+          await _apiService.put('/Admin/users/$id', data: userData);
 
       if (response.success) {
         Get.snackbar(
@@ -240,7 +251,8 @@ class ManageUsersController extends GetxController {
     return isActive ? Colors.green : Colors.red;
   }
 
-  Future<List<Map<String, dynamic>>> fetchUserEmergencyContacts(int userId) async {
+  Future<List<Map<String, dynamic>>> fetchUserEmergencyContacts(
+      int userId) async {
     try {
       final response = await _apiService.get('/EmergencyContacts/user/$userId');
       if (response.success && response.data != null) {
@@ -258,4 +270,3 @@ class ManageUsersController extends GetxController {
     return [];
   }
 }
-

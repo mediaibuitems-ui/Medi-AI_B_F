@@ -8,7 +8,6 @@ import 'profile_controller.dart';
 
 export 'profile_binding.dart';
 
-
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -234,7 +233,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     TextFormField(
                       controller: _nameController,
                       enabled: isEditMode,
-                        decoration: InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Full name',
                         prefixIcon: const Icon(Icons.person),
                       ),
@@ -265,15 +264,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       keyboardType: TextInputType.phone,
                     ),
                     const SizedBox(height: 16),
-                    TextFormField(
-                      initialValue: user?.cmsId ?? '',
-                      enabled: false,
-                      decoration: InputDecoration(
-                        labelText: 'CMS ID',
-                        prefixIcon: const Icon(Icons.badge),
+                    if (user?.role.toLowerCase() == 'student') ...[
+                      TextFormField(
+                        initialValue: user?.cmsId ?? '',
+                        enabled: false,
+                        decoration: InputDecoration(
+                          labelText: 'CMS ID',
+                          prefixIcon: const Icon(Icons.badge),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 16),
+                    ],
                     TextFormField(
                       initialValue: user?.department ?? '',
                       enabled: false,
@@ -363,8 +364,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 16),
 
-
-
           // Security
           Card(
             child: Padding(
@@ -440,8 +439,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 16),
-
-
         ],
       ),
     );

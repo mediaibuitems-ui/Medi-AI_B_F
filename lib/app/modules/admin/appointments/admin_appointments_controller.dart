@@ -10,7 +10,13 @@ class AdminAppointmentsController extends GetxController {
   final RxBool isLoading = true.obs;
 
   final RxString selectedFilter = 'All'.obs;
-  final List<String> filterOptions = ['All', 'Pending', 'Confirmed', 'Completed', 'Cancelled'];
+  final List<String> filterOptions = [
+    'All',
+    'Pending',
+    'Confirmed',
+    'Completed',
+    'Cancelled'
+  ];
 
   @override
   void onInit() {
@@ -24,7 +30,8 @@ class AdminAppointmentsController extends GetxController {
       final response = await _apiService.get('/Appointments');
       if (response.success && response.data != null) {
         final List<dynamic> list = response.data;
-        allAppointments.value = list.map((json) => Appointment.fromJson(json)).toList();
+        allAppointments.value =
+            list.map((json) => Appointment.fromJson(json)).toList();
         _applyFilter();
       }
     } catch (e) {
@@ -43,7 +50,9 @@ class AdminAppointmentsController extends GetxController {
     if (selectedFilter.value == 'All') {
       filteredAppointments.value = allAppointments;
     } else {
-      filteredAppointments.value = allAppointments.where((a) => a.status == selectedFilter.value).toList();
+      filteredAppointments.value = allAppointments
+          .where((a) => a.status == selectedFilter.value)
+          .toList();
     }
   }
 

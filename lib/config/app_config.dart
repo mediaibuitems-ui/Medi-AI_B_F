@@ -3,8 +3,10 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 class AppConfig {
   // Environment toggle - prefer using `--dart-define=USE_LOCAL_BACKEND=true`
   // when running locally. This allows switching without changing source.
-  static bool get useLocalBackend => const bool.fromEnvironment('USE_LOCAL_BACKEND', defaultValue: false);
-  static bool get usePhysicalDevice => const bool.fromEnvironment('USE_PHYSICAL_DEVICE', defaultValue: true);
+  static bool get useLocalBackend =>
+      const bool.fromEnvironment('USE_LOCAL_BACKEND', defaultValue: false);
+  static bool get usePhysicalDevice =>
+      const bool.fromEnvironment('USE_PHYSICAL_DEVICE', defaultValue: true);
 
   // Local development base URLs
   static const String _localWebBase = 'http://localhost:5281/api';
@@ -12,10 +14,12 @@ class AppConfig {
   static const String _localPhysicalBase = 'http://192.168.100.111:5281/api';
 
   // Production base URL
-  static const String _productionBase = 'https://medi-aibf-production.up.railway.app/api';
+  static const String _productionBase =
+      'https://medi-aibf-production.up.railway.app/api';
 
   // Allow overriding the API base at compile/run time using --dart-define=API_BASE_URL
-  static String get _overrideBase => const String.fromEnvironment('API_BASE_URL', defaultValue: '');
+  static String get _overrideBase =>
+      const String.fromEnvironment('API_BASE_URL', defaultValue: '');
 
   static String get baseUrl {
     if (_overrideBase.isNotEmpty) return _overrideBase;

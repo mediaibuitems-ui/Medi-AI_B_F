@@ -81,12 +81,15 @@ class AppNotificationsController extends GetxController {
       await markRead(id);
     }
 
-    final entityType = (item['relatedEntityType'] ?? item['RelatedEntityType'])?.toString();
-    final entityId = (item['relatedEntityId'] ?? item['RelatedEntityId'])?.toString();
+    final entityType =
+        (item['relatedEntityType'] ?? item['RelatedEntityType'])?.toString();
+    final entityId =
+        (item['relatedEntityId'] ?? item['RelatedEntityId'])?.toString();
 
     if (entityType != null && entityId != null) {
       if (entityType.toLowerCase() == 'appointment') {
-        Get.toNamed('/appointment-detail', arguments: {'appointmentId': entityId});
+        Get.toNamed('/appointment-detail',
+            arguments: {'appointmentId': entityId});
       }
       // Add other entity types as needed
     }

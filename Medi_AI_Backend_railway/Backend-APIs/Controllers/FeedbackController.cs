@@ -1,4 +1,4 @@
-using Backend_APIs.DTOs;
+﻿using Backend_APIs.DTOs;
 using Backend_APIs.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -68,7 +68,7 @@ namespace Backend_APIs.Controllers
             await _context.SaveChangesAsync();
 
             var adminUsers = await _context.Users
-                .Where(u => u.Role == "Admin" || u.Role == "admin")
+                .Where(u => u.Role == Backend_APIs.Constants.UserRoles.Admin)
                 .Select(u => new { u.Id, u.FullName })
                 .ToListAsync();
 
@@ -147,7 +147,7 @@ namespace Backend_APIs.Controllers
         }
 
         [HttpGet("admin/all")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = Backend_APIs.Constants.UserRoles.Admin)]
         public async Task<IActionResult> GetAllFeedback()
         {
             var feedback = await _context.Feedbacks
@@ -181,7 +181,7 @@ namespace Backend_APIs.Controllers
         }
 
         [HttpPut("admin/{id}/respond")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = Backend_APIs.Constants.UserRoles.Admin)]
         public async Task<IActionResult> RespondToFeedback(int id, [FromBody] RespondFeedbackRequest request)
         {
             if (!ModelState.IsValid)

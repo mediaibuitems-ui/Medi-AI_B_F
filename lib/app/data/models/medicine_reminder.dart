@@ -1,6 +1,6 @@
 import 'package:hive/hive.dart';
 
-// part 'medicine_reminder.g.dart'; // Run: flutter pub run build_runner build
+part 'medicine_reminder.g.dart';
 
 @HiveType(typeId: 0)
 class MedicineReminder extends HiveObject {
@@ -31,6 +31,9 @@ class MedicineReminder extends HiveObject {
   @HiveField(8)
   String? notes;
 
+  @HiveField(9)
+  bool isSynced;
+
   MedicineReminder({
     required this.id,
     required this.medicineName,
@@ -41,6 +44,7 @@ class MedicineReminder extends HiveObject {
     this.endDate,
     this.isActive = true,
     this.notes,
+    this.isSynced = true,
   });
 
   Map<String, dynamic> toJson() {
@@ -54,20 +58,22 @@ class MedicineReminder extends HiveObject {
       'endDate': endDate?.toIso8601String(),
       'isActive': isActive,
       'notes': notes,
+      'isSynced': isSynced,
     };
   }
 
   factory MedicineReminder.fromJson(Map<String, dynamic> json) {
     return MedicineReminder(
-      id: json['id'] ?? '',
+      id: json['id']?.toString() ?? '',
       medicineName: json['medicineName'] ?? '',
       dosage: json['dosage'] ?? '',
       times: List<String>.from(json['times'] ?? []),
       days: List<String>.from(json['days'] ?? []),
-      startDate: DateTime.parse(json['startDate']),
+      startDate: json['startDate'] != null ? DateTime.parse(json['startDate']) : DateTime.now(),
       endDate: json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
       isActive: json['isActive'] ?? true,
       notes: json['notes'],
+      isSynced: json['isSynced'] ?? true,
     );
   }
 }

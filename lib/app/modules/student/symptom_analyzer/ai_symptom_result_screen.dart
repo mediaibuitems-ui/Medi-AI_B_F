@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'ai_symptom_result_controller.dart';
-import 'package:medi_ai/config/app_theme.dart';
+
 
 class AiSymptomResultScreen extends GetView<AiSymptomResultController> {
   const AiSymptomResultScreen({super.key});
@@ -33,7 +33,8 @@ class AiSymptomResultScreen extends GetView<AiSymptomResultController> {
                       // Header
                       Row(
                         children: [
-                          Icon(Icons.health_and_safety, color: Colors.green.shade800, size: 28),
+                          Icon(Icons.health_and_safety,
+                              color: Colors.green.shade800, size: 28),
                           const SizedBox(width: 12),
                           Text(
                             'Analysis Result',
@@ -56,9 +57,11 @@ class AiSymptomResultScreen extends GetView<AiSymptomResultController> {
                         ),
                         child: Column(
                           children: [
-                            _buildDataRow('Possible Condition:', controller.possibleCondition),
+                            _buildDataRow('Possible Condition:',
+                                controller.possibleCondition),
                             const Divider(),
-                            _buildDataRow('Confidence Level:', controller.confidenceLevel),
+                            _buildDataRow('Confidence Level:',
+                                controller.confidenceLevel),
                             const Divider(),
                             _buildDataRow('Severity:', controller.severity),
                           ],
@@ -79,7 +82,9 @@ class AiSymptomResultScreen extends GetView<AiSymptomResultController> {
 
                       // Recommendations Section
                       if (controller.recommendations.isNotEmpty) ...[
-                        Text('Recommendations', style: Get.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                        Text('Recommendations',
+                            style: Get.textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 12),
                         ListView.builder(
                           shrinkWrap: true,
@@ -91,7 +96,8 @@ class AiSymptomResultScreen extends GetView<AiSymptomResultController> {
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Icon(Icons.check_circle, color: Colors.green.shade600, size: 20),
+                                  Icon(Icons.check_circle,
+                                      color: Colors.green.shade600, size: 20),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Text(
@@ -109,7 +115,9 @@ class AiSymptomResultScreen extends GetView<AiSymptomResultController> {
 
                       // Home Care Guidance Section
                       if (controller.homeCareGuidance.isNotEmpty) ...[
-                        Text('Home Care Guidance', style: Get.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                        Text('Home Care Guidance',
+                            style: Get.textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 12),
                         ListView.builder(
                           shrinkWrap: true,
@@ -121,7 +129,8 @@ class AiSymptomResultScreen extends GetView<AiSymptomResultController> {
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Icon(Icons.warning_amber_rounded, color: Colors.green.shade600, size: 20),
+                                  Icon(Icons.warning_amber_rounded,
+                                      color: Colors.green.shade600, size: 20),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Text(
@@ -142,13 +151,17 @@ class AiSymptomResultScreen extends GetView<AiSymptomResultController> {
                         width: double.infinity,
                         child: ElevatedButton.icon(
                           onPressed: () => controller.bookAppointment(),
-                          icon: const Icon(Icons.calendar_month, color: Colors.white),
-                          label: const Text('Book an Appointment', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          icon: const Icon(Icons.calendar_month,
+                              color: Colors.white),
+                          label: const Text('Book an Appointment',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green.shade800,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
                             elevation: 0,
                           ),
                         ),

@@ -61,61 +61,68 @@ class OtpVerificationScreen extends GetView<OtpVerificationController> {
 
   Widget _buildHeader(BuildContext context) {
     return Obx(() => Column(
-      children: [
-        Image.asset(
-          'assets/images/logos/buitems-logo-png_seeklogo-273407.png',
-          height: 100,
-          width: 100,
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.mail_outline,
-                size: 40,
+          children: [
+            Image.asset(
+              'assets/images/logos/buitems-logo-png_seeklogo-273407.png',
+              height: 100,
+              width: 100,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.mail_outline,
+                    size: 40,
+                    color: AppTheme.primary,
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Verify Your Email',
+              style: AppTheme.h2.copyWith(color: AppTheme.primary),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Enter the 6-digit code sent to',
+              style:
+                  AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              controller.email.value,
+              style: AppTheme.bodyMedium.copyWith(
                 color: AppTheme.primary,
+                fontWeight: FontWeight.bold,
               ),
-            );
-          },
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'Verify Your Email',
-          style: AppTheme.h2.copyWith(color: AppTheme.primary),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Enter the 6-digit code sent to',
-          style: AppTheme.bodyMedium.copyWith(color: AppTheme.textSecondary),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          controller.email.value,
-          style: AppTheme.bodyMedium.copyWith(
-            color: AppTheme.primary,
-            fontWeight: FontWeight.bold,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    ));
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ));
   }
 
   Widget _buildOtpFields() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildOtpField(controller.otp1Controller, controller.otp1Focus, controller.otp2Focus),
-        _buildOtpField(controller.otp2Controller, controller.otp2Focus, controller.otp3Focus),
-        _buildOtpField(controller.otp3Controller, controller.otp3Focus, controller.otp4Focus),
-        _buildOtpField(controller.otp4Controller, controller.otp4Focus, controller.otp5Focus),
-        _buildOtpField(controller.otp5Controller, controller.otp5Focus, controller.otp6Focus),
-        _buildOtpField(controller.otp6Controller, controller.otp6Focus, null, isLast: true),
+        _buildOtpField(controller.otp1Controller, controller.otp1Focus,
+            controller.otp2Focus),
+        _buildOtpField(controller.otp2Controller, controller.otp2Focus,
+            controller.otp3Focus),
+        _buildOtpField(controller.otp3Controller, controller.otp3Focus,
+            controller.otp4Focus),
+        _buildOtpField(controller.otp4Controller, controller.otp4Focus,
+            controller.otp5Focus),
+        _buildOtpField(controller.otp5Controller, controller.otp5Focus,
+            controller.otp6Focus),
+        _buildOtpField(controller.otp6Controller, controller.otp6Focus, null,
+            isLast: true),
       ],
     );
   }
@@ -177,73 +184,74 @@ class OtpVerificationScreen extends GetView<OtpVerificationController> {
 
   Widget _buildResendSection() {
     return Obx(() => Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          'Didn\'t receive code?',
-          style: AppTheme.bodyMedium,
-        ),
-        const SizedBox(width: 8),
-        if (controller.resendTimer.value > 0)
-          Text(
-            '(${controller.resendTimer.value}s)',
-            style: AppTheme.bodyMedium.copyWith(
-              color: AppTheme.textSecondary,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Didn\'t receive code?',
+              style: AppTheme.bodyMedium,
             ),
-          )
-        else
-          TextButton(
-            onPressed: controller.isResending.value ? null : controller.resendOtp,
-            child: controller.isResending.value
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppTheme.primary,
-                    ),
-                  )
-                : Text(
-                    'Resend',
-                    style: AppTheme.bodyMedium.copyWith(
-                      color: AppTheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-          ),
-      ],
-    ));
+            const SizedBox(width: 8),
+            if (controller.resendTimer.value > 0)
+              Text(
+                '(${controller.resendTimer.value}s)',
+                style: AppTheme.bodyMedium.copyWith(
+                  color: AppTheme.textSecondary,
+                ),
+              )
+            else
+              TextButton(
+                onPressed:
+                    controller.isResending.value ? null : controller.resendOtp,
+                child: controller.isResending.value
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppTheme.primary,
+                        ),
+                      )
+                    : Text(
+                        'Resend',
+                        style: AppTheme.bodyMedium.copyWith(
+                          color: AppTheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+              ),
+          ],
+        ));
   }
 
   Widget _buildVerifyButton() {
     return Obx(() => SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: controller.isLoading.value ? null : controller.verifyOtp,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.primary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        child: controller.isLoading.value
-            ? const SizedBox(
-                height: 24,
-                width: 24,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              )
-            : const Text(
-                'Verify Email',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+          width: double.infinity,
+          height: 56,
+          child: ElevatedButton(
+            onPressed: controller.isLoading.value ? null : controller.verifyOtp,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-      ),
-    ));
+            ),
+            child: controller.isLoading.value
+                ? const SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Text(
+                    'Verify Email',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+          ),
+        ));
   }
 }

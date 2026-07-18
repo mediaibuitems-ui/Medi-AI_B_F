@@ -59,11 +59,13 @@ class PatientsScreen extends GetView<PatientsController> {
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: AppTheme.border.withOpacity(0.08)),
+                    borderSide:
+                        BorderSide(color: AppTheme.border.withOpacity(0.08)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: AppTheme.primary.withOpacity(0.4)),
+                    borderSide:
+                        BorderSide(color: AppTheme.primary.withOpacity(0.4)),
                   ),
                   isDense: true,
                 ),
@@ -82,24 +84,27 @@ class PatientsScreen extends GetView<PatientsController> {
                       itemCount: patients.length,
                       itemBuilder: (context, index) {
                         final patient = patients[index];
-                        final name =
-                            (patient['fullName'] ?? patient['FullName'] ?? 'Unknown')
-                                .toString();
+                        final name = (patient['fullName'] ??
+                                patient['FullName'] ??
+                                'Unknown')
+                            .toString();
                         final email =
-                            (patient['email'] ?? patient['Email'] ?? '').toString();
+                            (patient['email'] ?? patient['Email'] ?? '')
+                                .toString();
                         final phone = (patient['phoneNumber'] ??
                                 patient['PhoneNumber'] ??
                                 '')
                             .toString();
-                        final image =
-                            patient['profileImageUrl'] ?? patient['ProfileImageUrl'];
+                        final image = patient['profileImageUrl'] ??
+                            patient['ProfileImageUrl'];
                         final dob = (patient['dateOfBirth'] ??
                                 patient['DateOfBirth'] ??
                                 '')
                             .toString()
                             .split('T')[0];
                         final gender =
-                            (patient['gender'] ?? patient['Gender'] ?? '').toString();
+                            (patient['gender'] ?? patient['Gender'] ?? '')
+                                .toString();
                         final cmsNumber = (patient['registrationNumber'] ??
                                 patient['RegistrationNumber'] ??
                                 patient['cmsNumber'] ??
@@ -108,15 +113,17 @@ class PatientsScreen extends GetView<PatientsController> {
                             .toString();
                         final hasImage =
                             image != null && image.toString().trim().isNotEmpty;
-                        final initial =
-                            name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : '?';
+                        final initial = name.trim().isNotEmpty
+                            ? name.trim()[0].toUpperCase()
+                            : '?';
 
                         return Container(
                           margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
                             color: AppTheme.surface,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppTheme.border.withOpacity(0.08)),
+                            border: Border.all(
+                                color: AppTheme.border.withOpacity(0.08)),
                             boxShadow: [
                               BoxShadow(
                                 color: AppTheme.textPrimary.withOpacity(0.03),
@@ -127,20 +134,22 @@ class PatientsScreen extends GetView<PatientsController> {
                           ),
                           child: ExpansionTile(
                             leading: CircleAvatar(
-                              backgroundColor: AppTheme.primary.withOpacity(0.1),
-                              backgroundImage:
-                                  hasImage ? NetworkImage(image.toString()) : null,
+                              backgroundColor:
+                                  AppTheme.primary.withOpacity(0.1),
+                              backgroundImage: hasImage
+                                  ? NetworkImage(image.toString())
+                                  : null,
                               child: hasImage
                                   ? null
                                   : Text(
                                       initial,
-                                      style:
-                                          const TextStyle(color: AppTheme.primary),
+                                      style: const TextStyle(
+                                          color: AppTheme.primary),
                                     ),
                             ),
                             title: Text(name,
-                                style:
-                                    const TextStyle(fontWeight: FontWeight.bold)),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold)),
                             subtitle: Text(
                               cmsNumber.isNotEmpty
                                   ? 'CMS: $cmsNumber'
@@ -153,15 +162,20 @@ class PatientsScreen extends GetView<PatientsController> {
                                 child: Column(
                                   children: [
                                     if (cmsNumber.isNotEmpty)
-                                      _buildInfoRow(Icons.badge, 'CMS', cmsNumber),
+                                      _buildInfoRow(
+                                          Icons.badge, 'CMS', cmsNumber),
                                     if (phone.isNotEmpty)
-                                      _buildInfoRow(Icons.phone, 'Phone', phone),
+                                      _buildInfoRow(
+                                          Icons.phone, 'Phone', phone),
                                     if (email.isNotEmpty)
-                                      _buildInfoRow(Icons.email, 'Email', email),
+                                      _buildInfoRow(
+                                          Icons.email, 'Email', email),
                                     if (gender.isNotEmpty)
-                                      _buildInfoRow(Icons.person, 'Gender', gender),
+                                      _buildInfoRow(
+                                          Icons.person, 'Gender', gender),
                                     if (dob.isNotEmpty)
-                                      _buildInfoRow(Icons.cake, 'Date of Birth', dob),
+                                      _buildInfoRow(
+                                          Icons.cake, 'Date of Birth', dob),
                                     const SizedBox(height: 8),
                                     Align(
                                       alignment: Alignment.centerRight,
@@ -202,7 +216,8 @@ class PatientsScreen extends GetView<PatientsController> {
         children: [
           Icon(icon, size: 16, color: AppTheme.textSecondary),
           const SizedBox(width: 8),
-          Text('$label: ', style: const TextStyle(color: AppTheme.textSecondary)),
+          Text('$label: ',
+              style: const TextStyle(color: AppTheme.textSecondary)),
           Expanded(
               child: Text(value,
                   style: const TextStyle(fontWeight: FontWeight.w500))),
@@ -211,4 +226,3 @@ class PatientsScreen extends GetView<PatientsController> {
     );
   }
 }
-

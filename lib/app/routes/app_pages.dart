@@ -25,16 +25,18 @@ import '../modules/student/symptom_analyzer/ai_symptom_input_screen.dart';
 import '../modules/student/symptom_analyzer/ai_symptom_input_binding.dart';
 import '../modules/student/symptom_analyzer/ai_symptom_result_screen.dart';
 import '../modules/student/symptom_analyzer/ai_symptom_result_binding.dart';
+import '../modules/student/symptom_analyzer/ai_symptom_history_screen.dart';
+import '../modules/student/symptom_analyzer/ai_symptom_history_binding.dart';
 import '../modules/student/medicine_reminders/medicine_reminders_screen.dart';
 import '../modules/student/medicine_reminders/medicine_reminders_binding.dart';
-import '../modules/student/profile/profile_screen.dart';
-import '../modules/student/profile/profile_binding.dart';
-import '../modules/student/medical_history/medical_history_screen.dart';
-import '../modules/student/medical_history/medical_history_binding.dart';
+import '../modules/common/profile/profile_screen.dart';
+import '../modules/common/profile/profile_binding.dart';
+import '../modules/common/medical_history/medical_history_screen.dart';
+import '../modules/common/medical_history/medical_history_binding.dart';
 import '../modules/student/prescription_history/prescription_history_screen.dart';
 import '../modules/student/prescription_history/prescription_history_binding.dart';
-import '../modules/student/emergency_contacts/emergency_contacts_screen.dart';
-import '../modules/student/emergency_contacts/emergency_contacts_binding.dart';
+import '../modules/common/emergency_contacts/emergency_contacts_screen.dart';
+import '../modules/common/emergency_contacts/emergency_contacts_binding.dart';
 import '../modules/common/feedback/feedback_screen.dart';
 import '../modules/common/feedback/feedback_binding.dart';
 
@@ -156,6 +158,11 @@ class AppPages {
       name: AppRoutes.symptomAnalyzerResult,
       page: () => const AiSymptomResultScreen(),
       binding: AiSymptomResultBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.symptomAnalyzerHistory,
+      page: () => const AiSymptomHistoryScreen(),
+      binding: AiSymptomHistoryBinding(),
     ),
     GetPage(
       name: AppRoutes.medicineReminders,

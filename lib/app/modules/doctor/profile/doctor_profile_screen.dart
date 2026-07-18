@@ -31,7 +31,7 @@ class DoctorProfileScreen extends GetView<DoctorProfileController> {
         if (controller.isLoading.value) {
           return const Center(child: CircularProgressIndicator());
         }
-        
+
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -40,7 +40,8 @@ class DoctorProfileScreen extends GetView<DoctorProfileController> {
               child: CircleAvatar(
                 radius: 60,
                 backgroundColor: AppTheme.primary,
-                child: const Icon(Icons.medical_information, size: 60, color: AppTheme.surface),
+                child: const Icon(Icons.medical_information,
+                    size: 60, color: AppTheme.surface),
               ),
             ),
             const SizedBox(height: 24),
@@ -56,7 +57,8 @@ class DoctorProfileScreen extends GetView<DoctorProfileController> {
                     children: [
                       const Text(
                         'Personal & Doctor Information',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
@@ -105,6 +107,21 @@ class DoctorProfileScreen extends GetView<DoctorProfileController> {
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
+                        controller: controller.licenseNumberController,
+                        decoration: const InputDecoration(
+                          labelText: 'License Number',
+                          prefixIcon: Icon(Icons.badge_outlined),
+                        ),
+                        enabled: controller.isEditMode.value,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your license number';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
                         controller: controller.roomController,
                         decoration: const InputDecoration(
                           labelText: 'Room number',
@@ -122,12 +139,38 @@ class DoctorProfileScreen extends GetView<DoctorProfileController> {
                         enabled: controller.isEditMode.value,
                         maxLines: 3,
                       ),
+                      if (controller.hasTempLicense) ...[
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppTheme.warning.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: AppTheme.warning.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.warning_amber_rounded, color: AppTheme.warning),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'You cannot mark yourself as available until you update your temporary license number.',
+                                  style: TextStyle(
+                                    color: AppTheme.warning.withOpacity(0.8),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 16),
                       SwitchListTile(
                         contentPadding: EdgeInsets.zero,
                         title: const Text('Available for appointments'),
                         value: controller.isAvailable.value,
-                        onChanged: controller.isEditMode.value
+                        onChanged: (controller.isEditMode.value && !controller.hasTempLicense)
                             ? (val) => controller.isAvailable.value = val
                             : null,
                         secondary: const Icon(Icons.check_circle_outline),
@@ -172,7 +215,8 @@ class DoctorProfileScreen extends GetView<DoctorProfileController> {
                       children: [
                         const Text(
                           'Security',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         TextButton.icon(
                           onPressed: controller.togglePasswordSection,

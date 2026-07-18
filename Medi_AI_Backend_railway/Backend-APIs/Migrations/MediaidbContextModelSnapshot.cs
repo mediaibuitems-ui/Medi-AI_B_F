@@ -230,6 +230,9 @@ namespace Backend_APIs.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)");
 
+                    b.Property<string>("IconKey")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("IpAddress")
                         .HasMaxLength(45)
                         .HasColumnType("varchar(45)");
@@ -1069,6 +1072,36 @@ namespace Backend_APIs.Migrations
                     b.HasIndex(new[] { "ReportType", "CreatedAt" }, "idx_type_date");
 
                     b.ToTable("reports", (string)null);
+                });
+
+            modelBuilder.Entity("Backend_APIs.Models.RevokedToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.HasKey("Id")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "TokenHash" }, "idx_revokedtokens_hash")
+                        .IsUnique();
+
+                    b.ToTable("revokedtokens", (string)null);
                 });
 
             modelBuilder.Entity("Backend_APIs.Models.Systemsetting", b =>

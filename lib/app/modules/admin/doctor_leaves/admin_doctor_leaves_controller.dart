@@ -5,7 +5,7 @@ import '../../../../config/app_config.dart';
 
 class AdminDoctorLeavesController extends GetxController {
   final _apiService = Get.find<ApiService>();
-  
+
   final leaves = <Map<String, dynamic>>[].obs;
   final isLoading = true.obs;
 
@@ -22,9 +22,11 @@ class AdminDoctorLeavesController extends GetxController {
         '${AppConfig.baseUrl}/Admin/doctor-leaves',
         fromJson: (json) {
           if (json is List) {
-            return json.map((item) => item is Map<String, dynamic> 
-              ? item 
-              : Map<String, dynamic>.from(item as Map)).toList();
+            return json
+                .map((item) => item is Map<String, dynamic>
+                    ? item
+                    : Map<String, dynamic>.from(item as Map))
+                .toList();
           }
           return [];
         },
@@ -51,7 +53,9 @@ class AdminDoctorLeavesController extends GetxController {
       isLoading.value = false;
     }
   }
-  Future<void> updateLeave(int id, DateTime startDate, DateTime endDate, String reason) async {
+
+  Future<void> updateLeave(
+      int id, DateTime startDate, DateTime endDate, String reason) async {
     try {
       final data = {
         'startDate': startDate.toIso8601String().split('T')[0],

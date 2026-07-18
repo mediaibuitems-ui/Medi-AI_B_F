@@ -1,244 +1,275 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../config/app_theme.dart';
-import '../../../services/doctor_service.dart';
-import '../dashboard/doctor_dashboard_controller.dart';
+import 'write_prescription_controller.dart';
 
 export 'write_prescription_binding.dart';
 
-
-class WritePrescriptionScreen extends StatefulWidget {
+class WritePrescriptionScreen extends GetView<WritePrescriptionController> {
   const WritePrescriptionScreen({super.key});
 
-  @override
-  State<WritePrescriptionScreen> createState() => _WritePrescriptionScreenState();
-}
-
-class _WritePrescriptionScreenState extends State<WritePrescriptionScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _diagnosisController = TextEditingController();
-  final _notesController = TextEditingController();
-  final List<Map<String, String>> _medications = [];
-
-  @override
-  void dispose() {
-    _diagnosisController.dispose();
-    _notesController.dispose();
-    super.dispose();
+  Future<bool> _onWillPop() async {
+    if (!controller.hasUnsavedData) return true;
+    
+    final result = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Discard prescription?'),
+        content: const Text('You have unsaved changes. Are you sure you want to discard them?'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Get.back(result: true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.error,
+              foregroundColor: AppTheme.surface,
+            ),
+            child: const Text('Discard'),
+          ),
+        ],
+      ),
+    );
+    
+    return result ?? false;
   }
 
   @override
   Widget build(BuildContext context) {
-    final args = Get.arguments is Map ? Map<String, dynamic>.from(Get.arguments as Map) : <String, dynamic>{};
-    final patientName = args['patientName'] ?? 'Patient';
-
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: Image.asset(
-            'assets/images/logos/buitems-logo-png_seeklogo-273407.png',
-            width: 32,
-            height: 32,
-            errorBuilder: (context, error, stackTrace) {
-              return const Icon(Icons.arrow_back);
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, dynamic result) async {
+        if (didPop) return;
+        final shouldPop = await _onWillPop();
+        if (shouldPop) {
+          Get.back();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppTheme.background,
+        appBar: AppBar(
+          leading: IconButton(
+            icon: Image.asset(
+              'assets/images/logos/buitems-logo-png_seeklogo-273407.png',
+              width: 32,
+              height: 32,
+              errorBuilder: (context, error, stackTrace) {
+                return const Icon(Icons.arrow_back);
+              },
+            ),
+            onPressed: () async {
+              if (await _onWillPop()) {
+                Get.back();
+              }
             },
           ),
-          onPressed: () => Get.back(),
+          title: const Text('Write Prescription'),
+          backgroundColor: AppTheme.primary,
+          foregroundColor: AppTheme.surface,
         ),
-        title: const Text('Write Prescription'),
-        backgroundColor: AppTheme.primary,
-        foregroundColor: AppTheme.surface,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: AppTheme.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.border.withOpacity(0.08)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.textPrimary.withOpacity(0.03),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.person, color: AppTheme.primary, size: 32),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Patient',
-                            style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-                          ),
-                          Text(
-                            patientName,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Diagnosis',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _diagnosisController,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  hintText: 'Enter diagnosis...',
-                  filled: true,
-                  fillColor: AppTheme.surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter diagnosis';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Medications',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextButton.icon(
-                    onPressed: _addMedication,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add Medicine'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              if (_medications.isEmpty)
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: controller.formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Container(
                   decoration: BoxDecoration(
                     color: AppTheme.surface,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: AppTheme.border.withOpacity(0.08)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.textPrimary.withOpacity(0.03),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Center(
-                      child: Column(
-                        children: [
-                          Icon(Icons.medication, size: 48, color: AppTheme.textSecondary.withOpacity(0.18)),
-                          const SizedBox(height: 8),
-                          Text(
-                            'No medications added',
-                            style: TextStyle(color: AppTheme.textSecondary),
-                          ),
-                        ],
-                      ),
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.person,
+                            color: AppTheme.primary, size: 32),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Patient',
+                              style: TextStyle(
+                                  fontSize: 12, color: AppTheme.textSecondary),
+                            ),
+                            Text(
+                              controller.patientName,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                )
-              else
-                ..._medications.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final med = entry.value;
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surface,
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Diagnosis',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: controller.diagnosisController,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    hintText: 'Enter diagnosis...',
+                    filled: true,
+                    fillColor: AppTheme.surface,
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppTheme.border.withOpacity(0.08)),
+                      borderSide: BorderSide.none,
                     ),
-                    child: ListTile(
-                      leading: const CircleAvatar(
-                        backgroundColor: AppTheme.primary,
-                        child: Icon(Icons.medication, color: AppTheme.surface, size: 20),
-                      ),
-                      title: Text(med['name']!),
-                      subtitle: Text('${med['dosage']} - ${med['duration']}\nFreq: ${med['frequency'] ?? 'N/A'} | Inst: ${med['instructions'] ?? 'None'}'),
-                      isThreeLine: true,
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: AppTheme.error),
-                        onPressed: () => _removeMedication(index),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter diagnosis';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Medications',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
+                    TextButton.icon(
+                      onPressed: () => _addMedication(context),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Medicine'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Obx(() {
+                  if (controller.medications.isEmpty) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border:
+                            Border.all(color: AppTheme.border.withOpacity(0.08)),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Center(
+                          child: Column(
+                            children: [
+                              Icon(Icons.medication,
+                                  size: 48,
+                                  color: AppTheme.textSecondary.withOpacity(0.18)),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'No medications added',
+                                style: TextStyle(color: AppTheme.textSecondary),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                  return Column(
+                    children: controller.medications.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final med = entry.value;
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: AppTheme.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border:
+                              Border.all(color: AppTheme.border.withOpacity(0.08)),
+                        ),
+                        child: ListTile(
+                          leading: const CircleAvatar(
+                            backgroundColor: AppTheme.primary,
+                            child: Icon(Icons.medication,
+                                color: AppTheme.surface, size: 20),
+                          ),
+                          title: Text(med['name']!),
+                          subtitle: Text(
+                              '${med['dosage']} - ${med['duration']}\nFreq: ${med['frequency'] ?? 'N/A'} | Inst: ${med['instructions'] ?? 'None'}'),
+                          isThreeLine: true,
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: AppTheme.error),
+                            onPressed: () => controller.removeMedication(index),
+                          ),
+                        ),
+                      );
+                    }).toList(),
                   );
                 }),
-              const SizedBox(height: 20),
-              const Text(
-                'Additional Notes',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _notesController,
-                maxLines: 4,
-                decoration: InputDecoration(
-                  hintText: 'Enter any additional notes or instructions...',
-                  filled: true,
-                  fillColor: AppTheme.surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+                const SizedBox(height: 20),
+                const Text(
+                  'Additional Notes',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton.icon(
-                  onPressed: _savePrescription,
-                  icon: const Icon(Icons.save),
-                  label: const Text('Save Prescription'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    foregroundColor: AppTheme.surface,
-                    shape: RoundedRectangleBorder(
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: controller.notesController,
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    hintText: 'Enter any additional notes or instructions...',
+                    filled: true,
+                    fillColor: AppTheme.surface,
+                    border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
                     ),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton.icon(
+                    onPressed: controller.savePrescription,
+                    icon: const Icon(Icons.save),
+                    label: const Text('Save Prescription'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      foregroundColor: AppTheme.surface,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  void _addMedication() {
+  void _addMedication(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) {
@@ -306,14 +337,12 @@ class _WritePrescriptionScreenState extends State<WritePrescriptionScreen> {
                 if (nameController.text.isNotEmpty &&
                     dosageController.text.isNotEmpty &&
                     durationController.text.isNotEmpty) {
-                  setState(() {
-                    _medications.add({
-                      'name': nameController.text,
-                      'dosage': dosageController.text,
-                      'duration': durationController.text,
-                      'frequency': frequencyController.text,
-                      'instructions': instructionsController.text,
-                    });
+                  controller.addMedication({
+                    'name': nameController.text,
+                    'dosage': dosageController.text,
+                    'duration': durationController.text,
+                    'frequency': frequencyController.text,
+                    'instructions': instructionsController.text,
                   });
                   Navigator.pop(context);
                 }
@@ -329,67 +358,4 @@ class _WritePrescriptionScreenState extends State<WritePrescriptionScreen> {
       },
     );
   }
-
-  void _removeMedication(int index) {
-    setState(() {
-      _medications.removeAt(index);
-    });
-  }
-
-  void _savePrescription() {
-    if (!_formKey.currentState!.validate()) return;
-
-    if (_medications.isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Please add at least one medication',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppTheme.error,
-        colorText: AppTheme.surface,
-      );
-      return;
-    }
-
-
-    // Note: The controller logic should ideally be in a GetxController but implemented here for simplicity
-    final doctorService = Get.find<DoctorService>();
-    final args = Get.arguments is Map ? Map<String, dynamic>.from(Get.arguments as Map) : <String, dynamic>{};
-    final appointmentId = args['appointmentId'];
-    
-    if (appointmentId == null) {
-        Get.snackbar('Error', 'Invalid appointment ID');
-        return;
-    }
-
-    // Call API
-    doctorService.createStructuredPrescription(
-      appointmentId: int.parse(appointmentId.toString()),
-      diagnosis: _diagnosisController.text,
-      notes: _notesController.text,
-      medicines: _medications,
-    ).then((response) async {
-       if (response.success) {
-          await doctorService.updateAppointmentStatus(appointmentId.toString(), 'Completed');
-          Get.snackbar(
-            'Success',
-            'Prescription saved & Appointment Completed',
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: AppTheme.success,
-            colorText: AppTheme.surface,
-          );
-          Future.delayed(const Duration(milliseconds: 500), () {
-            Get.back();
-            // Refresh previous screen if needed (e.g. Dashboard)
-            if (Get.isRegistered<DoctorDashboardController>()) {
-                Get.find<DoctorDashboardController>().refresh();
-            }
-          });
-       } else {
-          Get.snackbar('Error', response.message);
-       }
-    }).catchError((e) {
-       Get.snackbar('Error', 'Failed to save: $e');
-    });
-  }
 }
-

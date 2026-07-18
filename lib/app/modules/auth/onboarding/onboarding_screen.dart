@@ -19,22 +19,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final List<Map<String, String>> _pages = [
     {
       'title': 'Welcome to BUITEMS Health',
-      'description': 'Your comprehensive healthcare management system for students, faculty, and medical staff.',
+      'description':
+          'Your comprehensive healthcare management system for students, faculty, and medical staff.',
       'icon': 'medical_services',
     },
     {
       'title': 'Book Appointments',
-      'description': 'Schedule appointments with doctors easily and manage your health records in one place.',
+      'description':
+          'Schedule appointments with doctors easily and manage your health records in one place.',
       'icon': 'event',
     },
     {
       'title': 'AI Symptom Checker',
-      'description': 'Get instant health insights powered by AI technology to understand your symptoms better.',
+      'description':
+          'Get instant health insights powered by AI technology to understand your symptoms better.',
       'icon': 'psychology',
     },
     {
       'title': 'Stay Healthy',
-      'description': 'Access medicine reminders and personalized wellness recommendations.',
+      'description':
+          'Access medicine reminders and personalized wellness recommendations.',
       'icon': 'favorite',
     },
   ];
@@ -62,7 +66,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     width: 40,
                     height: 40,
                     errorBuilder: (context, error, stackTrace) {
-                      return const Icon(Icons.medical_services, size: 40, color: AppTheme.primary);
+                      return const Icon(Icons.medical_services,
+                          size: 40, color: AppTheme.primary);
                     },
                   ),
                   if (_currentPage < _pages.length - 1)
@@ -119,8 +124,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                       ),
                       child: Text(
-                        _currentPage < _pages.length - 1 ? 'Next' : 'Get Started',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        _currentPage < _pages.length - 1
+                            ? 'Next'
+                            : 'Get Started',
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),

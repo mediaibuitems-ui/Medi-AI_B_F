@@ -184,5 +184,47 @@ Duration: {request.Duration}";
                 return StatusCode(500, "An internal error occurred during symptom analysis.");
             }
         }
+        [HttpGet("history")]
+        public async Task<IActionResult> GetHistory()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+                              ?? User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized("Invalid token.");
+            }
+
+            try
+            {
+                var history = await _context.AiSymptomAnalyses
+                    .Where(a => a.UserId == userId)
+                    .OrderByDescending(a => a.CreatedAt)
+                    .Select(a => new
+                    {
+                        a.Id,
+                        a.SelectedSymptoms,
+                        a.OtherSymptoms,
+                        a.SeverityInput,
+                        a.Duration,
+                        a.PossibleCondition,
+                        a.ConfidenceLevel,
+                        a.CalculatedSeverity,
+                        a.UrgencyMessage,
+                        Recommendations = string.IsNullOrEmpty(a.Recommendations) ? new List<string>() : JsonSerializer.Deserialize<List<string>>(a.Recommendations, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
+                        HomeCareGuidance = string.IsNullOrEmpty(a.HomeCareGuidance) ? new List<string>() : JsonSerializer.Deserialize<List<string>>(a.HomeCareGuidance, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
+                        a.RecommendedDoctorType,
+                        a.CreatedAt
+                    })
+                    .ToListAsync();
+
+                return Ok(new { success = true, data = history });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"SymptomAnalyzer History Error: {ex.Message}");
+                return StatusCode(500, "An internal error occurred while retrieving history.");
+            }
+        }
     }
 }
+

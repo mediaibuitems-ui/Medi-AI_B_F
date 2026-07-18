@@ -4,6 +4,7 @@ import 'prescription_history_controller.dart';
 class PrescriptionHistoryBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<PrescriptionHistoryController>(() => PrescriptionHistoryController());
+    Get.lazyPut<PrescriptionHistoryController>(
+        () => PrescriptionHistoryController());
   }
 }

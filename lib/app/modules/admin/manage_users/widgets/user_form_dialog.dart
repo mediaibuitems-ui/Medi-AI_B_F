@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import '../../../../data/models/app_roles.dart';
 import 'package:get/get.dart';
 import '../../../../../config/app_theme.dart';
 
@@ -29,9 +30,10 @@ class _UserFormDialogState extends State<UserFormDialog> {
   @override
   void initState() {
     super.initState();
-    _role = widget.user?['role'] ?? 'Student';
+    _role = widget.user?['role'] ?? AppRoles.student;
     _emailController = TextEditingController(text: widget.user?['email'] ?? '');
-    _passwordController = TextEditingController(); // Empty for edit unless changed
+    _passwordController =
+        TextEditingController(); // Empty for edit unless changed
     _fullNameController =
         TextEditingController(text: widget.user?['fullName'] ?? '');
     _departmentController =
@@ -40,17 +42,17 @@ class _UserFormDialogState extends State<UserFormDialog> {
         TextEditingController(text: widget.user?['registrationNumber'] ?? '');
     _phoneController =
         TextEditingController(text: widget.user?['phoneNumber'] ?? '');
-    
+
     // Doctor fields
     _specializationController = TextEditingController();
     _licenseController = TextEditingController();
     _experienceController = TextEditingController();
 
     if (widget.user != null) {
-        // Since backend might return nested fields differently, adjust if needed
-        // Assuming user map might have doctorDetails directly or flattened
-        // You might need to adjust this depending on how GetUser returns data
-        // For now, let's assume flat structure or leave blank for edit if not in list
+      // Since backend might return nested fields differently, adjust if needed
+      // Assuming user map might have doctorDetails directly or flattened
+      // You might need to adjust this depending on how GetUser returns data
+      // For now, let's assume flat structure or leave blank for edit if not in list
     }
   }
 
@@ -96,150 +98,165 @@ class _UserFormDialogState extends State<UserFormDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                 Text(
-                   isEdit ? 'Edit User' : 'Add New User',
-                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                         fontWeight: FontWeight.bold,
-                         color: AppTheme.primary,
-                       ),
-                 ),
-                 const SizedBox(height: 24),
-                 
-                 // Role Selection
-                 if (!isEdit) ...[
-                   DropdownButtonFormField<String>(
-                     value: _role,
-                     decoration: _inputDecoration('Role'),
-                     items: ['Student', 'Faculty', 'Doctor', 'Admin']
-                       .map((r) => DropdownMenuItem(value: r, child: Text(r)))
-                         .toList(),
-                     onChanged: (val) => setState(() => _role = val!),
-                   ),
-                   const SizedBox(height: 16),
-                 ],
+                Text(
+                  isEdit ? 'Edit User' : 'Add New User',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primary,
+                      ),
+                ),
+                const SizedBox(height: 24),
 
-                 // Common Fields
-                 TextFormField(
-                   controller: _fullNameController,
-                   decoration: _inputDecoration('Full name'),
-                   validator: (v) => v!.isEmpty ? 'Required' : null,
-                 ),
-                 const SizedBox(height: 16),
+                // Role Selection
+                if (!isEdit) ...[
+                  DropdownButtonFormField<String>(
+                    value: _role,
+                    decoration: _inputDecoration('Role'),
+                    items: [
+                      AppRoles.student,
+                      AppRoles.faculty,
+                      AppRoles.doctor,
+                      AppRoles.admin
+                    ]
+                        .map((r) => DropdownMenuItem(value: r, child: Text(r)))
+                        .toList(),
+                    onChanged: (val) => setState(() => _role = val!),
+                  ),
+                  const SizedBox(height: 16),
+                ],
 
-                 if (!isEdit) ...[
-                   TextFormField(
-                     controller: _emailController,
-                     decoration: _inputDecoration('Email'),
-                     validator: (v) => v!.isEmpty || !v.contains('@') ? 'Invalid email' : null,
-                   ),
-                   const SizedBox(height: 16),
-                   
-                   TextFormField(
-                     controller: _passwordController,
-                     decoration: _inputDecoration('Password'),
-                     obscureText: true,
-                     validator: (v) => v!.isEmpty || v.length < 6 ? 'Minimum 6 characters' : null,
-                   ),
-                   const SizedBox(height: 16),
-                 ],
+                // Common Fields
+                TextFormField(
+                  controller: _fullNameController,
+                  decoration: _inputDecoration('Full name'),
+                  validator: (v) => v!.isEmpty ? 'Required' : null,
+                ),
+                const SizedBox(height: 16),
 
-                 TextFormField(
-                   controller: _phoneController,
-                   decoration: _inputDecoration('Phone number'),
-                 ),
-                 const SizedBox(height: 16),
-                 
-                 TextFormField(
-                   controller: _departmentController,
-                   decoration: _inputDecoration('Department'),
-                 ),
-                 const SizedBox(height: 16),
+                if (!isEdit) ...[
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: _inputDecoration('Email'),
+                    validator: (v) =>
+                        v!.isEmpty || !v.contains('@') ? 'Invalid email' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _passwordController,
+                    decoration: _inputDecoration('Password'),
+                    obscureText: true,
+                    validator: (v) => v!.isEmpty || v.length < 6
+                        ? 'Minimum 6 characters'
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+                ],
 
-                 // Conditional Fields based on Role
-                 if (_role == 'Student' || _role == 'Faculty') ...[
-                    TextFormField(
-                      controller: _regNumController,
-                      decoration: _inputDecoration(_role == 'Student' ? 'Registration number' : 'Employee ID'),
-                    ),
-                    const SizedBox(height: 16),
-                 ],
+                TextFormField(
+                  controller: _phoneController,
+                  decoration: _inputDecoration('Phone number'),
+                ),
+                const SizedBox(height: 16),
 
-                 if (_role == 'Doctor') ...[
-                    TextFormField(
-                      controller: _specializationController,
-                      decoration: _inputDecoration('Specialization'),
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _licenseController,
-                      decoration: _inputDecoration('License number'),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _experienceController,
-                            decoration: _inputDecoration('Experience years'),
-                            keyboardType: TextInputType.number,
-                          ),
+                TextFormField(
+                  controller: _departmentController,
+                  decoration: _inputDecoration('Department'),
+                ),
+                const SizedBox(height: 16),
+
+                // Conditional Fields based on Role
+                if (_role == AppRoles.student || _role == AppRoles.faculty) ...[
+                  TextFormField(
+                    controller: _regNumController,
+                    decoration: _inputDecoration(_role == AppRoles.student
+                        ? 'Registration number'
+                        : 'Employee ID'),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                if (_role == AppRoles.doctor) ...[
+                  TextFormField(
+                    controller: _specializationController,
+                    decoration: _inputDecoration('Specialization'),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _licenseController,
+                    decoration: _inputDecoration('License number'),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _experienceController,
+                          decoration: _inputDecoration('Experience years'),
+                          keyboardType: TextInputType.number,
                         ),
-                      ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Get.back(),
+                      child: const Text('Cancel'),
                     ),
-                    const SizedBox(height: 16),
-                 ],
+                    const SizedBox(width: 16),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: AppTheme.surface,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 32, vertical: 16),
+                      ),
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          final data = {
+                            'fullName': _fullNameController.text,
+                            'role': _role,
+                            'phoneNumber': _phoneController.text,
+                            'department': _departmentController.text,
+                            'registrationNumber': _regNumController.text,
+                            'isActive': widget.user?['isActive'] ??
+                                true, // Preserve or default
+                            'isEmailVerified':
+                                widget.user?['isEmailVerified'] ??
+                                    true, // Preserve or default
+                          };
 
-                 const SizedBox(height: 24),
-                 Row(
-                   mainAxisAlignment: MainAxisAlignment.end,
-                   children: [
-                     TextButton(
-                       onPressed: () => Get.back(),
-                       child: const Text('Cancel'),
-                     ),
-                     const SizedBox(width: 16),
-                     ElevatedButton(
-                       style: ElevatedButton.styleFrom(
-                         backgroundColor: AppTheme.primary,
-                         foregroundColor: AppTheme.surface,
-                         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                       ),
-                       onPressed: () {
-                         if (_formKey.currentState!.validate()) {
-                           final data = {
-                             'fullName': _fullNameController.text,
-                             'role': _role,
-                             'phoneNumber': _phoneController.text,
-                             'department': _departmentController.text,
-                             'registrationNumber': _regNumController.text,
-                             'isActive': widget.user?['isActive'] ?? true, // Preserve or default
-                             'isEmailVerified': widget.user?['isEmailVerified'] ?? true, // Preserve or default
-                           };
-                           
-                           if (!isEdit) {
-                             data['email'] = _emailController.text;
-                             data['password'] = _passwordController.text;
-                           }
+                          if (!isEdit) {
+                            data['email'] = _emailController.text;
+                            data['password'] = _passwordController.text;
+                          }
 
-                           if (_role == 'Doctor') {
-                             data['specialization'] = _specializationController.text;
-                             data['licenseNumber'] = _licenseController.text;
-                             data['experienceYears'] = int.tryParse(_experienceController.text) ?? 0;
-                           }
+                          if (_role == AppRoles.doctor) {
+                            data['specialization'] =
+                                _specializationController.text;
+                            data['licenseNumber'] = _licenseController.text;
+                            data['experienceYears'] =
+                                int.tryParse(_experienceController.text) ?? 0;
+                          }
 
-                           widget.onSubmit(data);
-                           Get.back();
-                         }
-                       },
-                       child: Text(isEdit ? 'Save Changes' : 'Create User'),
-                     ),
-                   ],
-                 ),
-               ],
-             ),
-           ),
-         ),
-       ),
+                          widget.onSubmit(data);
+                          Get.back();
+                        }
+                      },
+                      child: Text(isEdit ? 'Save Changes' : 'Create User'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -263,6 +280,4 @@ class _UserFormDialogState extends State<UserFormDialog> {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
   }
-
 }
-

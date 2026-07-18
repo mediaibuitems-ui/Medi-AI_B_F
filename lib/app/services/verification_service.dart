@@ -43,7 +43,8 @@ class VerificationService extends GetxService {
   /// Submits a verification request with an image file.
   Future<ApiResponse> submitVerification(String imagePath) async {
     final formData = dio.FormData.fromMap({
-      'DocumentImage': await dio.MultipartFile.fromFile(imagePath, filename: 'document.jpg'),
+      'DocumentImage':
+          await dio.MultipartFile.fromFile(imagePath, filename: 'document.jpg'),
     });
 
     return await _apiService.post(

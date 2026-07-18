@@ -75,7 +75,9 @@ class LoginController extends GetxController {
   /// Validates the form and sends the login request.
   Future<void> handleLogin() async {
     // Do not continue if the form is invalid or not yet attached.
-    if (formKey == null || formKey!.currentState == null || !formKey!.currentState!.validate()) return;
+    if (formKey == null ||
+        formKey!.currentState == null ||
+        !formKey!.currentState!.validate()) return;
 
     // Show a loading state while the backend request runs.
     isLoading.value = true;
@@ -89,12 +91,14 @@ class LoginController extends GetxController {
 
       if (response.success && response.data != null) {
         if (rememberMe.value) {
-          await _storageService.saveRememberMeEmail(emailController.text.trim());
+          await _storageService
+              .saveRememberMeEmail(emailController.text.trim());
         } else {
           await _storageService.removeRememberMeEmail();
         }
 
-        AppFeedback.success('Welcome back', 'Login successful. Loading your dashboard...');
+        AppFeedback.success(
+            'Welcome back', 'Login successful. Loading your dashboard...');
 
         // Route the user to the correct dashboard based on their role.
         final user = _authService.currentUser.value;

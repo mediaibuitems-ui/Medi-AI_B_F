@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import '../../../../config/app_theme.dart';
 import 'my_appointments_controller.dart';
 
@@ -24,7 +25,9 @@ class MyAppointmentsScreen extends GetView<MyAppointmentsController> {
         }
 
         if (controller.error.isNotEmpty) {
-          return Center(child: Text(controller.error.value, style: const TextStyle(color: Colors.red)));
+          return Center(
+              child: Text(controller.error.value,
+                  style: const TextStyle(color: Colors.red)));
         }
 
         if (controller.appointments.isEmpty) {
@@ -36,14 +39,18 @@ class MyAppointmentsScreen extends GetView<MyAppointmentsController> {
           itemCount: controller.appointments.length,
           itemBuilder: (context, index) {
             final apt = controller.appointments[index];
-            final dateStr = DateFormat('MMM dd, yyyy - hh:mm a').format(apt.dateTime);
-            
-            return Card(
-              margin: const EdgeInsets.only(bottom: 12),
+            final dateStr =
+                DateFormat('MMM dd, yyyy - hh:mm a').format(apt.dateTime);
+                
+            final canCancel = apt.status.toLowerCase() != 'completed' && apt.status.toLowerCase() != 'cancelled';
+
+            final cardContent = Card(
+              margin: EdgeInsets.zero,
               child: ListTile(
                 leading: CircleAvatar(
                   backgroundColor: AppTheme.primary.withOpacity(0.1),
-                  child: const Icon(Icons.calendar_today, color: AppTheme.primary),
+                  child:
+                      const Icon(Icons.calendar_today, color: AppTheme.primary),
                 ),
                 title: Text(apt.doctorName),
                 subtitle: Column(
@@ -51,17 +58,45 @@ class MyAppointmentsScreen extends GetView<MyAppointmentsController> {
                   children: [
                     Text(dateStr),
                     if (apt.status.isNotEmpty)
-                      Text(apt.status, style: TextStyle(
-                        color: _getStatusColor(apt.status),
-                        fontWeight: FontWeight.bold
-                      )),
+                      Text(apt.status,
+                          style: TextStyle(
+                              color: _getStatusColor(apt.status),
+                              fontWeight: FontWeight.bold)),
                   ],
                 ),
                 isThreeLine: true,
                 onTap: () {
-                   // Handle detailed view if needed
+                  // Handle detailed view if needed
                 },
               ),
+            );
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: canCancel 
+                ? Slidable(
+                    key: ValueKey(apt.id),
+                    endActionPane: ActionPane(
+                      motion: const ScrollMotion(),
+                      children: [
+                        SlidableAction(
+                          onPressed: (_) {
+                            _showCancelDialog(context, apt.id);
+                          },
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          icon: Icons.cancel,
+                          label: 'Cancel',
+                          borderRadius: const BorderRadius.only(
+                            topRight: Radius.circular(12),
+                            bottomRight: Radius.circular(12),
+                          ),
+                        ),
+                      ],
+                    ),
+                    child: cardContent,
+                  )
+                : cardContent,
             );
           },
         );
@@ -69,12 +104,40 @@ class MyAppointmentsScreen extends GetView<MyAppointmentsController> {
     );
   }
 
+  void _showCancelDialog(BuildContext context, String appointmentId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel Appointment'),
+        content: const Text('Are you sure you want to cancel this appointment?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('No'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              controller.cancelAppointment(appointmentId);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            child: const Text('Yes, Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'confirmed': return Colors.green;
-      case 'pending': return Colors.orange;
-      case 'cancelled': return Colors.red;
-      default: return Colors.grey;
+      case 'confirmed':
+        return Colors.green;
+      case 'pending':
+        return Colors.orange;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
     }
   }
 }

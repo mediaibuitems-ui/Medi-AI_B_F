@@ -8,6 +8,7 @@ import '../../../data/models/user.dart';
 import '../../../routes/app_routes.dart';
 import 'package:medi_ai/config/app_config.dart';
 import '../../../services/appointment_event_service.dart';
+import 'dart:async';
 
 class StudentDashboardController extends GetxController {
   final _authService = Get.find<AuthService>();
@@ -25,10 +26,26 @@ class StudentDashboardController extends GetxController {
 
   final RxInt unreadNotifications = 0.obs;
 
+  StreamSubscription? _appointmentSub;
+
   @override
   void onInit() {
     super.onInit();
     loadDashboardData();
+    
+    if (Get.isRegistered<AppointmentEventService>()) {
+      _appointmentSub = Get.find<AppointmentEventService>().stream.listen((event) {
+        if (event.action == 'refresh' || event.action == 'created' || event.action == 'cancelled') {
+          loadDashboardData();
+        }
+      });
+    }
+  }
+
+  @override
+  void onClose() {
+    _appointmentSub?.cancel();
+    super.onClose();
   }
 
   Future<void> loadDashboardData() async {
@@ -41,11 +58,11 @@ class StudentDashboardController extends GetxController {
       // 2. SAFETY CHECK: If the ID is missing, the cache is corrupted!
       if (user == null || user.id.isEmpty) {
         print('⛔ Error: User data corrupted. Forcing auto-logout.');
-        
-        Get.snackbar("Session Expired", "Please log in again.", 
+
+        Get.snackbar("Session Expired", "Please log in again.",
             snackPosition: SnackPosition.BOTTOM);
         // Clear the bad cache and send them back to the login screen safely
-        await logout(); 
+        await logout();
         return;
       }
 
@@ -64,7 +81,8 @@ class StudentDashboardController extends GetxController {
 
   Future<void> _loadUnreadNotifications() async {
     try {
-      final response = await _apiService.get('${AppConfig.baseUrl}/notifications/unread');
+      final response =
+          await _apiService.get('${AppConfig.baseUrl}/notifications/unread');
       if (response.success && response.data is List) {
         unreadNotifications.value = (response.data as List).length;
       }
@@ -76,7 +94,7 @@ class StudentDashboardController extends GetxController {
   Future<void> _loadUpcomingAppointments() async {
     try {
       final response = await _apiService.get(
-        '${AppConfig.baseUrl}/appointments/student/${currentUser.value?.id}/upcoming',
+        '${AppConfig.baseUrl}/appointments/user/${currentUser.value?.id}/upcoming',
       );
       if (response.success && response.data is List) {
         final list = response.data as List;
@@ -97,12 +115,12 @@ class StudentDashboardController extends GetxController {
   Future<void> _loadRecentAppointments() async {
     try {
       final response = await _apiService.get(
-        '${AppConfig.baseUrl}/appointments/student/${currentUser.value?.id}/history',
+        '${AppConfig.baseUrl}/appointments/user/${currentUser.value?.id}/history',
       );
       if (response.success && response.data != null) {
         final Map<String, dynamic> data = response.data as Map<String, dynamic>;
         final List<dynamic> list = data['items'] as List<dynamic>;
-        
+
         final now = DateTime.now();
         final thirtyDaysAgo = now.subtract(const Duration(days: 30));
         recentAppointments.value = list

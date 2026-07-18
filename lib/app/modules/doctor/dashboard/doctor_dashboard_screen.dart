@@ -111,7 +111,7 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
             final user = controller.currentUser.value;
             final imageUrl = user?.profileImage;
             final hasValidImageUrl =
-              imageUrl != null && imageUrl.trim().isNotEmpty;
+                imageUrl != null && imageUrl.trim().isNotEmpty;
 
             return UserAccountsDrawerHeader(
               decoration: BoxDecoration(
@@ -141,7 +141,7 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
               currentAccountPicture: CircleAvatar(
                 backgroundColor: AppTheme.surface,
                 backgroundImage:
-                  hasValidImageUrl ? NetworkImage(imageUrl) : null,
+                    hasValidImageUrl ? NetworkImage(imageUrl) : null,
                 child: hasValidImageUrl
                     ? null
                     : const Icon(Icons.medical_services,
@@ -291,7 +291,7 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
                       radius: 30,
                       backgroundColor: AppTheme.surface.withOpacity(0.2),
                       backgroundImage:
-                        hasValidImageUrl ? NetworkImage(imageUrl) : null,
+                          hasValidImageUrl ? NetworkImage(imageUrl) : null,
                       child: hasValidImageUrl
                           ? null
                           : const Icon(
@@ -371,8 +371,8 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
         ));
   }
 
-  Widget _buildStatCard(
-      String title, String value, IconData icon, Color color, VoidCallback onTap, bool isSelected) {
+  Widget _buildStatCard(String title, String value, IconData icon, Color color,
+      VoidCallback onTap, bool isSelected) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(18),
@@ -380,15 +380,19 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: isSelected ? [color.withOpacity(0.8), color] : [
-              AppTheme.surface.withOpacity(0.96),
-              AppTheme.surface.withOpacity(0.84),
-            ],
+            colors: isSelected
+                ? [color.withOpacity(0.8), color]
+                : [
+                    AppTheme.surface.withOpacity(0.96),
+                    AppTheme.surface.withOpacity(0.84),
+                  ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: color.withOpacity(isSelected ? 0.8 : 0.18), width: isSelected ? 2 : 1),
+          border: Border.all(
+              color: color.withOpacity(isSelected ? 0.8 : 0.18),
+              width: isSelected ? 2 : 1),
           boxShadow: [
             BoxShadow(
               color: color.withOpacity(isSelected ? 0.3 : 0.12),
@@ -403,14 +407,18 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
             const SizedBox(height: 8),
             Text(
               value,
-              style: AppTheme.dashboardStatValue(isSelected ? Colors.white : color).copyWith(fontSize: 20),
+              style:
+                  AppTheme.dashboardStatValue(isSelected ? Colors.white : color)
+                      .copyWith(fontSize: 20),
             ),
             const SizedBox(height: 4),
             Text(
               title,
               textAlign: TextAlign.center,
               style: AppTheme.dashboardStatLabel.copyWith(
-                color: isSelected ? Colors.white.withOpacity(0.9) : AppTheme.textSecondary,
+                color: isSelected
+                    ? Colors.white.withOpacity(0.9)
+                    : AppTheme.textSecondary,
                 fontSize: 12,
               ),
             ),
@@ -692,14 +700,16 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Icons.calendar_today, size: 16, color: AppTheme.textSecondary),
+                Icon(Icons.calendar_today,
+                    size: 16, color: AppTheme.textSecondary),
                 const SizedBox(width: 8),
                 Text(
                   dateFormat.format(appointment.appointmentDate),
                   style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
                 ),
                 const SizedBox(width: 20),
-                Icon(Icons.access_time, size: 16, color: AppTheme.textSecondary),
+                Icon(Icons.access_time,
+                    size: 16, color: AppTheme.textSecondary),
                 const SizedBox(width: 8),
                 Text(
                   timeFormat.format(appointment.appointmentDate),
@@ -728,7 +738,8 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
                         },
                       );
                     },
-                    icon: const Icon(Icons.check_circle, color: AppTheme.success),
+                    icon:
+                        const Icon(Icons.check_circle, color: AppTheme.success),
                     label: const Text('Confirm'),
                   ),
                   const SizedBox(width: 8),
@@ -739,7 +750,8 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
                         title: 'Decline Appointment',
                         content: Column(
                           children: [
-                            const Text('Please provide a reason for declining:'),
+                            const Text(
+                                'Please provide a reason for declining:'),
                             const SizedBox(height: 12),
                             TextField(
                               controller: reasonController,
@@ -756,12 +768,14 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
                         onConfirm: () {
                           if (reasonController.text.trim().isEmpty) {
                             Get.snackbar('Error', 'Reason is required',
-                                backgroundColor: AppTheme.error.withOpacity(0.1),
+                                backgroundColor:
+                                    AppTheme.error.withOpacity(0.1),
                                 colorText: AppTheme.error);
                             return;
                           }
                           Get.back();
-                          controller.declineAppointment(appointment.id, reasonController.text.trim());
+                          controller.declineAppointment(
+                              appointment.id, reasonController.text.trim());
                         },
                       );
                     },
@@ -779,7 +793,8 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
                     onPressed: () async {
                       Get.defaultDialog(
                         title: 'Mark as Checked',
-                        middleText: 'Mark this appointment as Checked (Completed)?',
+                        middleText:
+                            'Mark this appointment as Checked (Completed)?',
                         textConfirm: 'Yes',
                         textCancel: 'No',
                         confirmTextColor: AppTheme.surface,
@@ -800,7 +815,8 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
                         title: 'Cancel Appointment',
                         content: Column(
                           children: [
-                            const Text('Please provide a reason for cancelling:'),
+                            const Text(
+                                'Please provide a reason for cancelling:'),
                             const SizedBox(height: 12),
                             TextField(
                               controller: reasonController,
@@ -817,12 +833,14 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
                         onConfirm: () {
                           if (reasonController.text.trim().isEmpty) {
                             Get.snackbar('Error', 'Reason is required',
-                                backgroundColor: AppTheme.error.withOpacity(0.1),
+                                backgroundColor:
+                                    AppTheme.error.withOpacity(0.1),
                                 colorText: AppTheme.error);
                             return;
                           }
                           Get.back();
-                          controller.declineAppointment(appointment.id, reasonController.text.trim());
+                          controller.declineAppointment(
+                              appointment.id, reasonController.text.trim());
                         },
                       );
                     },
@@ -856,7 +874,7 @@ class DoctorDashboardScreen extends GetView<DoctorDashboardController> {
         child: Column(
           children: [
             Icon(Icons.medical_services_outlined,
-              size: 64, color: AppTheme.textSecondary.withOpacity(0.18)),
+                size: 64, color: AppTheme.textSecondary.withOpacity(0.18)),
             const SizedBox(height: 16),
             Text(
               message,

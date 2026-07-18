@@ -41,12 +41,18 @@ class AiSymptomInputController extends GetxController {
   }
 
   Future<void> analyzeSymptoms() async {
-    if (selectedSymptoms.isEmpty && otherSymptomsController.text.trim().isEmpty) {
-      Get.snackbar('Input Required', 'Please select or enter at least one symptom.', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.orange.shade100);
+    if (selectedSymptoms.isEmpty &&
+        otherSymptomsController.text.trim().isEmpty) {
+      Get.snackbar(
+          'Input Required', 'Please select or enter at least one symptom.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.orange.shade100);
       return;
     }
     if (selectedSeverity.value.isEmpty) {
-      Get.snackbar('Input Required', 'Please select the severity.', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.orange.shade100);
+      Get.snackbar('Input Required', 'Please select the severity.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.orange.shade100);
       return;
     }
     if (!formKey.currentState!.validate()) {
@@ -62,15 +68,20 @@ class AiSymptomInputController extends GetxController {
         'duration': durationController.text.trim(),
       };
 
-      final response = await _apiService.post('/analyzer/evaluate', data: requestData);
+      final response =
+          await _apiService.post('/analyzer/evaluate', data: requestData);
 
       if (response.success && response.data != null) {
         Get.toNamed('/symptom-analyzer-result', arguments: response.data);
       } else {
-        Get.snackbar('Analysis Failed', response.message, snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red.shade100);
+        Get.snackbar('Analysis Failed', response.message,
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red.shade100);
       }
     } catch (e) {
-      Get.snackbar('Error', 'An unexpected error occurred. Please try again.', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red.shade100);
+      Get.snackbar('Error', 'An unexpected error occurred. Please try again.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade100);
     } finally {
       isLoading.value = false;
     }

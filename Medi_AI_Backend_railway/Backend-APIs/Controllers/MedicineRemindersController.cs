@@ -1,4 +1,4 @@
-using Backend_APIs.Models;
+﻿using Backend_APIs.Models;
 using Backend_APIs.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -532,3 +532,4 @@ namespace Backend_APIs.Controllers
         public bool? IsActive { get; set; }
     }
 }
+

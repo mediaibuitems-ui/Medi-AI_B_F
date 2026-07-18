@@ -22,23 +22,24 @@ class AdminAppointmentsScreen extends GetView<AdminAppointmentsController> {
             color: AppTheme.surface,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Obx(() => SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: controller.filterOptions.map((filter) {
-                  final isSelected = controller.selectedFilter.value == filter;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: FilterChip(
-                      label: Text(filter),
-                      selected: isSelected,
-                      onSelected: (_) => controller.setFilter(filter),
-                      selectedColor: AppTheme.primary.withOpacity(0.2),
-                      checkmarkColor: AppTheme.primary,
-                    ),
-                  );
-                }).toList(),
-              ),
-            )),
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: controller.filterOptions.map((filter) {
+                      final isSelected =
+                          controller.selectedFilter.value == filter;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: FilterChip(
+                          label: Text(filter),
+                          selected: isSelected,
+                          onSelected: (_) => controller.setFilter(filter),
+                          selectedColor: AppTheme.primary.withOpacity(0.2),
+                          checkmarkColor: AppTheme.primary,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                )),
           ),
         ),
       ),
@@ -52,7 +53,8 @@ class AdminAppointmentsScreen extends GetView<AdminAppointmentsController> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.event_busy, size: 64, color: AppTheme.textSecondary.withOpacity(0.5)),
+                Icon(Icons.event_busy,
+                    size: 64, color: AppTheme.textSecondary.withOpacity(0.5)),
                 const SizedBox(height: 16),
                 const Text(
                   'No appointments found',
@@ -112,19 +114,24 @@ class AdminAppointmentsScreen extends GetView<AdminAppointmentsController> {
                   Expanded(
                     child: Text(
                       'Patient: ${appointment.patientName}',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: statusColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       appointment.status,
-                      style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: statusColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
@@ -132,7 +139,8 @@ class AdminAppointmentsScreen extends GetView<AdminAppointmentsController> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  const Icon(Icons.medical_services, size: 16, color: AppTheme.textSecondary),
+                  const Icon(Icons.medical_services,
+                      size: 16, color: AppTheme.textSecondary),
                   const SizedBox(width: 8),
                   Text(
                     'Dr. ${appointment.doctorName}',
@@ -143,10 +151,12 @@ class AdminAppointmentsScreen extends GetView<AdminAppointmentsController> {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  const Icon(Icons.calendar_today, size: 16, color: AppTheme.textSecondary),
+                  const Icon(Icons.calendar_today,
+                      size: 16, color: AppTheme.textSecondary),
                   const SizedBox(width: 8),
                   Text(
-                    DateFormat('MMM dd, yyyy - hh:mm a').format(appointment.appointmentDate),
+                    DateFormat('MMM dd, yyyy - hh:mm a')
+                        .format(appointment.appointmentDate),
                     style: const TextStyle(color: AppTheme.textSecondary),
                   ),
                 ],
@@ -156,7 +166,8 @@ class AdminAppointmentsScreen extends GetView<AdminAppointmentsController> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton.icon(
-                    onPressed: () => controller.viewAppointmentDetails(appointment),
+                    onPressed: () =>
+                        controller.viewAppointmentDetails(appointment),
                     icon: const Icon(Icons.visibility, size: 18),
                     label: const Text('View Details'),
                   ),
@@ -166,23 +177,30 @@ class AdminAppointmentsScreen extends GetView<AdminAppointmentsController> {
                         Get.dialog(
                           AlertDialog(
                             title: const Text('Cancel Appointment'),
-                            content: const Text('Are you sure you want to cancel this appointment?'),
+                            content: const Text(
+                                'Are you sure you want to cancel this appointment?'),
                             actions: [
-                              TextButton(onPressed: () => Get.back(), child: const Text('No')),
+                              TextButton(
+                                  onPressed: () => Get.back(),
+                                  child: const Text('No')),
                               ElevatedButton(
                                 onPressed: () {
                                   Get.back();
-                                  controller.deleteAppointment(appointment.id.toString());
+                                  controller.deleteAppointment(
+                                      appointment.id.toString());
                                 },
-                                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+                                style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.error),
                                 child: const Text('Yes, Cancel'),
                               ),
                             ],
                           ),
                         );
                       },
-                      icon: const Icon(Icons.cancel, size: 18, color: AppTheme.error),
-                      label: const Text('Cancel', style: TextStyle(color: AppTheme.error)),
+                      icon: const Icon(Icons.cancel,
+                          size: 18, color: AppTheme.error),
+                      label: const Text('Cancel',
+                          style: TextStyle(color: AppTheme.error)),
                     ),
                 ],
               ),

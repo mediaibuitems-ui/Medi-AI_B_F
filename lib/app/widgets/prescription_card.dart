@@ -35,7 +35,8 @@ class PrescriptionCard extends StatelessWidget {
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
               ),
-              border: Border(bottom: BorderSide(color: AppTheme.primary.withOpacity(0.1))),
+              border: Border(
+                  bottom: BorderSide(color: AppTheme.primary.withOpacity(0.1))),
             ),
             child: Row(
               children: [
@@ -62,7 +63,8 @@ class PrescriptionCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     parsed['diagnosis']!,
-                    style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary),
+                    style: const TextStyle(
+                        fontSize: 14, color: AppTheme.textPrimary),
                   ),
                   const SizedBox(height: 16),
                   const Divider(),
@@ -71,11 +73,14 @@ class PrescriptionCard extends StatelessWidget {
                 if ((parsed['medications'] as List).isNotEmpty) ...[
                   _buildSectionHeader(Icons.medication, 'Medications'),
                   const SizedBox(height: 12),
-                  ...((parsed['medications'] as List<String>).map((med) => _buildMedicationItem(med))),
+                  ...((parsed['medications'] as List<String>)
+                      .map((med) => _buildMedicationItem(med))),
                   const SizedBox(height: 16),
                 ],
-                if (parsed['notes'] != null && (parsed['notes'] as String).isNotEmpty) ...[
-                  if ((parsed['medications'] as List).isNotEmpty) const Divider(),
+                if (parsed['notes'] != null &&
+                    (parsed['notes'] as String).isNotEmpty) ...[
+                  if ((parsed['medications'] as List).isNotEmpty)
+                    const Divider(),
                   const SizedBox(height: 16),
                   _buildSectionHeader(Icons.note_alt, 'Additional Notes'),
                   const SizedBox(height: 8),
@@ -85,11 +90,15 @@ class PrescriptionCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: AppTheme.warning.withOpacity(0.05),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppTheme.warning.withOpacity(0.2)),
+                      border:
+                          Border.all(color: AppTheme.warning.withOpacity(0.2)),
                     ),
                     child: Text(
                       parsed['notes']!,
-                      style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary, fontStyle: FontStyle.italic),
+                      style: const TextStyle(
+                          fontSize: 14,
+                          color: AppTheme.textPrimary,
+                          fontStyle: FontStyle.italic),
                     ),
                   ),
                 ],

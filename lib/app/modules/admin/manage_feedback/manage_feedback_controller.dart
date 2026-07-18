@@ -71,14 +71,18 @@ class ManageFeedbackController extends GetxController {
       if (response.success) {
         responseController.clear();
         activeFeedbackId.value = null;
-        AppFeedback.success('Done', response.message.isEmpty
-            ? 'Reply sent successfully.'
-            : response.message);
+        AppFeedback.success(
+            'Done',
+            response.message.isEmpty
+                ? 'Reply sent successfully.'
+                : response.message);
         await loadAllFeedback();
       } else {
-        AppFeedback.error('Error', response.message.isEmpty
-            ? 'Unable to send reply.'
-            : response.message);
+        AppFeedback.error(
+            'Error',
+            response.message.isEmpty
+                ? 'Unable to send reply.'
+                : response.message);
       }
     } catch (e) {
       AppFeedback.error('Error', 'Failed to send reply.');
@@ -94,19 +98,27 @@ class ManageFeedbackController extends GetxController {
   String readUserName(Map<String, dynamic> item) {
     final userObj = item['user'] ?? item['User'];
     if (userObj != null && userObj is Map) {
-      final name = userObj['name'] ?? userObj['Name'] ?? userObj['fullName'] ?? userObj['FullName'];
-      if (name != null && name.toString().trim().isNotEmpty) return name.toString();
+      final name = userObj['name'] ??
+          userObj['Name'] ??
+          userObj['fullName'] ??
+          userObj['FullName'];
+      if (name != null && name.toString().trim().isNotEmpty)
+        return name.toString();
     }
-    return _readString(item, ['userName', 'UserName', 'fullName', 'FullName', 'name', 'Name'], fallback: 'Unknown User');
+    return _readString(
+        item, ['userName', 'UserName', 'fullName', 'FullName', 'name', 'Name'],
+        fallback: 'Unknown User');
   }
 
   String readUserRole(Map<String, dynamic> item) {
     final userObj = item['user'] ?? item['User'];
     if (userObj != null && userObj is Map) {
       final role = userObj['role'] ?? userObj['Role'];
-      if (role != null && role.toString().trim().isNotEmpty) return role.toString();
+      if (role != null && role.toString().trim().isNotEmpty)
+        return role.toString();
     }
-    return _readString(item, ['role', 'Role', 'userRole', 'UserRole'], fallback: 'Student');
+    return _readString(item, ['role', 'Role', 'userRole', 'UserRole'],
+        fallback: 'Student');
   }
 
   String readSubject(Map<String, dynamic> item) {
@@ -118,7 +130,8 @@ class ManageFeedbackController extends GetxController {
   }
 
   String readAdminResponse(Map<String, dynamic> item) {
-    return _readString(item, ['adminResponse', 'AdminResponse', 'response', 'Response']);
+    return _readString(
+        item, ['adminResponse', 'AdminResponse', 'response', 'Response']);
   }
 
   String readStatus(Map<String, dynamic> item) {
@@ -126,14 +139,16 @@ class ManageFeedbackController extends GetxController {
   }
 
   String readCreatedAt(Map<String, dynamic> item) {
-    return _readString(item, ['createdAt', 'CreatedAt', 'submittedAt', 'SubmittedAt']);
+    return _readString(
+        item, ['createdAt', 'CreatedAt', 'submittedAt', 'SubmittedAt']);
   }
 
   bool isPending(Map<String, dynamic> item) {
     return readStatus(item).toLowerCase() == 'pending';
   }
 
-  String _readString(Map<String, dynamic> item, List<String> keys, {String fallback = ''}) {
+  String _readString(Map<String, dynamic> item, List<String> keys,
+      {String fallback = ''}) {
     for (final key in keys) {
       final value = item[key];
       if (value != null) {

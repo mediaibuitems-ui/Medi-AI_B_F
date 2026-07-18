@@ -8,7 +8,7 @@ class BookingSettingsController extends GetxController {
   final _doctorService = Get.find<DoctorService>();
 
   final Rx<User?> currentUser = Rx<User?>(null);
-  
+
   // Appointment settings
   final RxInt appointmentDuration = 30.obs; // in minutes
   final RxInt maxPatientsPerDay = 16.obs;
@@ -16,11 +16,11 @@ class BookingSettingsController extends GetxController {
   final RxBool enableBreakTime = false.obs;
   final RxString breakStartTime = '12:00'.obs;
   final RxString breakEndTime = '13:00'.obs;
-  
+
   // Reminder settings
   final RxBool enableAppointmentReminders = true.obs;
   final RxInt reminderNotificationMinutes = 15.obs;
-  
+
   final RxBool isLoading = false.obs;
   final RxBool isSaving = false.obs;
   final RxString errorMessage = ''.obs;
@@ -79,8 +79,10 @@ class BookingSettingsController extends GetxController {
     enableBreakTime.value = readBool('enableBreakTime', false);
     breakStartTime.value = readString('breakStartTime', '12:00');
     breakEndTime.value = readString('breakEndTime', '13:00');
-    enableAppointmentReminders.value = readBool('enableAppointmentReminders', true);
-    reminderNotificationMinutes.value = readInt('reminderNotificationMinutes', 15);
+    enableAppointmentReminders.value =
+        readBool('enableAppointmentReminders', true);
+    reminderNotificationMinutes.value =
+        readInt('reminderNotificationMinutes', 15);
   }
 
   Future<void> saveSettings() async {

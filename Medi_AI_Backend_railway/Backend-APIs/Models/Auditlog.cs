@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Backend_APIs.Models;
@@ -22,6 +22,8 @@ public partial class Auditlog
     public string? IpAddress { get; set; }
 
     public string? UserAgent { get; set; }
+
+    public string? IconKey { get; set; }
 
     public DateTime? CreatedAt { get; set; }
 

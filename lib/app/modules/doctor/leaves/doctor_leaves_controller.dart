@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 
 class DoctorLeavesController extends GetxController {
   final _doctorService = Get.find<DoctorService>();
-  
+
   final leaves = <Map<String, dynamic>>[].obs;
   final isLoading = true.obs;
 
@@ -42,7 +42,8 @@ class DoctorLeavesController extends GetxController {
     }
   }
 
-  Future<void> addLeave(DateTime startDate, DateTime endDate, String reason) async {
+  Future<void> addLeave(
+      DateTime startDate, DateTime endDate, String reason) async {
     try {
       final data = {
         'startDate': DateFormat('yyyy-MM-dd').format(startDate),
@@ -76,7 +77,9 @@ class DoctorLeavesController extends GetxController {
       );
     }
   }
-  Future<void> updateLeave(int id, DateTime startDate, DateTime endDate, String reason) async {
+
+  Future<void> updateLeave(
+      int id, DateTime startDate, DateTime endDate, String reason) async {
     try {
       final data = {
         'startDate': DateFormat('yyyy-MM-dd').format(startDate),

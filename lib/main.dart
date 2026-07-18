@@ -8,12 +8,14 @@ import 'app/routes/app_pages.dart';
 import 'app/routes/app_routes.dart';
 import 'config/app_theme.dart';
 import 'config/app_config.dart';
+import 'app/data/models/medicine_reminder.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   if (!kIsWeb) {
     await Hive.initFlutter();
+    Hive.registerAdapter(MedicineReminderAdapter());
   }
 
   SystemChrome.setSystemUIOverlayStyle(
@@ -41,10 +43,10 @@ class MediAIApp extends StatelessWidget {
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      
+
       // ALWAYS start at the splash screen
-      initialRoute: AppRoutes.splash, 
-      
+      initialRoute: AppRoutes.splash,
+
       getPages: AppPages.routes,
       defaultTransition: Transition.cupertino,
       transitionDuration: const Duration(milliseconds: 300),
