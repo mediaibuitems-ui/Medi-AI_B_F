@@ -49,10 +49,6 @@ class ForgotPasswordScreen extends GetView<ForgotPasswordController> {
                           _buildHeader(),
                           const SizedBox(height: 32),
                           _buildEmailField(),
-                          const SizedBox(height: 16),
-                          _buildPhoneField(),
-                          const SizedBox(height: 16),
-                          _buildCmsField(),
                           const SizedBox(height: 24),
                           _buildVerifyButton(),
                           const SizedBox(height: 16),
@@ -112,7 +108,7 @@ class ForgotPasswordScreen extends GetView<ForgotPasswordController> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Enter your registered email, phone number, and CMS/Registration number to verify your identity.',
+          'Enter your registered email address to verify your identity and receive a password reset OTP.',
           style: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondary),
           textAlign: TextAlign.center,
         ),
@@ -140,47 +136,7 @@ class ForgotPasswordScreen extends GetView<ForgotPasswordController> {
     );
   }
 
-  Widget _buildPhoneField() {
-    return TextFormField(
-      controller: controller.phoneController,
-      keyboardType: TextInputType.phone,
-      decoration: InputDecoration(
-        labelText: 'Phone Number',
-        hintText: '+92xxxxxxxxxx',
-        prefixIcon: const Icon(Icons.phone_outlined),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-      validator: (value) {
-        if (value == null || value.trim().isEmpty) {
-          return 'Phone number is required';
-        }
-        return null;
-      },
-    );
-  }
 
-  Widget _buildCmsField() {
-    return TextFormField(
-      controller: controller.cmsController,
-      keyboardType: TextInputType.text,
-      decoration: InputDecoration(
-        labelText: 'CMS / Registration Number',
-        hintText: 'e.g. BS-CS-21-001',
-        prefixIcon: const Icon(Icons.badge_outlined),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-      validator: (value) {
-        if (value == null || value.trim().isEmpty) {
-          return 'CMS / Registration number is required';
-        }
-        return null;
-      },
-    );
-  }
 
   Widget _buildVerifyButton() {
     return Obx(() => SizedBox(

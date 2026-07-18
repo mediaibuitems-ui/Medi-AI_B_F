@@ -79,7 +79,30 @@ namespace Backend_APIs.Services
                 var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
                 if (existingUser != null)
                 {
-                    return (false, "Email already registered");
+                    if (existingUser.IsEmailVerified)
+                    {
+                        return (false, "Email already registered and verified. Please login.");
+                    }
+                    else
+                    {
+                        // User exists but is not verified. 
+                        // Delete their old unverified records to allow a clean re-registration.
+                        var otps = await _context.Emailverificationotps.Where(o => o.UserId == existingUser.Id).ToListAsync();
+                        if (otps.Any()) _context.Emailverificationotps.RemoveRange(otps);
+                        
+                        var doctorRecord = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == existingUser.Id);
+                        if (doctorRecord != null) _context.Doctors.Remove(doctorRecord);
+
+                        var refreshTokens = await _context.RefreshTokens.Where(r => r.UserId == existingUser.Id).ToListAsync();
+                        if (refreshTokens.Any()) _context.RefreshTokens.RemoveRange(refreshTokens);
+
+                        var passwordResetTokens = await _context.Passwordresettokens.Where(p => p.UserId == existingUser.Id).ToListAsync();
+                        if (passwordResetTokens.Any()) _context.Passwordresettokens.RemoveRange(passwordResetTokens);
+
+                        // Save deletions
+                        await _context.SaveChangesAsync();
+                        await _userManager.DeleteAsync(existingUser);
+                    }
                 }
 
                 if (role == Backend_APIs.Constants.UserRoles.Doctor)
@@ -410,24 +433,6 @@ namespace Backend_APIs.Services
                 // Find user by email
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == forgotPasswordDto.Email);
                 if (user == null)
-                {
-                    return (false, "No account found matching the provided details", null);
-                }
-
-                // Verify phone number matches
-                if (!string.Equals(
-                        (user.PhoneNumber ?? "").Trim(),
-                        forgotPasswordDto.PhoneNumber.Trim(),
-                        StringComparison.OrdinalIgnoreCase))
-                {
-                    return (false, "No account found matching the provided details", null);
-                }
-
-                // Verify CMS / registration number matches
-                if (!string.Equals(
-                        (user.RegistrationNumber ?? "").Trim(),
-                        forgotPasswordDto.RegistrationNumber.Trim(),
-                        StringComparison.OrdinalIgnoreCase))
                 {
                     return (false, "No account found matching the provided details", null);
                 }

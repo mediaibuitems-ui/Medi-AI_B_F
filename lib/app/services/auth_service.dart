@@ -267,19 +267,15 @@ class AuthService extends GetxService {
     return response;
   }
 
-  /// Forgot Password â€” verifies email + phone number + CMS/registration number against DB.
+  /// Forgot Password â€” verifies email against DB.
   /// Returns reset token directly in response.data['resetToken'] â€” no email sent.
   Future<ApiResponse<Map<String, dynamic>>> forgotPassword({
     required String email,
-    required String phoneNumber,
-    required String registrationNumber,
   }) async {
     return await _apiService.post<Map<String, dynamic>>(
       '/Auth/forgot-password',
       data: {
         'email': email,
-        'phoneNumber': phoneNumber,
-        'registrationNumber': registrationNumber,
       },
       fromJson: (json) => Map<String, dynamic>.from(json as Map),
     );

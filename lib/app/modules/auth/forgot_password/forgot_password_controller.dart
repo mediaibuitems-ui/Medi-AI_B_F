@@ -9,8 +9,6 @@ class ForgotPasswordController extends GetxController {
 
   final formKey = GlobalKey<FormState>();
   final emailController = TextEditingController();
-  final phoneController = TextEditingController();
-  final cmsController = TextEditingController();
 
   final RxBool isLoading = false.obs;
 
@@ -19,8 +17,6 @@ class ForgotPasswordController extends GetxController {
     Future.delayed(const Duration(milliseconds: 500), () {
       try {
         emailController.dispose();
-        phoneController.dispose();
-        cmsController.dispose();
       } catch (_) {}
     });
     super.onClose();
@@ -34,8 +30,6 @@ class ForgotPasswordController extends GetxController {
     try {
       final response = await _authService.forgotPassword(
         email: emailController.text.trim(),
-        phoneNumber: phoneController.text.trim(),
-        registrationNumber: cmsController.text.trim(),
       );
 
       isLoading.value = false;

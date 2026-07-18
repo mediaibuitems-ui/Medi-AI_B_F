@@ -11,11 +11,5 @@ namespace Backend_APIs.DTOs
         [Required(ErrorMessage = "Email is required")]
         [EmailAddress(ErrorMessage = "Invalid email address format")]
         public string Email { get; set; } = null!;
-
-        [Required(ErrorMessage = "Phone number is required")]
-        public string PhoneNumber { get; set; } = null!;
-
-        [Required(ErrorMessage = "CMS / Registration number is required")]
-        public string RegistrationNumber { get; set; } = null!;
     }
 }
