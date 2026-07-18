@@ -100,7 +100,7 @@ namespace Backend_APIs.Services
                 }
 
                 // Fetch System Settings
-                var requireVerification = await GetBoolSettingAsync("RequireEmailVerification", defaultValue: true);
+                var requireVerification = await GetBoolSettingAsync("RequireEmailVerification", defaultValue: false);
                 var autoApprove = await GetBoolSettingAsync("AutoApproveRegistrations", defaultValue: true);
 
                 // Create new user
