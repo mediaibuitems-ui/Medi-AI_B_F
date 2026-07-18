@@ -134,8 +134,8 @@ class OtpVerificationScreen extends GetView<OtpVerificationController> {
     bool isLast = false,
   }) {
     return SizedBox(
-      width: 55,
-      height: 70,
+      width: 45,
+      height: 60,
       child: TextFormField(
         controller: controller,
         focusNode: currentFocus,
@@ -143,7 +143,7 @@ class OtpVerificationScreen extends GetView<OtpVerificationController> {
         textAlign: TextAlign.center,
         maxLength: 1,
         style: const TextStyle(
-          fontSize: 32,
+          fontSize: 24,
           fontWeight: FontWeight.bold,
           color: Colors.black,
           letterSpacing: 1.0,
