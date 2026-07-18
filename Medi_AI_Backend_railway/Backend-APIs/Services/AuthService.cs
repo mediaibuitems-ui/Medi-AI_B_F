@@ -100,8 +100,7 @@ namespace Backend_APIs.Services
                 }
 
                 // Fetch System Settings
-                // Force bypass of email verification to avoid Railway Google SMTP blocking issues
-                var requireVerification = false; // await GetBoolSettingAsync("RequireEmailVerification", defaultValue: false);
+                var requireVerification = await GetBoolSettingAsync("RequireEmailVerification", defaultValue: true);
                 var autoApprove = await GetBoolSettingAsync("AutoApproveRegistrations", defaultValue: true);
 
                 // Create new user

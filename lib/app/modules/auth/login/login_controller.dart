@@ -44,7 +44,7 @@ class LoginController extends GetxController {
   void onClose() {
     // Delay disposal to prevent 'used after dispose' crashes during route transitions
     // when GetX synchronously closes controllers.
-    Future.delayed(const Duration(milliseconds: 500), () {
+    Future.delayed(const Duration(milliseconds: 2000), () {
       try {
         emailController.dispose();
         passwordController.dispose();

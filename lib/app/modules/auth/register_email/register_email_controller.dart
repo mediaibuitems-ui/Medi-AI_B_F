@@ -70,7 +70,7 @@ class RegisterEmailController extends GetxController {
   void onClose() {
     // Delay disposal to avoid 'used after disposed' crashes during page transitions
     // and when tap gestures are still completing in the widget tree.
-    Future.delayed(const Duration(milliseconds: 500), () {
+    Future.delayed(const Duration(milliseconds: 2000), () {
       try {
         firstNameController.dispose();
         lastNameController.dispose();
