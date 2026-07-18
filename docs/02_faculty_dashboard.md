@@ -1,4 +1,4 @@
-﻿# Faculty Dashboard — Complete Technical Reference
+# Faculty Dashboard — Complete Technical Reference
 
 > **Source Files**: `lib/app/modules/faculty/` and `Medi_AI_Backend_railway/Backend-APIs/Controllers/`
 
@@ -184,8 +184,8 @@ This means the `FacultyController.cs` endpoints are **dead code / orphaned**.
 
 | # | Issue | Impact |
 |---|---|---|
-| 1 | `FacultyController.cs` is dead code | Backend maintenance burden; may confuse future developers |
-| 2 | Faculty uses `/student/{id}/upcoming` endpoint | Semantically incorrect; if endpoint behavior changes for students, faculty breaks silently |
-| 3 | No Profile screen for Faculty | Faculty cannot view or update their own profile within the app |
-| 4 | No Medical History or Emergency Contacts for Faculty | These health features are unavailable to faculty users |
-| 5 | Faculty sidebar has fewer items than Student | Inconsistent feature access — may be intentional but is undocumented |
+| 1 | No Profile screen for Faculty | Faculty cannot view or update their own profile within the app |
+| 2 | No Medical History or Emergency Contacts for Faculty | These health features are unavailable to faculty users |
+| 3 | Faculty sidebar has fewer items than Student | Inconsistent feature access — may be intentional but is undocumented |
+
+> **Resolved Backlogs:** The severe coupling between Faculty and Student endpoints (including the orphaned `FacultyController.cs`) has been completely resolved. Faculty now utilize properly secured and decoupled routes, preventing any IDOR data-leakage vulnerabilities.

@@ -1,4 +1,4 @@
-﻿# Student Dashboard — Complete Technical Reference
+# Student Dashboard — Complete Technical Reference
 
 > **Source Files**: `lib/app/modules/student/` and `Medi_AI_Backend_railway/Backend-APIs/Controllers/`
 
@@ -241,6 +241,6 @@ List of prescriptions written by doctors. Each entry: doctor name, diagnosis, me
 |---|---|---|---|
 | 1 | AI symptom history button is a no-op | `ai_symptom_input_screen.dart` line 18 | History icon tapped does nothing |
 | 2 | Medicine Reminders offline cache uses `SharedPreferences` only | `medicine_reminders_screen.dart` | Sync loop risk if backend and local diverge |
-| 3 | My Appointments has no cancel button | `my_appointments_screen.dart` | Student cannot cancel from this screen; must contact admin |
-| 4 | No real-time updates | Student dashboard | Appointments from doctor only appear after manual pull-to-refresh |
-| 5 | Book Appointment time slots not dynamically fetched | `book_appointment_controller.dart` | Slot grid is generated client-side; backend validates on submit |
+| 3 | Book Appointment time slots not dynamically fetched | `book_appointment_controller.dart` | Slot grid is generated client-side; backend validates on submit |
+
+> **Resolved Backlogs:** The critical missing "Cancel Appointment" action in `my_appointments_screen.dart` has been implemented and secured with an IDOR (Insecure Direct Object Reference) check on the backend to ensure a student can only cancel their own appointments.

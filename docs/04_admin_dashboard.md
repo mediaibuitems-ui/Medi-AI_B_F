@@ -1,4 +1,4 @@
-﻿# Admin Dashboard — Complete Technical Reference
+# Admin Dashboard — Complete Technical Reference
 
 > **Source Files**: `lib/app/modules/admin/` and `Medi_AI_Backend_railway/Backend-APIs/Controllers/AdminController.cs`
 
@@ -369,13 +369,12 @@ Known setting keys:
 
 ## 9. Gaps & Known Issues
 
-| # | Issue | File | Impact |
-|---|---|---|---|
-| 1 | 14 sequential COUNT queries in dashboard-stats | `AdminController.cs` | High DB latency; scales poorly. Should use a single aggregated query or caching. |
-| 2 | DB Backup is fake | `AdminController.cs` | Admin believes backup occurred but nothing is stored anywhere. |
-| 3 | Reports recentReports list is hardcoded | `reports_screen.dart` lines 75–94 | Displayed dates (2024-11-25 etc.) are static strings, not real report records. |
-| 4 | No pagination on pending-verifications | `AdminController.cs` | All unverified users fetched at once — crash risk at scale. |
-| 5 | 2FA toggle is UI-only | `system_settings_screen.dart` | Switch does nothing on the backend; no 2FA system implemented. |
-| 6 | SMS notifications toggle is UI-only | `system_settings_screen.dart` | No SMS service integrated in backend. |
-| 7 | Toggle-status side effect undocumented in UI | `AdminController.cs` | Suspending a user also forces `IsEmailVerified=false` — not shown in the UI. |
-| 8 | Audit log icon resolution is string-matching | `AdminController.cs` | Brittle: `Action.Contains("register")` → icon mapping breaks if action string changes. |
+> **Resolved Backlogs:** The entire Admin Dashboard backlog has been successfully completed in a major security and truthful-UI hardening pass:
+> 
+> 1. **Truthful UI Enforcement:** The fake Database Backup endpoint now strictly returns `501 Not Implemented`, and decorative toggles for 2FA and SMS Notifications have been disabled to prevent lying to the admin. The fabricated "Recent Reports" list was entirely removed.
+> 2. **Performance Optimization:** The 14 sequential `COUNT` queries in `GetDashboardStats` were optimized using `GroupBy` and wrapped in `IMemoryCache` (1-minute TTL) to prevent database locking on dashboard load.
+> 3. **Pagination Added:** The Pending Verifications screen was upgraded to support infinite scrolling and paginated API fetching, fixing the crash risk of loading all users at once.
+> 4. **Side-Effect Removed:** Suspending a user no longer silently revokes their email verification status.
+> 5. **Audit Log Icons:** Added an `IconKey` column to the `Auditlogs` table, replacing the brittle string-matching logic for dashboard icon rendering.
+> 
+> *The Admin Dashboard is currently considered stable with zero critical known issues.*

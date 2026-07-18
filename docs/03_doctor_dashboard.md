@@ -1,4 +1,4 @@
-﻿# Doctor Dashboard — Complete Technical Reference
+# Doctor Dashboard — Complete Technical Reference
 
 > **Source Files**: `lib/app/modules/doctor/` and `Medi_AI_Backend_railway/Backend-APIs/Controllers/DoctorsController.cs`
 
@@ -278,9 +278,11 @@ Save → `PUT /api/doctors/profile`
 
 | # | Issue | File | Impact |
 |---|---|---|---|
-| 1 | 30-second polling for notifications | `doctor_dashboard_controller.dart` lines 84–96 | Not scalable; will cause unnecessary server load with many doctors |
-| 2 | `WritePrescriptionScreen` is StatefulWidget, not GetX | `write_prescription_screen.dart` | Inconsistent pattern; form state not restored on navigation pop |
-| 3 | Booking settings stored as JSON string in `systemsettings` | `DoctorsController.cs` | No schema validation; malformed JSON causes silent failures |
-| 4 | Auto-create doctor profile uses temp license number | `DoctorsController.cs` lines 50–51 | License `TEMP-{id}-{ticks}` is not a real license; should require admin setup |
-| 5 | AI Symptom Analyzer not available to doctors | Doctor module | Doctors cannot use the diagnostic tool themselves |
-| 6 | No delete appointment endpoint shown in doctor UI | Doctor dashboard | Doctor can only change status; cannot remove an appointment row |
+| 1 | AI Symptom Analyzer not available to doctors | Doctor module | Doctors cannot use the diagnostic tool themselves |
+| 2 | No delete appointment endpoint shown in doctor UI | Doctor dashboard | Doctor can only change status; cannot remove an appointment row |
+
+> **Resolved Backlogs:** The following critical issues have been fixed:
+> 1. **Booking Settings Validation:** Added strict schema validation and safe fallbacks for `DoctorBookingSettings` JSON storage.
+> 2. **Fake Doctor Profiles:** Removed the dangerous auto-creation of doctor profiles with fake "TEMP" credentials; unassigned doctors now receive a strict 403 Forbidden.
+> 3. **GetX Refactor:** `WritePrescriptionScreen` was refactored into a proper GetX architecture, fixing state-loss bugs on navigation pop (`PopScope`).
+> 4. **Polling Optimization:** The heavy 30-second manual polling in `DoctorDashboardController` was eliminated and centralized correctly.
