@@ -459,7 +459,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Widget _buildStatCard(
       String title, String value, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius: BorderRadius.circular(12),
@@ -471,29 +471,32 @@ class _ReportsScreenState extends State<ReportsScreen> {
           ),
         ],
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: color,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11,
-              color: AppTheme.textSecondary,
+            const SizedBox(height: 2),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 11,
+                color: AppTheme.textSecondary,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -508,6 +511,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: AppTheme.surface,
           borderRadius: BorderRadius.circular(12),
@@ -520,28 +524,31 @@ class _ReportsScreenState extends State<ReportsScreen> {
             ),
           ],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 36),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: color,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: color, size: 28),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'generate',
-              style: TextStyle(
-                fontSize: 11,
-                color: AppTheme.textSecondary,
+              const SizedBox(height: 2),
+              Text(
+                'generate',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: AppTheme.textSecondary,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
