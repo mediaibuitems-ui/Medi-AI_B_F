@@ -794,13 +794,14 @@ A `StreamController`-based event bus. When any controller changes an appointment
 
 ## 16. Security Configuration
 
-### JWT Flow (End-to-End)
-1. **Generation (Backend):** On login, `AuthController` creates a signed JWT using `Jwt:Key` (secret in environment variable). Claims include `NameIdentifier` (UserId), `Email`, `Role`.
-2. **Storage (Frontend):** `StorageService` writes the JWT to `FlutterSecureStorage` (AES encrypted on Android via `encryptedSharedPreferences: true`).
-3. **Attachment (Frontend):** `_AuthInterceptor.onRequest()` reads the token from `StorageService` and adds `Authorization: Bearer <token>` to every Dio request.
-4. **Validation (Backend):** `JwtBearer` middleware validates signature, audience, and expiry on every request. `User.FindFirst(ClaimTypes.NameIdentifier)` extracts userId — never from the request body.
-5. **Revocation (Backend):** On logout, the token string is cached in `IMemoryCache` under key `"Blacklist_{token}"` until expiry. The revocation middleware checks this before allowing any request through.
-6. **Refresh (Frontend):** On 401, `_AuthInterceptor` queues the failed request and calls `POST /api/Auth/refresh-token`. If successful, all queued requests retry. If failed, user is logged out.
+### Security Techniques & Architecture Flow
+Medi-AI employs defense-in-depth security techniques across the stack to ensure data integrity and user privacy:
+
+1. **JWT Authentication & Refresh Flow (Backend & Frontend):** On login, `AuthController` creates a signed JWT using `Jwt:Key` (secret). Claims include `NameIdentifier` (UserId), `Email`, `Role`. `StorageService` writes the JWT to `FlutterSecureStorage` (AES encrypted on Android via `encryptedSharedPreferences: true`). `_AuthInterceptor.onRequest()` adds `Authorization: Bearer <token>` to every Dio request. On 401, `_AuthInterceptor` securely catches the error, queues the request, and POSTs to `/Auth/refresh-token`.
+2. **Token Blacklisting (Logout Revocation):** Upon logout, the JWT signature is hashed (SHA-256) and stored persistently in a `RevokedTokens` database table. A custom ASP.NET Core Middleware (`JwtRevocationMiddleware`) intercepts every request, checks an `IMemoryCache` (pre-loaded from the DB at startup for performance), and rejects blacklisted tokens to prevent replay attacks.
+3. **Strict Role Normalization:** Roles are strongly typed via C# Constants (`UserRoles.cs`) and Dart Constants (`AppRoles.dart`), eliminating security holes caused by magic strings, casing errors, or typos.
+4. **IDOR Protection:** Endpoints like appointment cancellation (`DELETE /api/appointments/{id}`) or profile updates strictly verify that `ClaimTypes.NameIdentifier` matches the requested resource's owner or an Admin override.
+5. **Password Hashing:** Passwords are never stored in plaintext. They are salted and hashed utilizing modern cryptographic standards in the ASP.NET Identity pipeline (BCrypt).
 
 ### No Payment Gateway (Intentional Design Decision)
 The system **deliberately has no commercial payment gateway** (no Stripe, no PayPal). Appointment clearance is handled entirely through:
@@ -812,16 +813,36 @@ This is not a gap — it is a deliberate decision matching BUITEMS Medical Cente
 
 ---
 
-## 17. Known Issues & Gaps
+## 17. Current State & Known Gaps (Complete Project)
 
+The application has recently undergone a massive hardening and backlog completion pass, reaching a highly stable state where all critical backlog items across the Student, Faculty, Doctor, and Admin dashboards have been resolved.
+
+However, while the core architecture is stable, the following technical debts and functional gaps remain across the full stack:
+
+### 17.1 Frontend Gaps
 | Category | Issue | Risk |
 |---|---|---|
-| Memory | `FacultyDashboardController` may not cancel `StreamSubscription` in `onClose()` | Memory leak on screen pop |
-| Memory | Some controllers do not `dispose()` `TextEditingController` instances | RAM growth over time |
-| Stability | `ManageUsersScreen` loads all users without pagination | UI freeze on large datasets |
-| Stability | AI result screen nested `ListView.builder(shrinkWrap: true)` inside `SingleChildScrollView` | Layout performance degradation on deeply nested views |
-| Database | `Todaysappointment` model exists in EF Core but no active controller writes to it | Orphaned — verify before migration cleanup |
-| Security | `reports_screen.dart` and `system_settings_screen.dart` have no explicit `Binding` registered in `AppPages` | Controllers may not be properly disposed |
+| Stability | Pagination Missing: `ManageUsersScreen` and `AdminAppointmentsScreen` currently load all records into memory at once. | UI freezing and high memory usage at scale. |
+| UX | Button Debouncing: Several primary action buttons (e.g., "Submit" on forms) lack strict debouncing `.obs` flags. | Duplicate API calls if the user rapidly double-taps. |
+| UI | Responsive Overflow: The AI Symptom analyzer dynamic text rows occasionally lack `Expanded` wrappers. | Pixel `RenderFlex` overflow on smaller devices. |
+| Stability | Silent Failures on Schema Changes: Missing rigorous null-checks in Dart model parsing (`.fromJson`). | Red screen runtime exceptions if backend schema changes. |
+| Memory | Missing Disposals: `FacultyDashboardController` and others may not cleanly close StreamListeners or `TextEditingController`s in `onClose()`. | RAM growth over time. |
+
+### 17.2 Backend Gaps
+| Category | Issue | Risk |
+|---|---|---|
+| Integration | Decorative Communication: Placholders exist for 2FA and SMS/Email OTPs, but they are either decorative or only printed to console. | Requires real provider (e.g., SendGrid/Twilio) for production. |
+| Integration | Stubbed AI / Fake Reports: `SymptomAnalyzerController` relies on hardcoded logic rather than a real LLM. Admin DB backup returns `501 Not Implemented`. | Core advertised features remain non-functional. |
+| Infrastructure | File Storage Scalability: Profile pictures or documents currently rely on the ephemeral Railway container filesystem. | Files will disappear on server restarts unless migrated to S3/Blob storage. |
+| Security | Rate Limiting: There is no global rate limiting applied to the API. | Vulnerability to brute-force attacks on auth endpoints. |
+
+### 17.3 Database Gaps
+| Category | Issue | Risk |
+|---|---|---|
+| Infrastructure | Data Retention & Archival: The `Auditlogs` and `RevokedTokens` tables will grow indefinitely. | Requires a cron job to automatically purge old records to prevent DB bloat. |
+| Security | Soft Delete Integrity: User deletion uses a soft-delete (`IsActive = false`), but no EF Core Global Query Filters automatically hide inactive users. | Developers must remember to manually append `.Where(u => u.IsActive == true)`. |
+| Performance | Missing Composite Indices: Heavy dashboard queries rely on basic indices. | Degrading performance as table row counts scale beyond thousands. |
+| Cleanup | Orphaned Models: `Todaysappointment` model exists in EF Core but no active controller writes to it. | Unused tables inflate the schema footprint. |
 
 ---
 
