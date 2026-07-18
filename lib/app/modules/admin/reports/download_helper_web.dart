@@ -2,7 +2,7 @@
 import 'dart:html' as html;
 import 'dart:convert';
 
-void downloadFile(String content, String filename) {
+Future<void> downloadFile(String content, String filename) async {
   final bytes = utf8.encode(content);
   final blob = html.Blob([bytes]);
   final url = html.Url.createObjectUrlFromBlob(blob);

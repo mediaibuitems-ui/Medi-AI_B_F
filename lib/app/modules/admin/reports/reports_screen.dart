@@ -86,21 +86,27 @@ class _ReportsScreenState extends State<ReportsScreen> {
           children: [
             const Text('Which report would you like to generate?'),
             const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: selectedPeriod,
-              decoration: InputDecoration(
-                labelText: 'Period',
-                border: OutlineInputBorder(),
-              ),
-              items: ['Today', 'This Week', 'This Month', 'This Year', 'Custom']
-                  .map((period) => DropdownMenuItem(
-                        value: period,
-                        child: Text(_periodLabel(period)),
-                      ))
-                  .toList(),
-              onChanged: (value) {
-                setState(() => selectedPeriod = value!);
-              },
+            StatefulBuilder(
+              builder: (context, setDialogState) {
+                return DropdownButtonFormField<String>(
+                  value: selectedPeriod,
+                  decoration: const InputDecoration(
+                    labelText: 'Period',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: ['Today', 'This Week', 'This Month', 'This Year', 'Custom']
+                      .map((period) => DropdownMenuItem(
+                            value: period,
+                            child: Text(_periodLabel(period)),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    setDialogState(() {
+                      selectedPeriod = value!;
+                    });
+                  },
+                );
+              }
             ),
           ],
         ),
@@ -109,20 +115,19 @@ class _ReportsScreenState extends State<ReportsScreen> {
             onPressed: () => Get.back(),
             child: const Text('Cancel'),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Get.back();
-              Get.snackbar(
-                'Success',
-                'Report generated successfully',
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: AppTheme.success,
-                colorText: AppTheme.surface,
-              );
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
-            child: const Text('Generate'),
-          ),
+            ElevatedButton(
+              onPressed: () {
+                Get.back();
+                _downloadReport({
+                  'name': '$reportType Report - ${DateFormat('yyyy-MM-dd').format(DateTime.now())}',
+                  'type': reportType,
+                  'date': DateTime.now(),
+                  'period': selectedPeriod,
+                });
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary),
+              child: const Text('Generate'),
+            ),
         ],
       ),
     );
@@ -142,27 +147,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
       if (kIsWeb) {
         // Web download
-        download_helper.downloadFile(csvContent, '${report['name']}.csv');
+        await download_helper.downloadFile(csvContent, '${report['name']}.csv');
       } else {
-        // Mobile notification
-        Get.snackbar(
-          'Report generated',
-          'The report has been prepared for download.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: AppTheme.primary,
-          colorText: AppTheme.surface,
-          duration: const Duration(seconds: 3),
-        );
+        // Mobile download
+        await download_helper.downloadFile(csvContent, '${report['name']}.csv');
       }
-
-      Get.snackbar(
-        'Success',
-        'Report downloaded or generated successfully',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppTheme.success,
-        colorText: AppTheme.surface,
-        duration: const Duration(seconds: 2),
-      );
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
 
