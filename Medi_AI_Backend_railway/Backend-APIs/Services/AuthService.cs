@@ -335,7 +335,8 @@ namespace Backend_APIs.Services
         private async Task<string> GenerateJwtToken(User user)
         {
             var jwtSettings = _configuration.GetSection("Jwt");
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!));
+            var jwtKeyStr = jwtSettings["Key"] ?? Environment.GetEnvironmentVariable("JWT_KEY") ?? "";
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKeyStr));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             // Fetch session timeout from DB
