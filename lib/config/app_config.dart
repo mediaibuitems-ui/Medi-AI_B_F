@@ -15,7 +15,7 @@ class AppConfig {
 
   // Production base URL
   static const String _productionBase =
-      'https://medi-aibf-production.up.railway.app/api';
+      'https://medi-aibf-production-54bc.up.railway.app/api';
 
   // Allow overriding the API base at compile/run time using --dart-define=API_BASE_URL
   static String get _overrideBase =>
