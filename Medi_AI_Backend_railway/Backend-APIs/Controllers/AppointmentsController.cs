@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Text.Json;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Backend_APIs.Controllers
 {
@@ -15,6 +16,7 @@ namespace Backend_APIs.Controllers
     {
         private readonly MediaidbContext _context;
         private readonly Backend_APIs.Services.INotificationPushService _pushService;
+        private static readonly SemaphoreSlim _bookingLock = new SemaphoreSlim(1, 1);
         private const string BookingSettingsPrefix = "DoctorBookingSettings:";
         private static readonly HashSet<int> AllowedSlotDurations = new() { 15, 20, 30, 45, 60 };
         private static readonly TimeOnly UniversityStartTime = new(8, 0);
@@ -271,8 +273,10 @@ namespace Backend_APIs.Controllers
         /// Book a new appointment
         /// </summary>
         [HttpPost]
+        [EnableRateLimiting("AppointmentLimiter")]
         public async Task<IActionResult> BookAppointment([FromBody] CreateAppointmentDto appointmentDto)
         {
+            await _bookingLock.WaitAsync();
             try
             {
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -534,6 +538,10 @@ namespace Backend_APIs.Controllers
                     Message = $"Failed to book appointment: {ex.Message} | Inner: {innerMsg}",
                     Data = null
                 });
+            }
+            finally
+            {
+                _bookingLock.Release();
             }
         }
 
@@ -1102,7 +1110,7 @@ namespace Backend_APIs.Controllers
                     });
                 }
 
-                if (appointment.PatientId != userId && !User.IsInRole("admin"))
+                if (appointment.PatientId != userId && !User.IsInRole(Backend_APIs.Constants.UserRoles.Admin))
                 {
                     return Unauthorized(new ApiResponse<object>
                     {

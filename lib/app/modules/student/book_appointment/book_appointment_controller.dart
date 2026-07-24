@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/api_service.dart';
+import '../../../services/appointment_event_service.dart';
 import 'package:medi_ai/config/app_config.dart';
 import '../dashboard/student_dashboard_controller.dart';
 
@@ -33,6 +34,7 @@ class BookAppointmentController extends GetxController {
 
   final symptomsController = TextEditingController();
   final notesController = TextEditingController();
+  DateTime? _lastBookingAttempt;
 
   Map<String, dynamic>? get selectedDoctor {
     if (selectedDoctorId.value == null) return null;
@@ -149,6 +151,7 @@ class BookAppointmentController extends GetxController {
   }
 
   Future<void> bookAppointment() async {
+    // Run form validation first so errors still show to the user
     if (!formKey.currentState!.validate()) return;
 
     if (selectedDoctorId.value == null) {
@@ -163,6 +166,14 @@ class BookAppointmentController extends GetxController {
       Get.snackbar('Error', 'Please select a time slot');
       return;
     }
+
+    // Debounce guard — placed AFTER validation so errors still surface
+    final now = DateTime.now();
+    if (_lastBookingAttempt != null &&
+        now.difference(_lastBookingAttempt!).inSeconds < 2) {
+      return; // Silent guard — only fires on a real double-tap, not a validation retry
+    }
+    _lastBookingAttempt = now;
 
     isLoading.value = true;
     try {
@@ -185,6 +196,12 @@ class BookAppointmentController extends GetxController {
           await _apiService.post('/appointments', data: appointmentData);
 
       if (response.success) {
+        // Emit event so all dashboard controllers (Student AND Faculty) refresh
+        final eventService = Get.isRegistered<AppointmentEventService>()
+            ? Get.find<AppointmentEventService>()
+            : Get.put(AppointmentEventService());
+        eventService.emit(AppointmentEvent('new', 'created'));
+
         // Refresh dashboards so the new appointment shows immediately
         if (Get.isRegistered<StudentDashboardController>()) {
           await Get.find<StudentDashboardController>().refresh();

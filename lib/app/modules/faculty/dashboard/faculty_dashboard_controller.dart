@@ -113,7 +113,7 @@ class FacultyDashboardController extends GetxController {
       );
       if (response.success && response.data != null) {
         final Map<String, dynamic> data = response.data as Map<String, dynamic>;
-        final List<dynamic> list = data['items'] as List<dynamic>;
+        final List<dynamic> list = (data['items'] as List<dynamic>?) ?? [];
 
         final now = DateTime.now();
         final thirtyDaysAgo = now.subtract(const Duration(days: 30));

@@ -34,6 +34,9 @@ class MedicineReminder extends HiveObject {
   @HiveField(9)
   bool isSynced;
 
+  @HiveField(10)
+  String? frequency;
+
   MedicineReminder({
     required this.id,
     required this.medicineName,
@@ -45,6 +48,7 @@ class MedicineReminder extends HiveObject {
     this.isActive = true,
     this.notes,
     this.isSynced = true,
+    this.frequency,
   });
 
   Map<String, dynamic> toJson() {
@@ -59,6 +63,7 @@ class MedicineReminder extends HiveObject {
       'isActive': isActive,
       'notes': notes,
       'isSynced': isSynced,
+      'frequency': frequency,
     };
   }
 
@@ -74,6 +79,7 @@ class MedicineReminder extends HiveObject {
       isActive: json['isActive'] ?? true,
       notes: json['notes'],
       isSynced: json['isSynced'] ?? true,
+      frequency: json['frequency'],
     );
   }
 }

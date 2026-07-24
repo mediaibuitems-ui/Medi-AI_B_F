@@ -140,6 +140,14 @@ class _MedicineRemindersScreenState extends State<MedicineRemindersScreen> {
       try { startDate = DateTime.parse(startDateStr); } catch (_) {}
     }
 
+    final endDateStr = (apiReminder['endDate'] ?? apiReminder['EndDate'] ?? '').toString();
+    DateTime? endDate;
+    if (endDateStr.isNotEmpty) {
+      try { endDate = DateTime.parse(endDateStr); } catch (_) {}
+    }
+    
+    final frequency = apiReminder['frequency'] ?? apiReminder['Frequency'] ?? 'Custom';
+
     return MedicineReminder(
       id: (apiReminder['id'] ?? apiReminder['Id'] ?? '').toString(),
       medicineName: apiReminder['medicineName'] ?? apiReminder['MedicineName'] ?? '',
@@ -147,10 +155,11 @@ class _MedicineRemindersScreenState extends State<MedicineRemindersScreen> {
       times: timesList,
       days: [],
       startDate: startDate,
-      endDate: null,
+      endDate: endDate,
       isActive: (apiReminder['isActive'] ?? apiReminder['IsActive']) == true,
       notes: (apiReminder['notes'] ?? apiReminder['Notes'] ?? '').toString(),
       isSynced: true,
+      frequency: frequency,
     );
   }
 
@@ -409,6 +418,7 @@ class _MedicineRemindersScreenState extends State<MedicineRemindersScreen> {
       notes: notes ?? '',
       isActive: isActive,
       isSynced: false,
+      frequency: frequency,
     );
 
     if (!mounted) return;
@@ -434,10 +444,13 @@ class _MedicineRemindersScreenState extends State<MedicineRemindersScreen> {
           final realId = await _medicineReminderService.createReminder(payload);
           newReminder.id = realId.toString();
           newReminder.isSynced = true;
+          reminders.add(newReminder);
         } catch (e) {
-          print('Create failed online, falling back to offline id: $e');
+          print('Create failed online: $e');
+          AppFeedback.error('Error', 'Failed to create reminder. Please try again.');
+          if (mounted) setState(() => isLoading = false);
+          return;
         }
-        reminders.add(newReminder);
       }
 
       await _persistOfflineCache();
@@ -510,7 +523,7 @@ class _MedicineRemindersScreenState extends State<MedicineRemindersScreen> {
       await _persistOfflineCache();
 
       // Cancel notifications locally
-      for (int i = 0; i < 6; i++) {
+      for (int i = 0; i < 20; i++) {
         await _notificationService
             .cancelNotification(_generateNotificationId(id.toString(), i));
       }
@@ -592,7 +605,7 @@ class _MedicineRemindersScreenState extends State<MedicineRemindersScreen> {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        '${reminder.dosage} • Custom',
+                                        '${reminder.dosage} • ${reminder.frequency ?? 'Custom'}',
                                         style:
                                             const TextStyle(color: Colors.grey),
                                       ),

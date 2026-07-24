@@ -35,6 +35,17 @@ namespace Backend_APIs.Services
                         {
                             _logger.LogInformation($"Cleaned up {deletedCount} expired revoked tokens.");
                         }
+
+                        // Also cleanup old audit logs (>90 days)
+                        var auditCutoff = DateTime.UtcNow.AddDays(-90);
+                        var deletedLogsCount = await context.Auditlogs
+                            .Where(a => a.CreatedAt < auditCutoff)
+                            .ExecuteDeleteAsync(stoppingToken);
+
+                        if (deletedLogsCount > 0)
+                        {
+                            _logger.LogInformation($"Cleaned up {deletedLogsCount} old audit logs.");
+                        }
                     }
                 }
                 catch (Exception ex)

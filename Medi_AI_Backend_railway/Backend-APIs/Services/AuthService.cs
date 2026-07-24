@@ -47,17 +47,7 @@ namespace Backend_APIs.Services
                 var roomNumber = string.IsNullOrWhiteSpace(registerDto.RoomNumber) ? null : registerDto.RoomNumber.Trim();
                 var bio = string.IsNullOrWhiteSpace(registerDto.Bio) ? null : registerDto.Bio.Trim();
 
-                // Validate BUITEMS email domain (Commented out for testing so any email can register)
-                /*
-                var allowedDomains = new[] { "@buitems.edu.pk", "@student.buitems.edu.pk" };
-                var emailDomainValid = allowedDomains.Any(domain => email.EndsWith(domain, StringComparison.OrdinalIgnoreCase));
-                
-                // Allow admin creation from any domain for debugging purposes, but restrict other roles
-                if (!emailDomainValid && !string.Equals(registerDto.Role, "Admin", StringComparison.OrdinalIgnoreCase))
-                {
-                    return (false, "Registration is restricted to BUITEMS official email addresses (@buitems.edu.pk or @student.buitems.edu.pk)");
-                }
-                */
+                // Registration is open to any email domain per project configuration.
 
                 // Normalize and validate role against DB enum values
                 var role = (registerDto.Role ?? string.Empty).Trim();
@@ -197,7 +187,7 @@ namespace Backend_APIs.Services
                     }
 
                     await transaction.CommitAsync();
-                    return (true, $"Registration successful! Please verify your email. DEV OTP: {otp}");
+                    return (true, "Registration successful! Please check your email to verify your account.");
                 }
 
                 await transaction.CommitAsync();

@@ -626,6 +626,8 @@ public partial class MediaidbContext : IdentityDbContext<User, IdentityRole<int>
 
             entity.HasIndex(e => e.Role, "idx_role");
 
+            entity.HasIndex(e => new { e.CreatedAt, e.IsActive }, "idx_user_created_active");
+
             entity.Property(e => e.Address).HasColumnType("text");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")

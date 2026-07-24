@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Backend_APIs.Controllers
 {
@@ -46,6 +47,7 @@ namespace Backend_APIs.Controllers
         }
 
         [HttpPost("evaluate")]
+        [EnableRateLimiting("AnalyzerLimiter")]
         public async Task<IActionResult> EvaluateSymptoms([FromBody] SymptomAnalyzerRequestDto request)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
@@ -91,6 +93,7 @@ Duration: {request.Duration}";
             
             try 
             {
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
                 bool isGroq = apiKey.StartsWith("gsk_");
                 string replyContent = string.Empty;
 
@@ -108,9 +111,9 @@ Duration: {request.Duration}";
 
                     _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
                     var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
-                    var response = await _httpClient.PostAsync("https://api.groq.com/openai/v1/chat/completions", content);
+                    var response = await _httpClient.PostAsync("https://api.groq.com/openai/v1/chat/completions", content, cts.Token);
                     
-                    var responseString = await response.Content.ReadAsStringAsync();
+                    var responseString = await response.Content.ReadAsStringAsync(cts.Token);
                     if (!response.IsSuccessStatusCode)
                     {
                         _logger.LogError($"Groq API Error: {responseString}");
@@ -135,9 +138,9 @@ Duration: {request.Duration}";
                     };
 
                     var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
-                    var response = await _httpClient.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={apiKey}", content);
+                    var response = await _httpClient.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={apiKey}", content, cts.Token);
                     
-                    var responseString = await response.Content.ReadAsStringAsync();
+                    var responseString = await response.Content.ReadAsStringAsync(cts.Token);
                     if (!response.IsSuccessStatusCode)
                     {
                         _logger.LogError($"Gemini API Error: {responseString}");
@@ -178,6 +181,11 @@ Duration: {request.Duration}";
 
                 return Ok(new { success = true, data = jsonResult });
             }
+            catch (TaskCanceledException)
+            {
+                _logger.LogWarning("SymptomAnalyzer Evaluate Error: Request timed out.");
+                return StatusCode(504, "The AI analyzer took too long to respond. Please try again.");
+            }
             catch (Exception ex)
             {
                 _logger.LogError($"SymptomAnalyzer Evaluate Error: {ex.Message}");
@@ -196,10 +204,12 @@ Duration: {request.Duration}";
 
             try
             {
-                var history = await _context.AiSymptomAnalyses
+                var rawHistory = await _context.AiSymptomAnalyses
                     .Where(a => a.UserId == userId)
                     .OrderByDescending(a => a.CreatedAt)
-                    .Select(a => new
+                    .ToListAsync();
+
+                var history = rawHistory.Select(a => new
                     {
                         a.Id,
                         a.SelectedSymptoms,
@@ -210,12 +220,12 @@ Duration: {request.Duration}";
                         a.ConfidenceLevel,
                         a.CalculatedSeverity,
                         a.UrgencyMessage,
-                        Recommendations = string.IsNullOrEmpty(a.Recommendations) ? new List<string>() : JsonSerializer.Deserialize<List<string>>(a.Recommendations, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
-                        HomeCareGuidance = string.IsNullOrEmpty(a.HomeCareGuidance) ? new List<string>() : JsonSerializer.Deserialize<List<string>>(a.HomeCareGuidance, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }),
+                        Recommendations = TryParseJsonList(a.Recommendations),
+                        HomeCareGuidance = TryParseJsonList(a.HomeCareGuidance),
                         a.RecommendedDoctorType,
                         a.CreatedAt
                     })
-                    .ToListAsync();
+                    .ToList();
 
                 return Ok(new { success = true, data = history });
             }
@@ -223,6 +233,19 @@ Duration: {request.Duration}";
             {
                 _logger.LogError($"SymptomAnalyzer History Error: {ex.Message}");
                 return StatusCode(500, "An internal error occurred while retrieving history.");
+            }
+        }
+
+        private static List<string> TryParseJsonList(string json)
+        {
+            if (string.IsNullOrEmpty(json)) return new List<string>();
+            try
+            {
+                return JsonSerializer.Deserialize<List<string>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<string>();
+            }
+            catch
+            {
+                return new List<string> { "[Data could not be loaded for this record]" };
             }
         }
     }

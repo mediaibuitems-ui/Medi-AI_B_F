@@ -7,10 +7,19 @@ class AiSymptomResultController extends GetxController {
   String get confidenceLevel => resultData['confidenceLevel'] ?? 'N/A';
   String get severity => resultData['severity'] ?? 'Unknown';
   String get urgencyMessage => resultData['urgencyMessage'] ?? '';
-  List<String> get recommendations =>
-      List<String>.from(resultData['recommendations'] ?? []);
-  List<String> get homeCareGuidance =>
-      List<String>.from(resultData['homeCareGuidance'] ?? []);
+  List<String> get recommendations => _parseStringList(resultData['recommendations']);
+  List<String> get homeCareGuidance => _parseStringList(resultData['homeCareGuidance']);
+
+  List<String> _parseStringList(dynamic data) {
+    if (data == null) return [];
+    if (data is List) {
+      return data.map((e) => e.toString()).toList();
+    }
+    if (data is String) {
+      return [data];
+    }
+    return [];
+  }
   String get recommendedDoctorType =>
       resultData['recommendedDoctorType'] ?? 'General Physician';
 

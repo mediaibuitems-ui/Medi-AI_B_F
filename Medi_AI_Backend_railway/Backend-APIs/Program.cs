@@ -96,6 +96,22 @@ namespace Backend_APIs
                     opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
                     opt.QueueLimit = 2;
                 });
+
+                options.AddFixedWindowLimiter("AnalyzerLimiter", opt =>
+                {
+                    opt.PermitLimit = 3;
+                    opt.Window = TimeSpan.FromMinutes(1);
+                    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                    opt.QueueLimit = 0;
+                });
+
+                options.AddFixedWindowLimiter("AppointmentLimiter", opt =>
+                {
+                    opt.PermitLimit = 5;
+                    opt.Window = TimeSpan.FromMinutes(1);
+                    opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                    opt.QueueLimit = 0;
+                });
                 
                 options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             });
@@ -200,7 +216,11 @@ namespace Backend_APIs
             // Use a global exception middleware to ensure consistent ApiResponse payloads
             app.UseMiddleware<Middleware.GlobalExceptionMiddleware>();
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
+            var enableSwagger = builder.Configuration.GetValue<bool>("EnableSwaggerInProduction", false) 
+                || app.Environment.IsDevelopment() 
+                || Environment.GetEnvironmentVariable("ENABLE_SWAGGER") == "true";
+
+            if (enableSwagger)
             {
                 app.UseSwagger();
                 app.UseSwaggerUI(options =>

@@ -27,13 +27,14 @@ class MedicineReminderAdapter extends TypeAdapter<MedicineReminder> {
       isActive: fields[7] as bool,
       notes: fields[8] as String?,
       isSynced: fields[9] as bool,
+      frequency: fields[10] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, MedicineReminder obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -53,7 +54,9 @@ class MedicineReminderAdapter extends TypeAdapter<MedicineReminder> {
       ..writeByte(8)
       ..write(obj.notes)
       ..writeByte(9)
-      ..write(obj.isSynced);
+      ..write(obj.isSynced)
+      ..writeByte(10)
+      ..write(obj.frequency);
   }
 
   @override
