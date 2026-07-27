@@ -441,26 +441,26 @@ flowchart TD
 **Figure 20: Technology Stack Diagram**
 \`\`\`mermaid
 flowchart TD
-    subgraph Frontend
+    subgraph Frontend [Frontend]
         F[Flutter SDK]
         D[Dart]
         G[GetX]
         H[Hive NoSQL]
     end
-    subgraph Backend
+    subgraph Backend [Backend]
         C[C# .NET Core 8]
         E[Entity Framework Core]
         J[JWT Bearer]
     end
-    subgraph Database
+    subgraph Database [Database]
         M[MySQL 8.0]
     end
-    subgraph AI Service
+    subgraph AIService [AI Service]
         L[GroqCloud Llama-3]
     end
     Frontend --> Backend
     Backend --> Database
-    Backend --> AI Service
+    Backend --> AIService
 \`\`\`
 
 `;
