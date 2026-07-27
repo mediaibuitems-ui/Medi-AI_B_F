@@ -211,10 +211,10 @@ flowchart TD
 Illustrates the physical nodes and cloud infrastructure hosting Medi-AI.
 \`\`\`mermaid
 flowchart TD
-    node1[Mobile Device (Android/iOS)]
-    node2[Railway Cloud Platform]
-    node3[SmarterASP / MySQL Host]
-    node4[GroqCloud Infrastructure]
+    node1["Mobile Device (Android/iOS)"]
+    node2["Railway Cloud Platform"]
+    node3["SmarterASP / MySQL Host"]
+    node4["GroqCloud Infrastructure"]
 
     node1 -->|"HTTPS / TLS 1.2"| node2
     node2 -->|"TCP/IP (Port 3306)"| node3
