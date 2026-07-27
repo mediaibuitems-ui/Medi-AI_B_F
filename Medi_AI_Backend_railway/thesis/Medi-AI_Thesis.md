@@ -759,9 +759,9 @@ flowchart TD
     node3[SmarterASP / MySQL Host]
     node4[GroqCloud Infrastructure]
 
-    node1 -- "HTTPS / TLS 1.2" --> node2
-    node2 -- "TCP/IP (Port 3306)" --> node3
-    node2 -- "HTTPS (Llama-3 API)" --> node4
+    node1 -->|"HTTPS / TLS 1.2"| node2
+    node2 -->|"TCP/IP (Port 3306)"| node3
+    node2 -->|"HTTPS (Llama-3 API)"| node4
 ```
 
 **Figure 8: Login & Authentication Sequence Diagram**
