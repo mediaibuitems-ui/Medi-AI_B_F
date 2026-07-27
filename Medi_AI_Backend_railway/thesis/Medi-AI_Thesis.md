@@ -610,9 +610,7 @@ flowchart LR
     Student --> UC2
     Student --> UC3
 
-    Faculty --> UC1
     Faculty --> UC2
-    Faculty --> UC3
 
     Doctor --> UC4
     Doctor --> UC5
@@ -623,49 +621,60 @@ flowchart LR
 *(Note: standard mermaid syntax for Use Case is mapped via flowcharts, but the above conceptual mapping represents the system's interaction boundaries).*
 
 **Figure 3: Entity Relationship Diagram (ERD)**
-Generated from the actual EF Core DbContext, highlighting the strict relational constraints of the MySQL cloud database.
+Generated from the actual EF Core DbContext, highlighting the strict relational constraints of the MySQL cloud database. The schema consists of 23+ tables; key entities are shown below.
 ```mermaid
 erDiagram
     Users {
-        int UserId PK
+        int Id PK
         string Email
-        string PasswordHash
         string Role
-        string FullName
-        bool IsVerified
     }
     Doctors {
-        int DoctorId PK
+        int Id PK
         int UserId FK
         string Specialization
-        string Department
+    }
+    DoctorSchedule {
+        int Id PK
+        int DoctorId FK
     }
     Appointments {
-        int AppointmentId PK
+        int Id PK
         int PatientId FK
         int DoctorId FK
-        datetime AppointmentDate
         string Status
     }
-    MedicalHistories {
-        int HistoryId PK
-        int UserId FK
-        string Diagnosis
-        string Prescription
+    Prescriptions {
+        int Id PK
+        int AppointmentId FK
+    }
+    MedicalHistory {
+        int Id PK
+        int PatientId FK
+        string RecordType
     }
     MedicineReminders {
-        int ReminderId PK
-        int UserId FK
+        int Id PK
+        int StudentId FK
         string MedicineName
-        datetime StartDate
-        datetime EndDate
-        string Frequency
     }
-    Users ||--o{ Doctors : is
-    Users ||--o{ Appointments : books
-    Doctors ||--o{ Appointments : receives
-    Users ||--o{ MedicalHistories : has
-    Users ||--o{ MedicineReminders : configures
+    SymptomChecks {
+        int Id PK
+        int UserId FK
+    }
+    Notifications {
+        int Id PK
+        int UserId FK
+    }
+    Users ||--o{ Doctors : "is a"
+    Users ||--o{ Appointments : "books (as Patient)"
+    Doctors ||--o{ Appointments : "receives (as Doctor)"
+    Doctors ||--o{ DoctorSchedule : "has"
+    Appointments ||--o{ Prescriptions : "results in"
+    Users ||--o{ MedicalHistory : "has"
+    Users ||--o{ MedicineReminders : "configures"
+    Users ||--o{ SymptomChecks : "performs"
+    Users ||--o{ Notifications : "receives"
 ```
 
 **Figure 4: Data Flow Diagram (DFD) Level 0**
@@ -726,16 +735,25 @@ flowchart TD
     end
     
     subgraph Backend [ASP.NET Core]
+        subgraph Middleware [Security Pipeline]
+            RateLimiter[Rate Limiter]
+            JWTRevoke[JWT Revocation Check]
+        end
         AuthAPI[Auth Controller]
         ApptAPI[Appointments Controller]
         AIAPI[AI Controller]
         RemAPI[Reminders Controller]
     end
 
-    AuthUI -->|HTTPS| AuthAPI
-    ApptUI -->|HTTPS| ApptAPI
-    AIUI -->|HTTPS| AIAPI
-    RemUI -->|HTTPS| RemAPI
+    AuthUI -->|HTTPS| RateLimiter
+    ApptUI -->|HTTPS| RateLimiter
+    AIUI -->|HTTPS| RateLimiter
+    RemUI -->|HTTPS| RateLimiter
+    RateLimiter --> JWTRevoke
+    JWTRevoke --> AuthAPI
+    JWTRevoke --> ApptAPI
+    JWTRevoke --> AIAPI
+    JWTRevoke --> RemAPI
 ```
 
 **Figure 7: Deployment Diagram**
@@ -862,11 +880,11 @@ mindmap
 ```mermaid
 mindmap
   root((Faculty Dashboard))
-    Book Appointment
-      Priority Queue Access
     Medicine Reminders
-    AI Symptom Checker
+      Add New Medicine
+      View Schedule (Offline)
     Profile
+      Update Password
 ```
 
 **Figure 15: Admin Dashboard Feature Hierarchy**
@@ -905,25 +923,37 @@ Maps the exact C# Entity models and their relational constraints.
 ```mermaid
 classDiagram
     class User {
-        +int UserId
+        +int Id
         +string Email
         +string Role
         +Authenticate()
     }
     class Doctor {
-        +int DoctorId
+        +int Id
         +string Specialization
         +SetSchedule()
     }
     class Appointment {
-        +int AppointmentId
+        +int Id
         +DateTime AppointmentDate
         +string Status
         +Confirm()
         +Cancel()
     }
+    class MedicineReminder {
+        +int Id
+        +string MedicineName
+        +Time ScheduleTime
+    }
+    class SymptomCheck {
+        +int Id
+        +string Symptoms
+        +string AIResponse
+    }
     User "1" -- "0..*" Appointment : books
     Doctor "1" -- "0..*" Appointment : manages
+    User "1" -- "0..*" MedicineReminder : creates
+    User "1" -- "0..*" SymptomCheck : performs
     User "1" -- "1" Doctor : inherits (if role=Doctor)
 ```
 
@@ -934,14 +964,13 @@ flowchart TD
     Offline[User marks medicine as 'Taken' Offline]
     Hive[(Hive Local Storage)]
     NetworkCheck{Is Internet Available?}
-    Queue[Add to Sync Queue]
-    Sync[POST to /api/reminders/sync]
+    Fail[Silent Failure - Remain in Hive]
+    Sync[POST to /api/MedicineReminders/sync]
     Cloud[(MySQL DB)]
 
     Offline --> Hive
     Hive --> NetworkCheck
-    NetworkCheck -->|No| Queue
-    Queue --> NetworkCheck
+    NetworkCheck -->|No| Fail
     NetworkCheck -->|Yes| Sync
     Sync --> Cloud
     Cloud -->|Confirm| Hive
@@ -1118,74 +1147,53 @@ While the current iteration of Medi-AI provides a comprehensive foundation for c
 ```
 
 #### A.2 Database Schema Excerpt (MySQL)
+*(Note: Full schema contains 23+ tables. Shown below are key entities.)*
 ```sql
 CREATE TABLE Users (
-    UserId INT AUTO_INCREMENT PRIMARY KEY,
-    Email VARCHAR(255) UNIQUE NOT NULL,
-    PasswordHash VARCHAR(512) NOT NULL,
-    Role ENUM('Student', 'Faculty', 'Doctor', 'Admin') NOT NULL,
-    FullName VARCHAR(100) NOT NULL
+    Id INT AUTO_INCREMENT PRIMARY KEY,
+    Email VARCHAR(100) UNIQUE NOT NULL,
+    PasswordHash VARCHAR(255) NOT NULL,
+    FullName VARCHAR(100) NOT NULL,
+    Role ENUM('Student', 'Faculty', 'Doctor', 'Admin') NOT NULL
 );
 
 CREATE TABLE Doctors (
-    DoctorId INT AUTO_INCREMENT PRIMARY KEY,
+    Id INT AUTO_INCREMENT PRIMARY KEY,
     UserId INT UNIQUE NOT NULL,
     Specialization VARCHAR(100) NOT NULL,
     LicenseNumber VARCHAR(50) UNIQUE NOT NULL,
-    FOREIGN KEY (UserId) REFERENCES Users(UserId)
+    FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE
 );
 
 CREATE TABLE Appointments (
-    AppointmentId INT AUTO_INCREMENT PRIMARY KEY,
+    Id INT AUTO_INCREMENT PRIMARY KEY,
     PatientId INT NOT NULL,
     DoctorId INT NOT NULL,
-    DateTime DATETIME NOT NULL,
-    Status ENUM('Pending', 'Confirmed', 'Completed', 'Cancelled') DEFAULT 'Pending',
-    FOREIGN KEY (PatientId) REFERENCES Users(UserId),
-    FOREIGN KEY (DoctorId) REFERENCES Doctors(DoctorId)
+    AppointmentDate DATE NOT NULL,
+    AppointmentTime TIME NOT NULL,
+    Status ENUM('Pending','Confirmed','InProgress','Completed','Cancelled','NoShow') DEFAULT 'Pending',
+    FOREIGN KEY (PatientId) REFERENCES Users(Id) ON DELETE CASCADE,
+    FOREIGN KEY (DoctorId) REFERENCES Doctors(Id) ON DELETE CASCADE
 );
 
-CREATE TABLE MedicalHistory (
+CREATE TABLE SymptomChecks (
     Id INT AUTO_INCREMENT PRIMARY KEY,
     UserId INT NOT NULL,
-    RecordType VARCHAR(50),
-    Diagnosis TEXT,
-    Prescription TEXT,
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (UserId) REFERENCES Users(UserId)
-);
-
-CREATE TABLE AiSymptomAnalysis (
-    Id INT AUTO_INCREMENT PRIMARY KEY,
-    UserId INT NOT NULL,
-    SelectedSymptoms TEXT,
-    PossibleCondition VARCHAR(255),
-    ConfidenceLevel VARCHAR(50),
-    CalculatedSeverity VARCHAR(50),
-    UrgencyMessage TEXT,
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (UserId) REFERENCES Users(UserId)
+    Symptoms JSON NOT NULL,
+    AIResponse JSON,
+    Confidence DECIMAL(5,2),
+    RecommendedAction VARCHAR(200),
+    FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE
 );
 
 CREATE TABLE MedicineReminders (
     Id INT AUTO_INCREMENT PRIMARY KEY,
-    UserId INT NOT NULL,
-    MedicineName VARCHAR(100) NOT NULL,
-    Dosage VARCHAR(50),
-    Frequency VARCHAR(50),
-    ScheduleTime TIME NOT NULL,
-    IsActive BOOLEAN DEFAULT TRUE,
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (UserId) REFERENCES Users(UserId)
-);
-
-CREATE TABLE EmailVerificationOTPs (
-    Id INT AUTO_INCREMENT PRIMARY KEY,
-    UserId INT NOT NULL,
-    OTP VARCHAR(10) NOT NULL,
-    ExpiresAt DATETIME NOT NULL,
-    IsUsed BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (UserId) REFERENCES Users(UserId)
+    StudentId INT NOT NULL,
+    MedicineName VARCHAR(200) NOT NULL,
+    Dosage VARCHAR(100) NOT NULL,
+    Frequency ENUM('Once','Twice','Thrice','Four times','Custom') NOT NULL,
+    Times JSON NOT NULL,
+    FOREIGN KEY (StudentId) REFERENCES Users(Id) ON DELETE CASCADE
 );
 ```
 

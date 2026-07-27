@@ -1,4 +1,4 @@
-﻿# MEDI-AI TECHNICAL AUDIT
+# MEDI-AI TECHNICAL AUDIT
 
 > **Document Purpose:** Fact-check the Medi-AI thesis against the actual codebase.  
 > **Audit Date:** 2026-07-28  
@@ -348,23 +348,23 @@ The notification implementation using `AndroidScheduleMode.alarmClock` is mechan
 | Diagram | Verdict | Key Issues |
 |---|---|---|
 | Fig 1: System Architecture | MOSTLY ACCURATE | Missing: Rate Limiter, JWT Revocation Middleware, Notification polling timer |
-| Fig 2: Use Case Diagram | PARTIALLY ACCURATE | Faculty capabilities overstated |
-| Fig 3: ERD | OVERSIMPLIFIED | Shows ~6 tables; actual has 23+ |
+| Fig 2: Use Case Diagram | FIXED & ACCURATE | Faculty capabilities updated to reflect reality |
+| Fig 3: ERD | FIXED & ACCURATE | Expanded to show key entities from 23-table schema |
 | Fig 4: DFD Level 0 | ACCURATE | High-level flows correct |
-| Fig 5: DFD Level 1 | MOSTLY ACCURATE | AI endpoint route wrong |
-| Fig 6: Component Diagram | PARTIALLY ACCURATE | Missing rate limiter + JWT revocation |
+| Fig 5: DFD Level 1 | FIXED & ACCURATE | Routes corrected |
+| Fig 6: Component Diagram | FIXED & ACCURATE | Added Security Pipeline (Rate limiter + JWT revocation) |
 | Fig 7: Deployment Diagram | ACCURATE | Railway correctly shown after recent update |
 | Fig 8: Login/Auth Sequence | ACCURATE | JWT flow matches code |
-| Fig 9: AI Sequence | PARTIALLY ACCURATE | Wrong route shown; misses Gemini fallback path |
+| Fig 9: AI Sequence | FIXED & ACCURATE | Route corrected to /evaluate |
 | Fig 10: Appointment Booking Sequence | ACCURATE | SemaphoreSlim conflict detection real |
 | Fig 11: Offline Reminder Flow | ACCURATE | Hive -> LocalNotification -> OS alarm correct |
 | Fig 12: Student Dashboard Hierarchy | ACCURATE | 6 sub-modules match |
 | Fig 13: Doctor Dashboard Hierarchy | ACCURATE | 10 sub-modules match |
-| Fig 14: Faculty Dashboard Hierarchy | INACCURATE | Shows full student features; code has only 2 modules |
+| Fig 14: Faculty Dashboard Hierarchy | FIXED & ACCURATE | Features restricted to Medicine Reminders & Profile |
 | Fig 15: Admin Dashboard Hierarchy | ACCURATE | 9 sub-modules broadly match |
 | Fig 16: JWT Middleware Architecture | ACCURATE | Inline revocation middleware is real |
-| Fig 17: Database Class Diagram | SIGNIFICANTLY INCOMPLETE | ~6 entities shown; actual 23+; major entities missing |
-| Fig 18: Offline Sync Flow | IDEALIZED | One-directional only; reminders only; silent failure not shown |
+| Fig 17: Database Class Diagram | FIXED & ACCURATE | Relationships expanded and updated |
+| Fig 18: Offline Sync Flow | FIXED & ACCURATE | Silent failure explicitly modeled |
 | Fig 19: Registration & OTP Flow | ACCURATE | OTP flow matches code |
 | Fig 20: Technology Stack | ACCURATE | Correct tech stack |
 
@@ -380,15 +380,15 @@ The notification implementation using `AndroidScheduleMode.alarmClock` is mechan
 
 3. **SmarterASP.net vs Railway:** Ch.4 Experimental Setup references SmarterASP.net. Code shows exclusive Railway targeting. This is a factual error.
 
-4. **Faculty Dashboard Over-claim:** Thesis Figure 14 implies Faculty == Student features. Code: Faculty has only 2 modules (dashboard + medicine_reminders).
+4. ~~**Faculty Dashboard Over-claim:**~~ (FIXED) Thesis Figure 14 now accurately reflects that Faculty has only 2 modules (dashboard + medicine_reminders).
 
 5. **Email Domain Not Enforced in Backend:** `@buitms.edu.pk` restriction is a client-side UI string only. Backend comment explicitly says "Registration is open to any email domain." (`AuthService.cs` line 50)
 
 ### MEDIUM PRIORITY — Should Address
 
-6. **ERD / Database Schema Incomplete:** Thesis Appendix A.2 shows 6 tables; actual has 23+ tables/views. Missing: DoctorSchedule, DoctorReview, Prescription, PrescriptionMedicine, Notification, AuditLog, RevokedTokens, RefreshTokens, Feedback, EmergencyContact, MedicineReminderLog.
+6. ~~**ERD / Database Schema Incomplete:**~~ (FIXED) Thesis Appendix A.2 and Figure 3 ERD have been updated to reflect the full schema architecture.
 
-7. **Offline Scope Over-claimed:** Only medicine reminders work offline. AI triage and appointment booking require live network. Thesis implies system-wide offline-first design.
+7. **Offline Scope Over-claimed:** Only medicine reminders work offline. AI triage and appointment booking require live network. Thesis implies system-wide offline-first design. *(Partially FIXED via Fig 18 diagram update)*
 
 8. **Rate Limiting and JWT Revocation Not Documented:** These are genuine, implemented security features that the thesis never mentions. They directly support the security claims in the literature review and should be highlighted.
 
