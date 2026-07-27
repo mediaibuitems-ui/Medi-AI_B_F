@@ -60,9 +60,7 @@ namespace Backend_APIs.Controllers
             var apiKey = _configuration["Gemini:ApiKey"];
             if (string.IsNullOrEmpty(apiKey) || apiKey.StartsWith("INSERT_") || apiKey.Contains("INSERT_"))
             {
-                apiKey = _configuration["Groq:ApiKey"];
-                if (string.IsNullOrEmpty(apiKey) || apiKey.StartsWith("INSERT_") || apiKey.Contains("INSERT_"))
-                    return StatusCode(500, new { success = false, message = "AI API Key is not configured. Please add Gemini__ApiKey or Groq__ApiKey to Railway environment variables." });
+                return StatusCode(500, new { success = false, message = "AI API Key is not configured. Please add Gemini__ApiKey to Railway environment variables." });
             }
 
             var selectedSymptomsStr = string.Join(", ", request.SelectedSymptoms);
@@ -94,63 +92,31 @@ Duration: {request.Duration}";
             try 
             {
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-                bool isGroq = apiKey.StartsWith("gsk_");
-                string replyContent = string.Empty;
-
-                if (isGroq)
+                var requestBody = new
                 {
-                    var requestBody = new
+                    contents = new[]
                     {
-                        model = "llama-3.3-70b-versatile",
-                        messages = new[]
-                        {
-                            new { role = "system", content = systemPrompt }
-                        },
-                        response_format = new { type = "json_object" }
-                    };
-
-                    _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
-                    var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
-                    var response = await _httpClient.PostAsync("https://api.groq.com/openai/v1/chat/completions", content, cts.Token);
-                    
-                    var responseString = await response.Content.ReadAsStringAsync(cts.Token);
-                    if (!response.IsSuccessStatusCode)
+                        new { parts = new[] { new { text = systemPrompt } } }
+                    },
+                    generationConfig = new
                     {
-                        _logger.LogError($"Groq API Error: {responseString}");
-                        return StatusCode(500, new { success = false, message = $"Failed to analyze symptoms via Groq API. Error: {responseString}" });
+                        responseMimeType = "application/json"
                     }
+                };
 
-                    using var doc = JsonDocument.Parse(responseString);
-                    replyContent = doc.RootElement.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString() ?? "{}";
-                }
-                else
+                var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={apiKey}", content, cts.Token);
+                
+                var responseString = await response.Content.ReadAsStringAsync(cts.Token);
+                if (!response.IsSuccessStatusCode)
                 {
-                    var requestBody = new
-                    {
-                        contents = new[]
-                        {
-                            new { parts = new[] { new { text = systemPrompt } } }
-                        },
-                        generationConfig = new
-                        {
-                            responseMimeType = "application/json"
-                        }
-                    };
-
-                    var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
-                    var response = await _httpClient.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={apiKey}", content, cts.Token);
-                    
-                    var responseString = await response.Content.ReadAsStringAsync(cts.Token);
-                    if (!response.IsSuccessStatusCode)
-                    {
-                        _logger.LogError($"Gemini API Error: {responseString}");
-                        return StatusCode(500, new { success = false, message = $"Failed to analyze symptoms via Gemini API. Error: {responseString}" });
-                    }
-
-                    using var doc = JsonDocument.Parse(responseString);
-                    var candidates = doc.RootElement.GetProperty("candidates")[0];
-                    replyContent = candidates.GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString() ?? "{}";
+                    _logger.LogError($"Gemini API Error: {responseString}");
+                    return StatusCode(500, new { success = false, message = $"Failed to analyze symptoms via Gemini API. Error: {responseString}" });
                 }
+
+                using var doc = JsonDocument.Parse(responseString);
+                var candidates = doc.RootElement.GetProperty("candidates")[0];
+                string replyContent = candidates.GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString() ?? "{}";
 
                 // Clean markdown code blocks if any
                 replyContent = replyContent.Trim();
