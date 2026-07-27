@@ -756,7 +756,7 @@ Illustrates the physical nodes and cloud infrastructure hosting Medi-AI.
 flowchart TD
     node1["Mobile Device (Android/iOS)"]
     node2["Railway Cloud Platform"]
-    node3["SmarterASP / MySQL Host"]
+    node3["Railways / MySQL Host"]
     node4["GroqCloud Infrastructure"]
 
     node1 -->|"HTTPS / TLS 1.2"| node2
