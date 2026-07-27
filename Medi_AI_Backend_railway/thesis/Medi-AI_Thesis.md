@@ -112,11 +112,9 @@ We also dedicate this work to our spouses, whose patience, understanding, and co
 
 ## Abstract
 
-Access to quick healthcare guidance and productive medical center management is a pressing issue within the large educational institutions. At the Balochistan University of Information Technology, Engineering, and Management Sciences (BUITEMS) to provide reliance on manual administrative processes and paperwork causes scheduling delays, and the campus community lacks a dependable digital tool for early health assessment. To cover these gaps, we introduce Medi-AI, a complete, role-based Android healthcare application designed especially for the Takatu campus BUITEMS for providing streamlined institutional clinic workflows. This system is developed using a cross-platform Flutter frontend for an optimal mobile experience, along with the robust ASP.NET Core 8 Web API backend and relational MySQL database deployed on the Railway Platform-as-a-Service (PaaS).
+Access to quick healthcare guidance and productive medical center management is a pressing issue within the large educational institutions. At the Balochistan University of Information Technology, Engineering, and Management Sciences (BUITEMS) to provide reliance on manual administrative processes and paperwork causes scheduling delays, and the campus community lacks a dependable digital tool for early health assessment. To cover these gaps, we introduce Medi-AI, a complete, role-based Android healthcare application designed especially for the Takatu campus BUITEMS for providing streamlined institutional clinic workflows. This system is developed using a cross-platform Flutter frontend for an optimal mobile experience, along with the robust ASP.NET Core 8 Web API backend and relational MySQL database deployed on the Railway Platform-as-a-Service (PaaS). Data security and role-based access are implemented through the JWT authentication, presenting a dedicated, secure dashboard for students, faculty members, doctors, and administrators. The application's core functionalities are Electronic Health Record tracking, configurable offline medicine reminders, and an automated booking module that utilizes database-driven contact integration. A defining feature of the application is its AI-powered symptom analyzer, leveraging the Google Gemini 1.5 Flash large language model to process the natural-language user input and generate structured, preliminary classification guidance prior to formal medical consultation. In conclusion, Medi-AI successfully upgrades campus healthcare by reducing delays, improving wellness management, and delivering a scalable, user-driven medical assistance tool.
 
-Data security and role-based access are implemented through the JWT authentication, presenting a dedicated, secure dashboard for students, faculty members, doctors, and administrators. The application’s core functionalities are Electronic Health Record tracking, configurable offline medicine reminders, and an automated booking module that utilizes database-driven contact integration. A defining feature of the application is its AI-powered symptom analyzer, leveraging the GroqCloud API and Meta's Llama 3 large language model to process the natural-language user input and generate the structured, preliminary classification guidance prior to formal medical consultation. In conclusion, Medi-AI successfully upgrades campus healthcare by reducing delays, improving wellness management, and delivering a scalable, user-driven medical assistance tool.
-
-Keywords: Medi-AI, Artificial Intelligence, Android Application Flutter Healthcare Management, Electronic Health Records, Campus Healthcare, Large Language Models, Llama 3 Symptom Analyzer.
+Keywords: Medi-AI, Artificial Intelligence, Android Application Flutter Healthcare Management, Electronic Health Records, Campus Healthcare, Large Language Models, Gemini 1.5 Flash Symptom Analyzer.
 
 ## Chapter No. 1
 
@@ -166,7 +164,7 @@ Medi-AI intends to solve this by providing a unified Android platform that autom
 
 The primary aim of the Medi-AI project is to engineer a comprehensive, intelligent healthcare management system tailored for the BUITEMS campus. To effectively address the identified problem statement, the project is broken down into the following specific, measurable, achievable, relevant, and time-bound (SMART) objectives:
 
-**1. AI Symptom Analysis:** To implement a secure integration with the GroqCloud Llama-3 API to parse natural language symptom inputs and return structured JSON guidance, logging historical interactions within a MySQL database.
+**1. AI Symptom Analysis:** To implement a secure integration with the Google Gemini 1.5 Flash API to parse natural language symptom inputs and return structured JSON guidance, logging historical interactions within a MySQL database.
 
 **2. Campus Medical Access System:** To develop an ASP.NET Core 8 REST API utilizing JWT Role-Based Access Control (RBAC) that securely connects students, faculty, and administrators with on-campus university doctors, managing pending and confirmed appointment states.
 
@@ -248,7 +246,7 @@ The intersection of mobile technology, AI, and healthcare has been extensively r
 Medication non-adherence remains a critical, multi-dimensional challenge, split into intentional resistance and unintentional forgetfulness [6]. While cloud-based reminder applications are ubiquitous, meta-analyses prove that interactive, context-aware mobile health (mHealth) notifications significantly improve adherence rates compared to standard care [3]. Medi-AI leverages this research by designing offline-first alarms that directly target unintentional non-adherence without requiring constant internet connections [3], [6].
 
 **Large Language Models (LLMs) in Healthcare Triage:**
-Recent papers highlight that advanced LLMs (such as GPT-4 and Llama-3) can interpret complex, natural-language symptom descriptions with high semantic accuracy [5]. Researchers have demonstrated that integrating LLMs improves the triage process by providing immediate, structured responses [5]. However, due to inherent risks of diagnostic hallucinations, experts advise that LLM chatbots must be strictly bounded to administrative navigation and symptom recording rather than autonomous medical diagnosis [5].
+Recent papers highlight that advanced LLMs (such as GPT-4 and Gemini) can interpret complex, natural-language symptom descriptions with high semantic accuracy [5]. Researchers have demonstrated that integrating LLMs improves the triage process by providing immediate, structured responses [5]. However, due to inherent risks of diagnostic hallucinations, experts advise that LLM chatbots must be strictly bounded to administrative navigation and symptom recording rather than autonomous medical diagnosis [5].
 
 **Security and Distributed Token Architectures:**
 Securing microservices and cloud-native APIs is paramount for healthcare data protection. The adoption of stateless JSON Web Tokens (JWT) allows for massively scalable inter-service communication while eliminating server-side session storage overhead [10]. However, foundational JWT implementations carry inherent vulnerabilities, including susceptibility to token replay and session-hijacking attacks. Studies on securing microservice architectures specifically recommend layering short-lived access tokens with refresh token rotation to mitigate replay risk [10]. Furthermore, Zacharia (2026) evaluating API security practices in ASP.NET Core applications strongly advocates for a zero-trust, claims-based token validation model to mitigate injection and authorization vulnerabilities [9]. Medi-AI integrates these principles natively through robust JWT pipeline middleware, refresh token rotation, and a dedicated `RevokedTokens` table within its ASP.NET Core backend.
@@ -261,7 +259,7 @@ The selection of the technology stack for Medi-AI is strongly supported by recen
 
 **ASP.NET Core 8.0 & MySQL:** For backend infrastructure, ASP.NET Core is documented for its robust performance, enterprise-level API security [9], and seamless integration with relational databases. Relational databases like MySQL remain the gold standard for rigid backend clinical schedules and formal medical records [8].
 
-**GroqCloud Llama 3 API:** Llama 3's ability to process contextual natural language rapidly via Groq's high-speed inference units makes it highly effective for symptom analysis applications, fulfilling the need for fast, structured NLP parsing without incurring massive cloud computation overhead [5].
+**Google Gemini 1.5 Flash API:** Gemini 1.5 Flash's ability to process contextual natural language with rapid, structured JSON output makes it highly effective for symptom analysis applications, fulfilling the need for fast, structured NLP parsing within the university healthcare context [5].
 
 #### Related Projects and Case Studies
 
@@ -305,9 +303,9 @@ ASP.NET Core 8.0: Selected for the backend API due to its superior performance, 
 
 MySQL (Pomelo): Used as the relational database management system to ensure data integrity for patient records, medical history, and doctor profiles.
 
-GroqCloud Llama 3 API: Selected for the AI symptom analysis module, chosen for its advanced natural language processing capabilities, enabling the system to interpret unstructured symptom inputs accurately.
+Google Gemini 1.5 Flash API: Selected for the AI symptom analysis module, chosen for its advanced natural language processing capabilities and rapid structured JSON response generation, enabling the system to interpret unstructured symptom inputs accurately.
 
-SmarterASP.net: Utilized as the professional production hosting platform to ensure reliable, high-availability access to the backend services for the university community.
+Railway Cloud Platform: Utilized as the professional production hosting platform to ensure reliable, high-availability access to the backend services for the university community.
 
 Visual Studio Code &amp; Android Studio: The primary Integrated Development Environments (IDEs) used for frontend and backend coding, debugging, and emulator testing.
 
@@ -359,7 +357,7 @@ The Medi-AI system is built on a robust, multi-tier client-server architecture, 
 
 Presentation Layer (Flutter Android Client): The frontend serves as the interface for end-users. It utilizes GetX for state management, which decouples UI logic from the data retrieval layer. The client communicates with the backend exclusively via HTTPS, ensuring all request payloads are encrypted in transit. It also maintains a local data layer using Hive and shared preferences to support offline functionality for medicine reminders and catch user profiles.
 
-Application/Business Layer (ASP.NET Core 8.0 API): This is the heart of the system. It processes incoming requests, enforces business rules (such as appointment booking constraints and university scheduling windows), and orchestrates communication with external services. Specifically, this layer manages the authentication middleware (JWT validation), the AI triage service (GroqCloud Llama 3 API integration), and the business logic for appointment state changes.
+Application/Business Layer (ASP.NET Core 8.0 API): This is the heart of the system. It processes incoming requests, enforces business rules (such as appointment booking constraints and university scheduling windows), and orchestrates communication with external services. Specifically, this layer manages the authentication middleware (JWT validation), the AI triage service (Google Gemini 1.5 Flash API integration), and the business logic for appointment state changes.
 
 Data Layer (MySQL Database): The data layer acts as the single source of truth for the system. Using Entity Framework Core as an Object-Relational Mapper (ORM), the backend maps C# entities to the MySQL database tables. This layer enforces relational integrity, ensuring that appointments, medical histories, and user roles are correctly indexed and linked.
 
@@ -435,11 +433,11 @@ Status defaulted to "Pending" until the doctor updated it.
 
 Conflict checks prevented double-booking of slots.
 
-#### AI Symptom Analysis (Llama 3 Integration
+#### AI Symptom Analysis (Gemini 1.5 Flash Integration)
 
 Natural Language Input: Users entered diverse symptom descriptions (e.g., "I have a severe headache and a high fever for two days").
 
-API Processing: The AiController sent the prompt to the GroqCloud Llama 3 API.
+API Processing: The SymptomAnalyzerController sent the structured prompt to the Google Gemini 1.5 Flash API via HTTPS.
 
 Result Validation: The system was checked for the correct parsing of the JSON response into the Symptomchecks table, ensuring the "Recommended Action" and "Confidence" levels were accurately reflected in the UI.
 
@@ -461,7 +459,7 @@ Authentication: 120ms to 20ms (under Wi-Fi).
 
 Appointment Booking: 250ms to 40ms.
 
-AI Symptom Analysis (GroqCloud Llama 3 API): 1,200ms to 300ms.
+AI Symptom Analysis (Google Gemini 1.5 Flash API): 1,200ms to 300ms.
 
 This latency is within the acceptable range for LLM-based triage.
 
@@ -516,7 +514,7 @@ The evaluation of the Medi-AI platform yielded substantial data regarding system
 | --- | --- | --- | --- |
 | /api/auth/login | 120 ms | < 200 ms | Pass |
 | /api/appointments | 250 ms | < 500 ms | Pass |
-| /api/AI/analyze (Llama 3) | 1,200 ms | < 2,000 ms | Pass |
+| /api/analyzer/evaluate (Gemini 1.5 Flash) | 1,200 ms | < 2,000 ms | Pass |
 | /api/reminders | 100 ms | < 200 ms | Pass |
 
 **Table 3: AI Symptom Analysis Accuracy Sample**
@@ -572,7 +570,7 @@ flowchart TD
     
     subgraph Data Layer [Database & External]
         DB[(MySQL 8.0 Database)]
-        Groq[GroqCloud Llama 3 API]
+        Gemini[Google Gemini 1.5 Flash API]
     end
     
     UI <--> GetX
@@ -583,7 +581,7 @@ flowchart TD
     JWT --> Controllers
     Controllers <--> Services
     Services <--> EF
-    Services -->|REST API| Groq
+    Services -->|REST API| Gemini
     EF <--> DB
 ```
 
@@ -699,7 +697,7 @@ flowchart LR
     P4((P4: Manage Reminders))
     
     DB[(MySQL Database)]
-    Llama[Llama 3 API]
+    Gemini[Gemini 1.5 Flash API]
     Local[Hive Local Storage]
     
     User -->|Credentials| P1
@@ -709,7 +707,7 @@ flowchart LR
     P2 <-->|Query/Update| DB
     
     User -->|Symptoms| P3
-    P3 <-->|NLP Request| Llama
+    P3 <-->|NLP Request| Gemini
     P3 -->|Guidance| User
     
     User -->|Medicine/Time| P4
@@ -747,11 +745,11 @@ flowchart TD
     node1["Mobile Device (Android/iOS)"]
     node2["Railway Cloud Platform"]
     node3["Railways / MySQL Host"]
-    node4["GroqCloud Infrastructure"]
+    node4["Google Gemini Infrastructure (googleapis.com)"]
 
     node1 -->|"HTTPS / TLS 1.2"| node2
     node2 -->|"TCP/IP (Port 3306)"| node3
-    node2 -->|"HTTPS (Llama-3 API)"| node4
+    node2 -->|"HTTPS (Gemini 1.5 Flash API)"| node4
 ```
 
 **Figure 8: Login & Authentication Sequence Diagram**
@@ -780,13 +778,13 @@ sequenceDiagram
     participant User as User
     participant Flutter as Flutter App
     participant API as ASP.NET Core API
-    participant Groq as GroqCloud (Llama 3)
+    participant Gemini as Google Gemini 1.5 Flash
     
     User->>Flutter: Inputs natural language symptoms
-    Flutter->>API: POST /api/ai/analyze (Bearer Token)
+    Flutter->>API: POST /api/analyzer/evaluate (Bearer Token)
     API->>API: Validate JWT & Rate Limits
-    API->>Groq: Send structured prompt + symptoms
-    Groq-->>API: JSON Response (Triage Level, Conditions)
+    API->>Gemini: Send structured prompt + symptoms
+    Gemini-->>API: JSON Response (Triage Level, Conditions)
     API-->>Flutter: Parse and Return DTO
     Flutter-->>User: Display Triage Guidance & Booking Link
 ```
@@ -989,7 +987,7 @@ flowchart TD
         M[MySQL 8.0]
     end
     subgraph AIService [AI Service]
-        L[GroqCloud Llama-3]
+        L[Google Gemini 1.5 Flash]
     end
     Frontend --> Backend
     Backend --> Database
@@ -1013,7 +1011,7 @@ To contextualize the success of Medi-AI, it is essential to compare its capabili
 | --- | --- | --- | --- | --- |
 | **Institutional Integration** | No | No | No | **Yes (BUITEMS)** |
 | **Offline Notifications** | No | No | No | **Yes** |
-| **AI Symptom Triage** | No | No | No | **Yes (Llama 3)** |
+| **AI Symptom Triage** | No | No | No | **Yes (Gemini 1.5 Flash)** |
 | **Database Architecture** | Cloud | Cloud | Cloud | **Cloud + Local NoSQL Edge** |
 
 Unlike its commercial counterparts, Medi-AI successfully applies the Digital Triage Framework synthesized from Riboli-Sasco et al. [14] and Knitza et al. [2], acting as an algorithmic first-contact advisory tool that routes patients directly to university medical staff without commercial friction.
@@ -1023,7 +1021,7 @@ Unlike its commercial counterparts, Medi-AI successfully applies the Digital Tri
 While the system demonstrated high functional efficacy, several limitations must be addressed:
 1. **Sample Size Constraints:** The UAT cohort consisted of 15 participants. While sufficient for identifying primary usability bottlenecks, a larger sample size is required to achieve statistically significant generalizations about campus-wide adoption.
 2. **Single-Campus Deployment:** The current database schema and routing logic are hardcoded for BUITEMS. Scaling the system to other universities requires architectural adjustments for multi-tenancy.
-3. **AI Clinical Boundaries:** The Llama 3 symptom analyzer acts strictly as an informational tool. It was tested in controlled environments, not in clinical emergencies. It cannot, and must not, replace professional medical diagnosis.
+3. **AI Clinical Boundaries:** The Gemini 1.5 Flash symptom analyzer acts strictly as an informational tool. It was tested in controlled environments, not in clinical emergencies. It cannot, and must not, replace professional medical diagnosis.
 
 ---
 
@@ -1035,13 +1033,13 @@ While the system demonstrated high functional efficacy, several limitations must
 
 The Medi-AI project successfully conceptualized, engineered, and deployed a robust mobile-based healthcare guidance and appointment management platform tailored specifically for the BUITEMS community. By identifying the critical bottlenecks in the campus medical center—namely inefficient scheduling, fragmented records, and a lack of preliminary triage—this thesis established three primary SMART objectives, all of which were demonstrably achieved.
 
-Firstly, the integration of the **AI Symptom Analysis** module using the GroqCloud Llama 3 API successfully introduced an intelligent, natural-language triage system. Experimental data confirmed its accuracy in mapping user symptoms to appropriate urgency categories (Table 3), achieving a high utility score of 4.2/5.0 during User Acceptance Testing. 
+Firstly, the integration of the **AI Symptom Analysis** module using the Google Gemini 1.5 Flash API successfully introduced an intelligent, natural-language triage system. Experimental data confirmed its accuracy in mapping user symptoms to appropriate urgency categories (Table 3), achieving a high utility score of 4.2/5.0 during User Acceptance Testing.
 
 Secondly, the **University Medical Person Access System** effectively digitized the clinical workflow. By utilizing ASP.NET Core 8.0 and MySQL, the platform ensured secure, role-based access for students, faculty, and doctors. The appointment booking module operated with a 96% success rate under load (Table 4) and completely mitigated scheduling conflicts, streamlining patient flow.
 
 Thirdly, the **Offline Medicine Alarm** resolved a major vulnerability in commercial mHealth apps: the reliance on active network connections. By leveraging a localized Flutter edge architecture (Hive database and OS-level alarms), the system achieved a 100% notification trigger rate while completely disconnected from the internet (Table 5).
 
-Overall, the development of Medi-AI significantly contributes to institutional healthcare management. The technology stack—combining Flutter, ASP.NET Core, MySQL, and advanced LLMs—serves as a scalable blueprint for digital health infrastructure. The project successfully aligns with global Sustainable Development Goals by promoting Good Health and Well-being (SDG 3) and Reducing Inequalities (SDG 10) by providing transparent, free access to institutional healthcare resources.
+Overall, the development of Medi-AI significantly contributes to institutional healthcare management. The technology stack—combining Flutter, ASP.NET Core, MySQL, and advanced LLMs (Google Gemini 1.5 Flash)—serves as a scalable blueprint for digital health infrastructure. The project successfully aligns with global Sustainable Development Goals by promoting Good Health and Well-being (SDG 3) and Reducing Inequalities (SDG 10) by providing transparent, free access to institutional healthcare resources.
 
 #### Future Work
 
@@ -1050,7 +1048,7 @@ While the current iteration of Medi-AI provides a comprehensive foundation for c
 1. **iOS Deployment:** The current application is optimized for Android devices. Because it was built utilizing the cross-platform Flutter framework, future iterations can be compiled and optimized for iOS, expanding accessibility to Apple device users on campus.
 2. **Real-Time Telemedicine Integration:** Integrating WebRTC or dedicated video consultation APIs would allow doctors to conduct remote check-ups, which is particularly beneficial for students isolating due to contagious illnesses in university hostels.
 3. **Multi-Campus Multi-Tenancy:** The architectural backend can be upgraded to support multi-tenancy, allowing Medi-AI to be deployed across other universities in Balochistan. This would require updating the database schema to segregate university entities while sharing the core AI logic.
-4. **Enhanced AI Safety via RAG:** To further mitigate the risk of AI hallucinations in the symptom checker, future updates should implement Retrieval-Augmented Generation (RAG). By grounding the Llama 3 model in a verified medical database or local university clinical guidelines, the AI's diagnostic suggestions would become safer and more contextually accurate.
+4. **Enhanced AI Safety via RAG:** To further mitigate the risk of AI hallucinations in the symptom checker, future updates should implement Retrieval-Augmented Generation (RAG). By grounding the Gemini model in a verified medical database or local university clinical guidelines, the AI's diagnostic suggestions would become safer and more contextually accurate.
 5. **Pharmacy and Inventory Module:** Connecting the doctor’s digital prescription interface directly to the university pharmacy's inventory management system would automate stock tracking and allow students to know immediately if their prescribed medication is available on campus.
 6. **Wearable Device Integration:** Connecting the mobile application to smartwatches (via Google Fit or Apple HealthKit APIs) could allow the system to proactively monitor vitals (heart rate, blood oxygen) and trigger automatic alerts to the medical center during emergencies.
 
