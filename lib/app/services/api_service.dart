@@ -318,7 +318,9 @@ class _AuthInterceptor extends Interceptor {
       if (req.path.contains('refresh-token') ||
           req.uri.path.contains('refresh-token')) {
         await _storageService.clearAuthData();
-        Get.offAllNamed('/login');
+        if (Get.currentRoute != '/login') {
+          Get.offAllNamed('/login');
+        }
         return;
       }
 
@@ -368,14 +370,18 @@ class _AuthInterceptor extends Interceptor {
           // Refresh failed -> clear auth and redirect to login
           _refreshQueue.clear();
           await _storageService.clearAuthData();
-          Get.offAllNamed('/login');
+          if (Get.currentRoute != '/login') {
+            Get.offAllNamed('/login');
+          }
           handler.next(err);
           return;
         }
       } catch (e) {
         _refreshQueue.clear();
         await _storageService.clearAuthData();
-        Get.offAllNamed('/login');
+        if (Get.currentRoute != '/login') {
+          Get.offAllNamed('/login');
+        }
         handler.next(err);
         return;
       } finally {
