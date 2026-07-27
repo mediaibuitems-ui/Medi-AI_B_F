@@ -138,7 +138,7 @@ Duration: {request.Duration}";
                     };
 
                     var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
-                    var response = await _httpClient.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={apiKey}", content, cts.Token);
+                    var response = await _httpClient.PostAsync($"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={apiKey}", content, cts.Token);
                     
                     var responseString = await response.Content.ReadAsStringAsync(cts.Token);
                     if (!response.IsSuccessStatusCode)
