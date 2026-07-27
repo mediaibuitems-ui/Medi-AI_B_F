@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../../../../config/app_theme.dart';
@@ -183,7 +183,7 @@ class BookAppointmentScreen extends GetView<BookAppointmentController> {
                             runSpacing: 8,
                             children: controller.availableSlots.map((slot) {
                               final time = slot['time'];
-                              final isAvailable = slot['available'] == true;
+                              final isAvailable = (slot['available'] ?? true) == true;
                               final isSelected =
                                   controller.selectedSlot.value == slot;
 

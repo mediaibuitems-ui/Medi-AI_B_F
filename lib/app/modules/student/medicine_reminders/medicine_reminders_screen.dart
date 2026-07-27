@@ -32,6 +32,7 @@ class _MedicineRemindersScreenState extends State<MedicineRemindersScreen> {
 
   final List<MedicineReminder> reminders = [];
   bool isLoading = false;
+  dynamic _connectivitySubscription;
 
   String get _storageKey {
     final userId = _authService.currentUser.value?.id ?? 'guest';
@@ -42,6 +43,23 @@ class _MedicineRemindersScreenState extends State<MedicineRemindersScreen> {
   void initState() {
     super.initState();
     _loadReminders();
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((results) {
+      bool isOnline = false;
+      if (results is List) {
+        isOnline = results.any((r) => r != ConnectivityResult.none);
+      } else {
+        isOnline = (results != ConnectivityResult.none);
+      }
+      if (isOnline) {
+        _loadReminders();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _connectivitySubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadReminders() async {
@@ -49,6 +67,11 @@ class _MedicineRemindersScreenState extends State<MedicineRemindersScreen> {
     setState(() => isLoading = true);
     try {
       await _loadOfflineReminders();
+
+      // First sync any pending offline items saved in Hive to DB
+      try {
+        await _medicineReminderService.syncPendingReminders();
+      } catch (_) {}
 
       // Also fetch from backend to keep sync
       final response = await _apiService
@@ -446,10 +469,9 @@ class _MedicineRemindersScreenState extends State<MedicineRemindersScreen> {
           newReminder.isSynced = true;
           reminders.add(newReminder);
         } catch (e) {
-          print('Create failed online: $e');
-          AppFeedback.error('Error', 'Failed to create reminder. Please try again.');
-          if (mounted) setState(() => isLoading = false);
-          return;
+          print('Create failed online (offline mode): $e');
+          newReminder.isSynced = false;
+          reminders.add(newReminder);
         }
       }
 
@@ -458,12 +480,19 @@ class _MedicineRemindersScreenState extends State<MedicineRemindersScreen> {
       // Schedule notification
       await _scheduleRemindersFor(newReminder);
 
-      AppFeedback.success(
-        'Success',
-        isEditing
-            ? 'Medicine reminder updated successfully'
-            : 'Medicine reminder added successfully',
-      );
+      if (newReminder.isSynced) {
+        AppFeedback.success(
+          'Success',
+          isEditing
+              ? 'Medicine reminder updated successfully'
+              : 'Medicine reminder added successfully',
+        );
+      } else {
+        AppFeedback.info(
+          'Offline Mode',
+          'Medicine reminder saved locally on device. Will sync to database when internet is restored.',
+        );
+      }
     } catch (e) {
       AppFeedback.error('Error', 'Failed to save reminder: $e');
     } finally {

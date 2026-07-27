@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../../routes/app_routes.dart';
 
 class AiSymptomResultController extends GetxController {
   final Map<String, dynamic> resultData = Get.arguments ?? {};
@@ -25,7 +26,7 @@ class AiSymptomResultController extends GetxController {
 
   void bookAppointment() {
     // Navigate to the book appointment screen and pass the recommended doctor type if needed
-    Get.toNamed('/student/book-appointment',
+    Get.toNamed(AppRoutes.bookAppointment,
         arguments: {'doctorType': recommendedDoctorType});
   }
 }

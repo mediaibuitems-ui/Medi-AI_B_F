@@ -58,11 +58,11 @@ namespace Backend_APIs.Controllers
             }
 
             var apiKey = _configuration["Gemini:ApiKey"];
-            if (string.IsNullOrEmpty(apiKey) || apiKey.Contains("INSERT_GEMINI_API_KEY_HERE"))
+            if (string.IsNullOrEmpty(apiKey) || apiKey.StartsWith("INSERT_") || apiKey.Contains("INSERT_"))
             {
                 apiKey = _configuration["Groq:ApiKey"];
-                if (string.IsNullOrEmpty(apiKey) || apiKey.Contains("INSERT_GROQ_API_KEY_HERE"))
-                    return StatusCode(500, "API Key is not configured in appsettings.json.");
+                if (string.IsNullOrEmpty(apiKey) || apiKey.StartsWith("INSERT_") || apiKey.Contains("INSERT_"))
+                    return StatusCode(500, new { success = false, message = "AI API Key is not configured. Please add Gemini__ApiKey or Groq__ApiKey to Railway environment variables." });
             }
 
             var selectedSymptomsStr = string.Join(", ", request.SelectedSymptoms);
@@ -117,7 +117,7 @@ Duration: {request.Duration}";
                     if (!response.IsSuccessStatusCode)
                     {
                         _logger.LogError($"Groq API Error: {responseString}");
-                        return StatusCode(500, "Failed to analyze symptoms via Groq API.");
+                        return StatusCode(500, new { success = false, message = "Failed to analyze symptoms via Groq API." });
                     }
 
                     using var doc = JsonDocument.Parse(responseString);
@@ -144,7 +144,7 @@ Duration: {request.Duration}";
                     if (!response.IsSuccessStatusCode)
                     {
                         _logger.LogError($"Gemini API Error: {responseString}");
-                        return StatusCode(500, "Failed to analyze symptoms via Gemini API.");
+                        return StatusCode(500, new { success = false, message = "Failed to analyze symptoms via Gemini API." });
                     }
 
                     using var doc = JsonDocument.Parse(responseString);
@@ -152,11 +152,27 @@ Duration: {request.Duration}";
                     replyContent = candidates.GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString() ?? "{}";
                 }
 
+                // Clean markdown code blocks if any
+                replyContent = replyContent.Trim();
+                if (replyContent.StartsWith("```json", StringComparison.OrdinalIgnoreCase))
+                {
+                    replyContent = replyContent.Substring(7);
+                }
+                else if (replyContent.StartsWith("```"))
+                {
+                    replyContent = replyContent.Substring(3);
+                }
+                if (replyContent.EndsWith("```"))
+                {
+                    replyContent = replyContent.Substring(0, replyContent.Length - 3);
+                }
+                replyContent = replyContent.Trim();
+
                 var jsonResult = JsonSerializer.Deserialize<SymptomAnalyzerResponseDto>(replyContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
                 if (jsonResult == null)
                 {
-                    return StatusCode(500, "Failed to parse AI response.");
+                    return StatusCode(500, new { success = false, message = "Failed to parse AI response." });
                 }
 
                 var analysisRecord = new AiSymptomAnalysis
