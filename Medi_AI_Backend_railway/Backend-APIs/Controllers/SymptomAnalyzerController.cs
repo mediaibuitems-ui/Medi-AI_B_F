@@ -117,7 +117,7 @@ Duration: {request.Duration}";
                     if (!response.IsSuccessStatusCode)
                     {
                         _logger.LogError($"Groq API Error: {responseString}");
-                        return StatusCode(500, new { success = false, message = "Failed to analyze symptoms via Groq API." });
+                        return StatusCode(500, new { success = false, message = $"Failed to analyze symptoms via Groq API. Error: {responseString}" });
                     }
 
                     using var doc = JsonDocument.Parse(responseString);
@@ -144,7 +144,7 @@ Duration: {request.Duration}";
                     if (!response.IsSuccessStatusCode)
                     {
                         _logger.LogError($"Gemini API Error: {responseString}");
-                        return StatusCode(500, new { success = false, message = "Failed to analyze symptoms via Gemini API." });
+                        return StatusCode(500, new { success = false, message = $"Failed to analyze symptoms via Gemini API. Error: {responseString}" });
                     }
 
                     using var doc = JsonDocument.Parse(responseString);
@@ -172,7 +172,7 @@ Duration: {request.Duration}";
 
                 if (jsonResult == null)
                 {
-                    return StatusCode(500, new { success = false, message = "Failed to parse AI response." });
+                    return StatusCode(500, new { success = false, message = $"Failed to parse AI response. Raw output: {replyContent}" });
                 }
 
                 var analysisRecord = new AiSymptomAnalysis

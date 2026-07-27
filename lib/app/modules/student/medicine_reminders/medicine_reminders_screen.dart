@@ -43,10 +43,10 @@ class _MedicineRemindersScreenState extends State<MedicineRemindersScreen> {
   void initState() {
     super.initState();
     _loadReminders();
-    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((results) {
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((dynamic results) {
       bool isOnline = false;
       if (results is List) {
-        isOnline = results.any((r) => r != ConnectivityResult.none);
+        isOnline = (results as List).any((r) => r != ConnectivityResult.none);
       } else {
         isOnline = (results != ConnectivityResult.none);
       }
@@ -122,8 +122,15 @@ class _MedicineRemindersScreenState extends State<MedicineRemindersScreen> {
     await box.addAll(reminders);
     
     // Sync via connectivity queue
-    final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult != ConnectivityResult.none) {
+    final dynamic connectivityResult = await Connectivity().checkConnectivity();
+    bool isOnline = false;
+    if (connectivityResult is List) {
+      isOnline = (connectivityResult as List).any((r) => r != ConnectivityResult.none);
+    } else {
+      isOnline = (connectivityResult != ConnectivityResult.none);
+    }
+    
+    if (isOnline) {
       try {
         await _medicineReminderService.syncPendingReminders();
         // Reload from box after sync to get updated real IDs
