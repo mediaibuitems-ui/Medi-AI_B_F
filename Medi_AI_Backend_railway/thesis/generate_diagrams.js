@@ -57,19 +57,23 @@ flowchart TD
 **Figure 2: Use Case Diagram**
 Illustrates the primary actions available to the four distinct Role-Based Access Control (RBAC) actors within the university ecosystem.
 \`\`\`mermaid
-usecaseDiagram
-    actor Student
-    actor Faculty
-    actor Doctor
-    actor Admin
+flowchart LR
+    subgraph Actors
+        Student([Student])
+        Faculty([Faculty])
+        Doctor([Doctor])
+        Admin([Admin])
+    end
 
-    usecase "Book Appointment" as UC1
-    usecase "Manage Medicines (Offline)" as UC2
-    usecase "Analyze Symptoms (AI)" as UC3
-    usecase "Manage Schedule" as UC4
-    usecase "Review Patient History" as UC5
-    usecase "Manage Users & Roles" as UC6
-    usecase "View System Metrics" as UC7
+    subgraph System [Medi-AI System]
+        UC1(Book Appointment)
+        UC2(Manage Medicines Offline)
+        UC3(Analyze Symptoms AI)
+        UC4(Manage Schedule)
+        UC5(Review Patient History)
+        UC6(Manage Users & Roles)
+        UC7(View System Metrics)
+    end
 
     Student --> UC1
     Student --> UC2
