@@ -99,7 +99,7 @@ namespace Backend_APIs
 
                 options.AddFixedWindowLimiter("AnalyzerLimiter", opt =>
                 {
-                    opt.PermitLimit = 3;
+                    opt.PermitLimit = 20; // Increased to 20 for testing
                     opt.Window = TimeSpan.FromMinutes(1);
                     opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
                     opt.QueueLimit = 0;
