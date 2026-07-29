@@ -82,7 +82,6 @@ class AiSymptomInputScreen extends GetView<AiSymptomInputController> {
                         steps: [
                           _buildDemographicsStep(),
                           _buildRedFlagsStep(),
-                          _buildSymptomsStep(),
                           _buildContextStep(),
                         ],
                       ),
@@ -191,93 +190,14 @@ class AiSymptomInputScreen extends GetView<AiSymptomInputController> {
     );
   }
 
-  Step _buildSymptomsStep() {
-    return Step(
-      title: const Text('Current Symptoms'),
-      isActive: controller.currentStep.value >= 2,
-      content: Form(
-        key: controller.formKeys[2],
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Common Symptoms', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8.0,
-              runSpacing: 8.0,
-              children: controller.commonSymptoms.map((symptom) {
-                return Obx(() {
-                  final isSelected = controller.selectedSymptoms.contains(symptom);
-                  return FilterChip(
-                    label: Text(symptom),
-                    selected: isSelected,
-                    onSelected: (_) => controller.toggleSymptom(symptom),
-                    selectedColor: Colors.blue.shade50,
-                  );
-                });
-              }).toList(),
-            ),
-            const SizedBox(height: 16),
-            const Text('Severity', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8.0,
-              children: controller.severityLevels.map((severity) {
-                return Obx(() {
-                  final isSelected = controller.selectedSeverity.value == severity;
-                  return ChoiceChip(
-                    label: Text(severity),
-                    selected: isSelected,
-                    onSelected: (_) => controller.selectedSeverity.value = severity,
-                  );
-                });
-              }).toList(),
-            ),
-            const SizedBox(height: 16),
-            const Text('Onset', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8.0,
-              children: controller.onsetOptions.map((opt) {
-                return Obx(() {
-                  return ChoiceChip(
-                    label: Text(opt),
-                    selected: controller.onset.value == opt,
-                    onSelected: (_) => controller.onset.value = opt,
-                  );
-                });
-              }).toList(),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: controller.durationController,
-              decoration: InputDecoration(
-                labelText: 'Duration (e.g., 3 days)',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: controller.otherSymptomsController,
-              maxLines: 2,
-              decoration: InputDecoration(
-                labelText: 'Other symptoms or details',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
 
   Step _buildContextStep() {
     return Step(
       title: const Text('Medical Context'),
-      isActive: controller.currentStep.value >= 3,
+      isActive: controller.currentStep.value >= 2,
       content: Form(
-        key: controller.formKeys[3],
+        key: controller.formKeys[2],
         child: Column(
           children: [
             TextFormField(

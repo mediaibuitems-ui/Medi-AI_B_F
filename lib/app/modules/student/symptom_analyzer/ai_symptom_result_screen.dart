@@ -28,6 +28,11 @@ class AiSymptomResultScreen extends GetView<AiSymptomResultController> {
               _buildConditionCard(),
               const SizedBox(height: 16),
 
+              if (controller.summary.isNotEmpty) ...[
+                _buildSummaryCard(),
+                const SizedBox(height: 16),
+              ],
+
               if (controller.recommendations.isNotEmpty)
                 _buildChecklistCard('Recommendations', controller.recommendations, Icons.check_circle_outline, Colors.blue),
               const SizedBox(height: 16),
@@ -35,6 +40,11 @@ class AiSymptomResultScreen extends GetView<AiSymptomResultController> {
               if (controller.homeCareGuidance.isNotEmpty)
                 _buildChecklistCard('Home Care Guidance', controller.homeCareGuidance, Icons.home_repair_service_outlined, Colors.teal),
               const SizedBox(height: 16),
+
+              if (controller.transcript.isNotEmpty) ...[
+                _buildTranscriptCard(),
+                const SizedBox(height: 16),
+              ],
 
               if (controller.whenToSeekCare.isNotEmpty)
                 _buildWhenToSeekCare(),
@@ -230,6 +240,103 @@ class AiSymptomResultScreen extends GetView<AiSymptomResultController> {
             style: TextStyle(fontSize: 15, color: Colors.red.shade900, height: 1.4),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard() {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.notes, color: Colors.grey.shade600),
+                const SizedBox(width: 8),
+                const Text('Interview Summary', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              controller.summary,
+              style: const TextStyle(fontSize: 15, height: 1.5, color: Colors.black87),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTranscriptCard() {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      child: Theme(
+        data: Theme.of(Get.context!).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          iconColor: AppTheme.primary,
+          collapsedIconColor: Colors.grey.shade600,
+          title: Row(
+            children: [
+              Icon(Icons.chat_bubble_outline, color: Colors.grey.shade600),
+              const SizedBox(width: 8),
+              const Text('Full Interview Transcript', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
+            ],
+          ),
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+              child: Column(
+                children: controller.transcript.map((turn) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (turn['question']!.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(12).copyWith(bottomLeft: const Radius.circular(0)),
+                            ),
+                            child: Text(
+                              turn['question']!,
+                              style: const TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        const SizedBox(height: 8),
+                        if (turn['answer']!.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12).copyWith(bottomRight: const Radius.circular(0)),
+                            ),
+                            child: Text(
+                              turn['answer']!,
+                              textAlign: TextAlign.right,
+                              style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

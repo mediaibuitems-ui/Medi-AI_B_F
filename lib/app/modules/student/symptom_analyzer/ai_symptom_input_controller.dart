@@ -7,12 +7,11 @@ class AiSymptomInputController extends GetxController {
 
   // Step Management
   final currentStep = 0.obs;
-  final int totalSteps = 4;
+  final int totalSteps = 3;
   final List<GlobalKey<FormState>> formKeys = [
     GlobalKey<FormState>(), // Step 0: Demographics
     GlobalKey<FormState>(), // Step 1: Red Flags
-    GlobalKey<FormState>(), // Step 2: Symptoms
-    GlobalKey<FormState>(), // Step 3: Context
+    GlobalKey<FormState>(), // Step 2: Context
   ];
 
   // State - Step 0: Demographics
@@ -31,19 +30,7 @@ class AiSymptomInputController extends GetxController {
     'Thoughts of self-harm'
   ];
 
-  // State - Step 2: Symptoms
-  final selectedSymptoms = <String>[].obs;
-  final selectedSeverity = ''.obs;
-  final onset = ''.obs;
-  final durationController = TextEditingController();
-  final otherSymptomsController = TextEditingController();
 
-  final List<String> commonSymptoms = [
-    'Fever', 'Cough', 'Headache', 'Fatigue', 'Sore Throat',
-    'Body Aches', 'Nausea', 'Dizziness', 'Shortness of Breath', 'Chest Pain'
-  ];
-  final List<String> severityLevels = ['Mild', 'Moderate', 'Severe'];
-  final List<String> onsetOptions = ['Sudden', 'Gradual'];
 
   // State - Step 3: Medical Context
   final existingConditionsController = TextEditingController();
@@ -60,13 +47,7 @@ class AiSymptomInputController extends GetxController {
     }
   }
 
-  void toggleSymptom(String symptom) {
-    if (selectedSymptoms.contains(symptom)) {
-      selectedSymptoms.remove(symptom);
-    } else {
-      selectedSymptoms.add(symptom);
-    }
-  }
+
 
   void nextStep() {
     if (!formKeys[currentStep.value].currentState!.validate()) {
@@ -85,22 +66,10 @@ class AiSymptomInputController extends GetxController {
       return;
     }
 
-    // Step 2 validation
-    if (currentStep.value == 2) {
-      if (selectedSymptoms.isEmpty && otherSymptomsController.text.trim().isEmpty) {
-        Get.snackbar('Input Required', 'Please select or enter at least one symptom.', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.orange.shade100);
-        return;
-      }
-      if (selectedSeverity.value.isEmpty || onset.value.isEmpty) {
-        Get.snackbar('Input Required', 'Please select severity and onset.', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.orange.shade100);
-        return;
-      }
-    }
-
     if (currentStep.value < totalSteps - 1) {
       currentStep.value++;
     } else {
-      analyzeSymptoms();
+      startInterview();
     }
   }
 
@@ -110,7 +79,7 @@ class AiSymptomInputController extends GetxController {
     }
   }
 
-  Future<void> analyzeSymptoms() async {
+  Future<void> startInterview() async {
     isLoading.value = true;
     try {
       final requestData = {
@@ -118,24 +87,18 @@ class AiSymptomInputController extends GetxController {
         'biologicalSex': biologicalSex.value,
         'pregnancyStatus': pregnancyStatus.value,
         'redFlags': selectedRedFlags.toList(),
-        'selectedSymptoms': selectedSymptoms.toList(),
-        'otherSymptoms': otherSymptomsController.text.trim(),
-        'severity': selectedSeverity.value,
-        'onset': onset.value,
-        'duration': durationController.text.trim(),
         'existingConditions': existingConditionsController.text.trim().isNotEmpty ? [existingConditionsController.text.trim()] : [],
         'currentMedications': currentMedicationsController.text.trim(),
         'allergies': allergiesController.text.trim(),
       };
 
-      final response = await _apiService.post('/analyzer/evaluate', data: requestData);
+      final response = await _apiService.post('/analyzer/interview/start', data: requestData);
 
       if (response.success && response.data != null) {
-        // We might get an emergency response from server if it caught keywords
         if (response.data is Map && response.data['isEmergency'] == true) {
            Get.offNamed('/emergency-guidance');
         } else {
-           Get.offNamed('/symptom-analyzer-result', arguments: response.data);
+           Get.offNamed('/symptom-analyzer-chat', arguments: response.data);
         }
       } else {
         Get.snackbar('Analysis Failed', response.message ?? 'Unknown error',
@@ -154,8 +117,6 @@ class AiSymptomInputController extends GetxController {
   @override
   void onClose() {
     ageController.dispose();
-    durationController.dispose();
-    otherSymptomsController.dispose();
     existingConditionsController.dispose();
     currentMedicationsController.dispose();
     allergiesController.dispose();

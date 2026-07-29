@@ -17,6 +17,7 @@ class AppRoutes {
   static const symptomAnalyzerResult = '/symptom-analyzer-result';
   static const symptomAnalyzerHistory = '/symptom-analyzer-history';
   static const emergencyGuidance = '/emergency-guidance';
+  static const symptomAnalyzerChat = '/symptom-analyzer-chat';
   static const medicineReminders = '/medicine-reminders';
   static const medicalHistory = '/medical-history';
   static const emergencyContacts = '/emergency-contacts';
