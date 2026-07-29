@@ -57,10 +57,10 @@ namespace Backend_APIs.Controllers
                 return Unauthorized("Invalid token.");
             }
 
-            var apiKey = _configuration["NaraRouter:ApiKey"] ?? _configuration["Gemini:ApiKey"];
+            var apiKey = _configuration["Groq:ApiKey"] ?? _configuration["NaraRouter:ApiKey"] ?? _configuration["Gemini:ApiKey"];
             if (string.IsNullOrEmpty(apiKey) || apiKey.StartsWith("INSERT_") || apiKey.Contains("INSERT_"))
             {
-                return StatusCode(500, new { success = false, message = "AI API Key is not configured. Please add NaraRouter__ApiKey to Railway environment variables." });
+                return StatusCode(500, new { success = false, message = "AI API Key is not configured. Please add Groq__ApiKey to Railway environment variables." });
             }
 
             var selectedSymptomsStr = string.Join(", ", request.SelectedSymptoms);
@@ -94,7 +94,7 @@ Duration: {request.Duration}";
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
                 var requestBody = new
                 {
-                    model = "gpt-4o-mini", // Nara Router supports OpenAI model names
+                    model = "llama-3.1-8b-instant", // Groq model name
                     messages = new[]
                     {
                         new { role = "system", content = systemPrompt }
@@ -104,13 +104,13 @@ Duration: {request.Duration}";
 
                 _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
                 var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync("https://router.bynara.id/v1/chat/completions", content, cts.Token);
+                var response = await _httpClient.PostAsync("https://api.groq.com/openai/v1/chat/completions", content, cts.Token);
                 
                 var responseString = await response.Content.ReadAsStringAsync(cts.Token);
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogError($"Nara Router API Error: {responseString}");
-                    return StatusCode(500, new { success = false, message = $"Failed to analyze symptoms via Nara Router API. Error: {responseString}" });
+                    _logger.LogError($"Groq API Error: {responseString}");
+                    return StatusCode(500, new { success = false, message = $"Failed to analyze symptoms via AI API. Error: {responseString}" });
                 }
 
                 using var doc = JsonDocument.Parse(responseString);
