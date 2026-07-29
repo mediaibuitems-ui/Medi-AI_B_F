@@ -486,7 +486,7 @@ public partial class MediaidbContext : IdentityDbContext<User, IdentityRole<int>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
             entity.ToTable("revokedtokens");
-            
+
             entity.HasIndex(e => e.TokenHash, "idx_revokedtokens_hash").IsUnique();
 
             entity.Property(e => e.CreatedAt)
@@ -575,7 +575,7 @@ public partial class MediaidbContext : IdentityDbContext<User, IdentityRole<int>
             entity.HasIndex(e => new { e.UserId, e.CreatedAt }, "idx_symptom_user_date");
             entity.Property(e => e.Recommendations).HasColumnType("json");
             entity.Property(e => e.HomeCareGuidance).HasColumnType("json");
-            
+
             entity.HasOne(d => d.User).WithMany(p => p.AiSymptomAnalyses)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("aisymptomanalyses_ibfk_1");

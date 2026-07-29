@@ -140,7 +140,7 @@ namespace Backend_APIs.Controllers
                 if (!string.IsNullOrEmpty(dto.LicenseNumber)) doctor.LicenseNumber = dto.LicenseNumber;
                 if (!string.IsNullOrEmpty(dto.RoomNumber)) doctor.RoomNumber = dto.RoomNumber;
                 if (!string.IsNullOrEmpty(dto.Bio)) doctor.Bio = dto.Bio;
-                
+
                 if (dto.IsAvailable.HasValue)
                 {
                     if (dto.IsAvailable.Value && (doctor.LicenseNumber?.StartsWith("TEMP-") ?? false))
@@ -693,7 +693,7 @@ namespace Backend_APIs.Controllers
                 var slotDuration = bookingSettings.AppointmentDuration;
                 TimeOnly.TryParse(bookingSettings.BreakStartTime, out var breakStartTime);
                 TimeOnly.TryParse(bookingSettings.BreakEndTime, out var breakEndTime);
-                
+
                 var maxReached = existingAppointments.Count >= bookingSettings.MaxPatientsPerDay;
 
                 var currentTime = startTime;

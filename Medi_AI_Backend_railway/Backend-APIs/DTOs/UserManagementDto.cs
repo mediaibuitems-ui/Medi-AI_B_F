@@ -46,7 +46,7 @@ namespace Backend_APIs.DTOs
         public bool IsActive { get; set; }
         public bool IsEmailVerified { get; set; }
 
-         // Doctor specific fields
+        // Doctor specific fields
         public string? Specialization { get; set; }
         public int? ExperienceYears { get; set; }
         public string? LicenseNumber { get; set; }

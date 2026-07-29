@@ -331,7 +331,7 @@ namespace Backend_APIs.Controllers
         public async Task<IActionResult> Logout([FromServices] IMemoryCache cache, [FromServices] MediaidbContext dbContext)
         {
             var token = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
-            
+
             if (!string.IsNullOrEmpty(token))
             {
                 var hashBytes = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token));

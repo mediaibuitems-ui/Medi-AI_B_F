@@ -165,7 +165,7 @@ namespace Backend_APIs.Controllers
                 var newUsers = await _context.Users.CountAsync(u => u.CreatedAt >= thirtyDaysAgo);
                 var activeUsers = await _context.Users.CountAsync(u => u.IsActive == true);
                 var pendingVerifications = await _context.Users.CountAsync(u => u.IsEmailVerified == false || u.IsActive == false);
-                
+
                 var activeFeedbacks = await _context.Feedbacks.CountAsync(f => f.Status == "Pending" || f.Status == "Active");
                 var systemAlerts = await _context.Notifications.CountAsync(n => n.IsRead == false &&
                                                                                (n.User.Role == "Admin" || n.User.Role == "admin"));
@@ -507,7 +507,7 @@ namespace Backend_APIs.Controllers
                 }
 
                 user.IsActive = !(user.IsActive ?? true);
-                
+
                 await _context.SaveChangesAsync();
 
                 return Ok(new ApiResponse<object>

@@ -23,158 +23,71 @@ class AiSymptomInputScreen extends GetView<AiSymptomInputController> {
       body: SafeArea(
         child: Obx(() => Stack(
               children: [
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Form(
-                    key: controller.formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Top Warning Banner
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.orange.shade50,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.orange.shade200),
+                Column(
+                  children: [
+                    // Top Warning Banner
+                    Container(
+                      margin: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.orange.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'This tool provides general guidance, not medical advice. For emergencies, call your local emergency number immediately.',
+                              style: TextStyle(color: Colors.orange.shade900, fontSize: 13),
+                            ),
                           ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.warning_amber_rounded,
-                                  color: Colors.orange.shade700),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'This tool provides general guidance, not medical advice. Consult a doctor for accurate diagnosis.',
-                                  style: TextStyle(
-                                      color: Colors.orange.shade900,
-                                      fontSize: 13),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Section 1: Symptoms
-                        Text('1. Select Your Symptoms',
-                            style: Get.textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8.0,
-                          runSpacing: 8.0,
-                          children: controller.commonSymptoms.map((symptom) {
-                            final isSelected =
-                                controller.selectedSymptoms.contains(symptom);
-                            return FilterChip(
-                              label: Text(symptom),
-                              selected: isSelected,
-                              onSelected: (_) =>
-                                  controller.toggleSymptom(symptom),
-                              selectedColor: Colors.blue.shade50,
-                              checkmarkColor: Colors.blue.shade700,
-                              labelStyle: TextStyle(
-                                color: isSelected
-                                    ? Colors.blue.shade700
-                                    : Colors.black87,
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.normal,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                                side: BorderSide(
-                                  color: isSelected
-                                      ? Colors.blue.shade200
-                                      : Colors.grey.shade300,
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Section 2: Severity
-                        Text('2. How severe are your symptoms?',
-                            style: Get.textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8.0,
-                          children: controller.severityLevels.map((severity) {
-                            final isSelected =
-                                controller.selectedSeverity.value == severity;
-                            return ChoiceChip(
-                              label: Text(severity),
-                              selected: isSelected,
-                              onSelected: (_) =>
-                                  controller.selectSeverity(severity),
-                              selectedColor: Colors.green.shade50,
-                              labelStyle: TextStyle(
-                                color: isSelected
-                                    ? Colors.green.shade700
-                                    : Colors.black87,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                                side: BorderSide(
-                                  color: isSelected
-                                      ? Colors.green.shade300
-                                      : Colors.grey.shade300,
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Section 3: Duration
-                        Text('3. How long have you had these symptoms?',
-                            style: Get.textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: controller.durationController,
-                          decoration: InputDecoration(
-                            hintText: 'e.g., 3 days, 1 week',
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Please specify the duration';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Section 4: Other Symptoms
-                        Text('4. Any other symptoms or context?',
-                            style: Get.textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: controller.otherSymptomsController,
-                          maxLines: 3,
-                          decoration: InputDecoration(
-                            hintText: 'Type any additional details here...',
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
-                          ),
-                        ),
-                        const SizedBox(height: 80), // Padding for button
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
+                    Expanded(
+                      child: Stepper(
+                        type: StepperType.vertical,
+                        currentStep: controller.currentStep.value,
+                        onStepContinue: controller.nextStep,
+                        onStepCancel: controller.previousStep,
+                        controlsBuilder: (BuildContext context, ControlsDetails details) {
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 24.0),
+                            child: Row(
+                              children: <Widget>[
+                                ElevatedButton(
+                                  onPressed: details.onStepContinue,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.primary,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  ),
+                                  child: Text(controller.currentStep.value == controller.totalSteps - 1 ? 'Analyze' : 'Continue'),
+                                ),
+                                if (controller.currentStep.value > 0) ...[
+                                  const SizedBox(width: 12),
+                                  TextButton(
+                                    onPressed: details.onStepCancel,
+                                    child: const Text('Back'),
+                                  ),
+                                ]
+                              ],
+                            ),
+                          );
+                        },
+                        steps: [
+                          _buildDemographicsStep(),
+                          _buildRedFlagsStep(),
+                          _buildSymptomsStep(),
+                          _buildContextStep(),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
                 if (controller.isLoading.value)
                   Container(
@@ -186,31 +99,213 @@ class AiSymptomInputScreen extends GetView<AiSymptomInputController> {
               ],
             )),
       ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Obx(() => ElevatedButton(
-              onPressed: controller.isLoading.value
-                  ? null
-                  : () => controller.analyzeSymptoms(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                elevation: 0,
+    );
+  }
+
+  Step _buildDemographicsStep() {
+    return Step(
+      title: const Text('Basic Information'),
+      isActive: controller.currentStep.value >= 0,
+      content: Form(
+        key: controller.formKeys[0],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextFormField(
+              controller: controller.ageController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: 'Age',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: controller.isLoading.value
-                  ? const SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2),
-                    )
-                  : const Text('Analyze Symptoms',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            )),
+              validator: (value) {
+                if (value == null || value.isEmpty) return 'Required';
+                if (int.tryParse(value) == null) return 'Enter a valid number';
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            const Text('Biological Sex', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: ['Male', 'Female', 'Other'].map((sex) {
+                return Obx(() => ChoiceChip(
+                      label: Text(sex),
+                      selected: controller.biologicalSex.value.toLowerCase() == sex.toLowerCase(),
+                      onSelected: (_) => controller.biologicalSex.value = sex.toLowerCase(),
+                    ));
+              }).toList(),
+            ),
+            Obx(() {
+              if (controller.biologicalSex.value == 'female') {
+                return Padding(
+                  padding: const EdgeInsets.only(top: 16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Are you pregnant?', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        children: ['Yes', 'No', 'Not Sure'].map((opt) {
+                          return ChoiceChip(
+                            label: Text(opt),
+                            selected: controller.pregnancyStatus.value == opt,
+                            onSelected: (_) => controller.pregnancyStatus.value = opt,
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Step _buildRedFlagsStep() {
+    return Step(
+      title: const Text('Emergency Symptoms'),
+      subtitle: const Text('Select any that apply'),
+      isActive: controller.currentStep.value >= 1,
+      content: Form(
+        key: controller.formKeys[1],
+        child: Column(
+          children: controller.redFlagsOptions.map((flag) {
+            return Obx(() => CheckboxListTile(
+                  title: Text(flag, style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.red)),
+                  value: controller.selectedRedFlags.contains(flag),
+                  onChanged: (_) => controller.toggleRedFlag(flag),
+                  activeColor: Colors.red,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                ));
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Step _buildSymptomsStep() {
+    return Step(
+      title: const Text('Current Symptoms'),
+      isActive: controller.currentStep.value >= 2,
+      content: Form(
+        key: controller.formKeys[2],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Common Symptoms', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8.0,
+              runSpacing: 8.0,
+              children: controller.commonSymptoms.map((symptom) {
+                return Obx(() {
+                  final isSelected = controller.selectedSymptoms.contains(symptom);
+                  return FilterChip(
+                    label: Text(symptom),
+                    selected: isSelected,
+                    onSelected: (_) => controller.toggleSymptom(symptom),
+                    selectedColor: Colors.blue.shade50,
+                  );
+                });
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+            const Text('Severity', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8.0,
+              children: controller.severityLevels.map((severity) {
+                return Obx(() {
+                  final isSelected = controller.selectedSeverity.value == severity;
+                  return ChoiceChip(
+                    label: Text(severity),
+                    selected: isSelected,
+                    onSelected: (_) => controller.selectedSeverity.value = severity,
+                  );
+                });
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+            const Text('Onset', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8.0,
+              children: controller.onsetOptions.map((opt) {
+                return Obx(() {
+                  return ChoiceChip(
+                    label: Text(opt),
+                    selected: controller.onset.value == opt,
+                    onSelected: (_) => controller.onset.value = opt,
+                  );
+                });
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: controller.durationController,
+              decoration: InputDecoration(
+                labelText: 'Duration (e.g., 3 days)',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: controller.otherSymptomsController,
+              maxLines: 2,
+              decoration: InputDecoration(
+                labelText: 'Other symptoms or details',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Step _buildContextStep() {
+    return Step(
+      title: const Text('Medical Context'),
+      isActive: controller.currentStep.value >= 3,
+      content: Form(
+        key: controller.formKeys[3],
+        child: Column(
+          children: [
+            TextFormField(
+              controller: controller.existingConditionsController,
+              decoration: InputDecoration(
+                labelText: 'Existing Conditions (Optional)',
+                hintText: 'e.g., Asthma, Diabetes',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: controller.currentMedicationsController,
+              decoration: InputDecoration(
+                labelText: 'Current Medications (Optional)',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: controller.allergiesController,
+              decoration: InputDecoration(
+                labelText: 'Allergies (Optional)',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

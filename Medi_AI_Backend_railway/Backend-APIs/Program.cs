@@ -39,7 +39,7 @@ namespace Backend_APIs
             builder.Services.AddHttpClient();
 
             builder.Services.AddScoped<INotificationPushService, NotificationPushService>();
-            
+
             // Register Background Services
             builder.Services.AddHostedService<TokenCleanupService>();
 
@@ -112,7 +112,7 @@ namespace Backend_APIs
                     opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
                     opt.QueueLimit = 0;
                 });
-                
+
                 options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             });
 
@@ -216,8 +216,8 @@ namespace Backend_APIs
             // Use a global exception middleware to ensure consistent ApiResponse payloads
             app.UseMiddleware<Middleware.GlobalExceptionMiddleware>();
             // Configure the HTTP request pipeline.
-            var enableSwagger = builder.Configuration.GetValue<bool>("EnableSwaggerInProduction", false) 
-                || app.Environment.IsDevelopment() 
+            var enableSwagger = builder.Configuration.GetValue<bool>("EnableSwaggerInProduction", false)
+                || app.Environment.IsDevelopment()
                 || Environment.GetEnvironmentVariable("ENABLE_SWAGGER") == "true";
 
             if (enableSwagger)
@@ -251,7 +251,7 @@ namespace Backend_APIs
                 {
                     var cache = context.RequestServices.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
                     var dbContext = context.RequestServices.GetRequiredService<MediaidbContext>();
-                    
+
                     var hashBytes = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token));
                     var tokenHash = Convert.ToHexString(hashBytes).ToLowerInvariant();
 
@@ -262,7 +262,7 @@ namespace Backend_APIs
                         await context.Response.WriteAsync("{\"success\":false,\"message\":\"Token is invalid or revoked\",\"data\":null}");
                         return;
                     }
-                    
+
                     // Fallback to DB check
                     var isRevoked = await dbContext.RevokedTokens.AnyAsync(r => r.TokenHash == tokenHash && r.ExpiresAt > DateTime.UtcNow);
                     if (isRevoked)
@@ -272,7 +272,7 @@ namespace Backend_APIs
                             AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24)
                         };
                         cache.Set($"Blacklist_{tokenHash}", true, cacheOptions);
-                        
+
                         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                         context.Response.ContentType = "application/json";
                         await context.Response.WriteAsync("{\"success\":false,\"message\":\"Token is invalid or revoked\",\"data\":null}");
@@ -299,7 +299,7 @@ namespace Backend_APIs
                 {
                     var context = services.GetRequiredService<MediaidbContext>();
                     context.Database.Migrate(); // This is likely where the crash happens
-                    
+
                     // Preload unexpired revoked tokens into cache
                     var cache = services.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
                     var unexpiredTokens = context.RevokedTokens.Where(t => t.ExpiresAt > DateTime.UtcNow).ToList();

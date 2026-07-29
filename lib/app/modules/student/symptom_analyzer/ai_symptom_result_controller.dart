@@ -8,6 +8,8 @@ class AiSymptomResultController extends GetxController {
   String get confidenceLevel => resultData['confidenceLevel'] ?? 'N/A';
   String get severity => resultData['severity'] ?? 'Unknown';
   String get urgencyMessage => resultData['urgencyMessage'] ?? '';
+  String get triageTier => resultData['triageTier'] ?? 'self_care';
+  String get whenToSeekCare => resultData['whenToSeekCare'] ?? '';
   List<String> get recommendations => _parseStringList(resultData['recommendations']);
   List<String> get homeCareGuidance => _parseStringList(resultData['homeCareGuidance']);
 

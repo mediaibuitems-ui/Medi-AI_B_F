@@ -235,7 +235,7 @@ namespace Backend_APIs.Controllers
 
                 var bookingSettings = await GetDoctorBookingSettingsAsync(doctorId);
                 int slotDuration = bookingSettings.AppointmentDuration;
-                
+
                 var availableSlots = new List<string>();
                 var currentTime = schedule.StartTime;
 
@@ -333,7 +333,7 @@ namespace Backend_APIs.Controllers
                 var appointmentDateTime = DateTime.Parse(appointmentDto.DateTime);
                 var appointmentDate = DateOnly.FromDateTime(appointmentDateTime);
                 var appointmentTime = TimeOnly.FromDateTime(appointmentDateTime);
-                
+
                 // Check if doctor is on leave
                 var leave = await _context.Doctorleaves
                     .Where(l => l.DoctorId == doctorId && l.StartDate <= appointmentDate && l.EndDate >= appointmentDate)
@@ -847,7 +847,7 @@ namespace Backend_APIs.Controllers
 
                 var wasConfirmed = string.Equals(appointment.Status, "Confirmed", StringComparison.OrdinalIgnoreCase);
                 var willBeConfirmed = string.Equals(statusDto.Status, "Confirmed", StringComparison.OrdinalIgnoreCase);
-                
+
                 var wasCancelled = string.Equals(appointment.Status, "Cancelled", StringComparison.OrdinalIgnoreCase);
                 var willBeCancelled = string.Equals(statusDto.Status, "Cancelled", StringComparison.OrdinalIgnoreCase);
 
@@ -857,7 +857,7 @@ namespace Backend_APIs.Controllers
                     appointment.CancellationReason = statusDto.CancellationReason;
                     appointment.CancelledBy = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
                 }
-                
+
                 appointment.UpdatedAt = DateTime.UtcNow;
 
                 await _context.SaveChangesAsync();

@@ -79,7 +79,7 @@ namespace Backend_APIs.Services
                         // Delete their old unverified records to allow a clean re-registration.
                         var otps = await _context.Emailverificationotps.Where(o => o.UserId == existingUser.Id).ToListAsync();
                         if (otps.Any()) _context.Emailverificationotps.RemoveRange(otps);
-                        
+
                         var doctorRecord = await _context.Doctors.FirstOrDefaultAsync(d => d.UserId == existingUser.Id);
                         if (doctorRecord != null) _context.Doctors.Remove(doctorRecord);
 
@@ -129,8 +129,8 @@ namespace Backend_APIs.Services
                     DateOfBirth = registerDto.DateOfBirth,
                     Gender = gender,
                     Address = address,
-                    IsEmailVerified = !requireVerification, 
-                    IsActive = autoApprove, 
+                    IsEmailVerified = !requireVerification,
+                    IsActive = autoApprove,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
@@ -164,7 +164,8 @@ namespace Backend_APIs.Services
                     await _context.SaveChangesAsync();
                 }
 
-                if (requireVerification) {
+                if (requireVerification)
+                {
                     var otp = GenerateOtp();
                     var otpRecord = new Emailverificationotp
                     {
@@ -270,14 +271,14 @@ namespace Backend_APIs.Services
                 if (!await _userManager.CheckPasswordAsync(user, loginDto.Password))
                 {
                     await _userManager.AccessFailedAsync(user);
-                    
+
                     if (await _userManager.IsLockedOutAsync(user))
                     {
                         var lockoutEnd = await _userManager.GetLockoutEndDateAsync(user);
                         var minutesLeft = (int)(lockoutEnd!.Value.UtcDateTime - DateTime.UtcNow).TotalMinutes;
                         return (false, $"Account locked due to multiple failed attempts. Try again in {minutesLeft} minutes.", null, null, null);
                     }
-                    
+
                     var attemptsLeft = _userManager.Options.Lockout.MaxFailedAccessAttempts - await _userManager.GetAccessFailedCountAsync(user);
                     return (false, $"Invalid email or password. {attemptsLeft} attempts remaining before lockout.", null, null, null);
                 }
@@ -353,9 +354,9 @@ namespace Backend_APIs.Services
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             // Fetch session timeout from DB
-             var timeoutSetting = await _context.Systemsettings
-                .FirstOrDefaultAsync(s => s.SettingKey == "SessionTimeoutMinutes");
-            
+            var timeoutSetting = await _context.Systemsettings
+               .FirstOrDefaultAsync(s => s.SettingKey == "SessionTimeoutMinutes");
+
             int sessionTimeoutMinutes = DEFAULT_SESSION_TIMEOUT;
             if (timeoutSetting != null && int.TryParse(timeoutSetting.SettingValue, out int val))
             {

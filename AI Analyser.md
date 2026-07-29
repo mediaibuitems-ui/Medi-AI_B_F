@@ -1,3 +1,36 @@
+# AI Analyzer Architecture & Flow
+
+This document outlines the complete architecture, data flow, and code implementation of the AI Symptom Analyzer feature in the Medi-AI application.
+
+## System Flow Architecture
+
+The AI Analyzer involves communication between the Flutter frontend, the C# .NET Backend, and the Groq API (using the `llama-3.1-8b-instant` model).
+
+### 1. Frontend Flow (Flutter / Dart)
+1. **User Input:** The user accesses the Symptom Analyzer screen and inputs their symptoms (selecting from common ones or typing custom ones), severity, and duration.
+2. **Input Processing:** The `AiSymptomInputController` validates the inputs.
+3. **API Request:** The frontend makes a `POST` request to the backend at `/api/analyzer/evaluate` with the payload (symptoms, otherSymptoms, severity, duration).
+4. **Result Handling:** Upon a successful response, the controller navigates the user to the `AiSymptomResultController` screen, passing the JSON response data as navigation arguments.
+5. **Next Steps:** The `AiSymptomResultController` parses the AI response (Possible condition, urgency, recommendations, recommended doctor type) and displays it. The user can then tap "Book Appointment" which passes the recommended doctor type to the booking screen.
+
+### 2. Backend Flow (C# .NET)
+1. **Endpoint:** `SymptomAnalyzerController` handles the `POST /api/analyzer/evaluate` request.
+2. **Authentication & Rate Limiting:** The request is authorized using JWT claims (to get `userId`) and rate-limited to prevent API abuse.
+3. **Prompt Construction:** The controller builds a system prompt instructing the AI to act as a clinical triage assistant. It embeds the patient's symptoms, severity, and duration into the prompt, and strictly requests a JSON format response.
+4. **External API Call:** The backend sends the prompt to the Groq API (`https://api.groq.com/openai/v1/chat/completions`) using the `llama-3.1-8b-instant` model.
+5. **Response Parsing:** The response content is extracted, stripped of any markdown formatting (like ```json), and deserialized into a `SymptomAnalyzerResponseDto`.
+6. **Database Persistence:** The raw request data and the AI's analysis results are stored in the database (`AiSymptomAnalyses` table) linked to the user's ID for history tracking.
+7. **Return Response:** The backend returns the parsed AI evaluation to the frontend.
+
+---
+
+## Code Implementation Details
+
+### Backend Code
+
+**File:** `Medi_AI_Backend_railway/Backend-APIs/Controllers/SymptomAnalyzerController.cs`
+
+```csharp
 using System.Text;
 using System.Text.Json;
 using Backend_APIs.Models;
@@ -15,14 +48,6 @@ namespace Backend_APIs.Controllers
         public string OtherSymptoms { get; set; } = string.Empty;
         public string Severity { get; set; } = string.Empty;
         public string Duration { get; set; } = string.Empty;
-        public int? Age { get; set; }
-        public string? BiologicalSex { get; set; }
-        public string? Onset { get; set; }
-        public List<string> RedFlags { get; set; } = new();
-        public List<string> ExistingConditions { get; set; } = new();
-        public string? CurrentMedications { get; set; }
-        public string? Allergies { get; set; }
-        public string? PregnancyStatus { get; set; }
     }
 
     public class SymptomAnalyzerResponseDto
@@ -34,8 +59,6 @@ namespace Backend_APIs.Controllers
         public List<string> Recommendations { get; set; } = new();
         public List<string> HomeCareGuidance { get; set; } = new();
         public string RecommendedDoctorType { get; set; } = string.Empty;
-        public string TriageTier { get; set; } = string.Empty;
-        public string WhenToSeekCare { get; set; } = string.Empty;
     }
 
     [Route("api/analyzer")]
@@ -75,75 +98,27 @@ namespace Backend_APIs.Controllers
 
             var selectedSymptomsStr = string.Join(", ", request.SelectedSymptoms);
 
-            var emergencyKeywords = new[] { "can't breathe", "cannot breathe", "chest pain", "suicidal", "kill myself", "heart attack", "stroke" };
-            bool hasRedFlagKeywords = !string.IsNullOrEmpty(request.OtherSymptoms) && 
-                emergencyKeywords.Any(k => request.OtherSymptoms.Contains(k, StringComparison.OrdinalIgnoreCase));
-
-            if ((request.RedFlags != null && request.RedFlags.Any()) || hasRedFlagKeywords)
-            {
-                var redFlagsDetail = request.RedFlags != null ? string.Join(", ", request.RedFlags) : "";
-                if (hasRedFlagKeywords) redFlagsDetail += " [Keyword Match in Other Symptoms]";
-
-                var emergencyRecord = new AiSymptomAnalysis
-                {
-                    UserId = userId,
-                    SelectedSymptoms = selectedSymptomsStr,
-                    OtherSymptoms = request.OtherSymptoms,
-                    SeverityInput = request.Severity,
-                    Duration = request.Duration,
-                    Age = request.Age,
-                    BiologicalSex = request.BiologicalSex,
-                    Onset = request.Onset,
-                    RedFlagsTriggered = true,
-                    RedFlagsDetail = redFlagsDetail.Trim(),
-                    ExistingConditions = string.Join(", ", request.ExistingConditions ?? new List<string>()),
-                    CurrentMedications = request.CurrentMedications,
-                    Allergies = request.Allergies,
-                    PregnancyStatus = request.PregnancyStatus,
-                    Status = "emergency_routed",
-                    TriageTier = "seek_care_urgently",
-                    UrgencyMessage = "Emergency routing triggered based on reported red flags.",
-                    CreatedAt = DateTime.UtcNow
-                };
-                _context.AiSymptomAnalyses.Add(emergencyRecord);
-                await _context.SaveChangesAsync();
-
-                return Ok(new { success = true, isEmergency = true, message = "Emergency red flags detected. Please seek immediate medical attention." });
-            }
-
             string systemPrompt = $@"
 Act as an expert clinical triage assistant.
 CRITICAL RULES:
-1. DO NOT provide a definitive medical diagnosis. State clearly that this is a preliminary analysis.
+1. DO NOT provide a definitive medical diagnosis. State that this is a preliminary analysis.
 2. DO NOT prescribe restricted or prescription medications.
-3. NEVER name a specific medication, brand, or drug class (not even OTC). ONLY describe general self-care categories (e.g. 'rest', 'hydration', 'warm compress').
+3. YOU MAY suggest standard Over-The-Counter (OTC) remedies for symptom relief.
 4. Always provide a clear home-care procedure.
 
-Analyze the following patient context and respond STRICTLY in the following JSON format without any markdown formatting or extra text:
+Analyze the following symptoms and respond STRICTLY in the following JSON format without any markdown formatting or extra text:
 {{
-  ""triageTier"": ""[self_care | see_a_doctor_soon | seek_care_urgently]"",
-  ""possibleCondition"": ""[General Malaise - phrased as a possibility, not a diagnosis]"",
-  ""confidenceLevel"": ""[low | moderate | high]"",
+  ""possibleCondition"": ""[General Malaise]"",
+  ""confidenceLevel"": ""[70%]"",
   ""severity"": ""[Mild, Moderate, or Severe]"",
   ""urgencyMessage"": ""[Mild urgency. Home care and monitoring may help.]"",
   ""recommendations"": [""[Rest]"", ""[Monitor symptoms]""],
   ""homeCareGuidance"": [""[Hydrate well]"", ""[Rest]""],
-  ""whenToSeekCare"": ""[Warning signs to watch for]"",
   ""recommendedDoctorType"": ""[General Physician]""
 }}
 
-Patient Context:
-Age: {request.Age?.ToString() ?? "Not provided"}
-Biological Sex: {request.BiologicalSex ?? "Not provided"}
-Pregnancy Status: {request.PregnancyStatus ?? "N/A"}
-Existing Conditions: {(request.ExistingConditions != null && request.ExistingConditions.Any() ? string.Join(", ", request.ExistingConditions) : "None")}
-Current Medications: {request.CurrentMedications ?? "None"}
-Allergies: {request.Allergies ?? "None"}
-
-Symptoms and Current Episode:
-Selected Symptoms: {selectedSymptomsStr}
+Patient Symptoms: {selectedSymptomsStr}
 Other Symptoms: {request.OtherSymptoms}
-Onset: {request.Onset ?? "Not provided"}
 Patient Reported Severity: {request.Severity}
 Duration: {request.Duration}";
 
@@ -192,18 +167,9 @@ Duration: {request.Duration}";
 
                 var jsonResult = JsonSerializer.Deserialize<SymptomAnalyzerResponseDto>(replyContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                if (jsonResult == null || string.IsNullOrEmpty(jsonResult.TriageTier))
+                if (jsonResult == null)
                 {
-                    return StatusCode(500, new { success = false, message = $"Failed to parse AI response or missing TriageTier. Raw output: {replyContent}" });
-                }
-
-                // Basic check for drug names in free text to enforce Rule 3
-                var combinedText = string.Join(" ", jsonResult.Recommendations) + " " + string.Join(" ", jsonResult.HomeCareGuidance) + " " + jsonResult.UrgencyMessage;
-                var commonDrugKeywords = new[] { "ibuprofen", "tylenol", "advil", "aspirin", "paracetamol", "acetaminophen", "antibiotic", "medication", "pill", "tablet" };
-                if (commonDrugKeywords.Any(k => combinedText.Contains(k, StringComparison.OrdinalIgnoreCase)))
-                {
-                     _logger.LogWarning("AI response contained potential drug names. Rejecting response.");
-                     return StatusCode(500, new { success = false, message = "AI response violated safety constraints regarding medication recommendations." });
+                    return StatusCode(500, new { success = false, message = $"Failed to parse AI response. Raw output: {replyContent}" });
                 }
 
                 var analysisRecord = new AiSymptomAnalysis
@@ -213,13 +179,6 @@ Duration: {request.Duration}";
                     OtherSymptoms = request.OtherSymptoms,
                     SeverityInput = request.Severity,
                     Duration = request.Duration,
-                    Age = request.Age,
-                    BiologicalSex = request.BiologicalSex,
-                    Onset = request.Onset,
-                    ExistingConditions = string.Join(", ", request.ExistingConditions ?? new List<string>()),
-                    CurrentMedications = request.CurrentMedications,
-                    Allergies = request.Allergies,
-                    PregnancyStatus = request.PregnancyStatus,
                     PossibleCondition = jsonResult.PossibleCondition,
                     ConfidenceLevel = jsonResult.ConfidenceLevel,
                     CalculatedSeverity = jsonResult.Severity,
@@ -227,9 +186,6 @@ Duration: {request.Duration}";
                     Recommendations = JsonSerializer.Serialize(jsonResult.Recommendations),
                     HomeCareGuidance = JsonSerializer.Serialize(jsonResult.HomeCareGuidance),
                     RecommendedDoctorType = jsonResult.RecommendedDoctorType,
-                    TriageTier = jsonResult.TriageTier,
-                    WhenToSeekCare = jsonResult.WhenToSeekCare,
-                    Status = "analyzed",
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -307,4 +263,146 @@ Duration: {request.Duration}";
         }
     }
 }
+```
 
+---
+
+### Frontend Code
+
+**File:** `lib/app/modules/student/symptom_analyzer/ai_symptom_input_controller.dart`
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:medi_ai/app/services/api_service.dart';
+
+class AiSymptomInputController extends GetxController {
+  final ApiService _apiService = Get.find<ApiService>();
+
+  // State
+  final selectedSymptoms = <String>[].obs;
+  final selectedSeverity = ''.obs;
+  final durationController = TextEditingController();
+  final otherSymptomsController = TextEditingController();
+  final isLoading = false.obs;
+  final formKey = GlobalKey<FormState>();
+
+  final List<String> commonSymptoms = [
+    'Fever',
+    'Cough',
+    'Headache',
+    'Fatigue',
+    'Sore Throat',
+    'Body Aches',
+    'Nausea',
+    'Dizziness',
+    'Shortness of Breath',
+    'Chest Pain'
+  ];
+
+  final List<String> severityLevels = ['Mild', 'Moderate', 'Severe'];
+
+  void toggleSymptom(String symptom) {
+    if (selectedSymptoms.contains(symptom)) {
+      selectedSymptoms.remove(symptom);
+    } else {
+      selectedSymptoms.add(symptom);
+    }
+  }
+
+  void selectSeverity(String severity) {
+    selectedSeverity.value = severity;
+  }
+
+  Future<void> analyzeSymptoms() async {
+    if (selectedSymptoms.isEmpty &&
+        otherSymptomsController.text.trim().isEmpty) {
+      Get.snackbar(
+          'Input Required', 'Please select or enter at least one symptom.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.orange.shade100);
+      return;
+    }
+    if (selectedSeverity.value.isEmpty) {
+      Get.snackbar('Input Required', 'Please select the severity.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.orange.shade100);
+      return;
+    }
+    if (!formKey.currentState!.validate()) {
+      return;
+    }
+
+    isLoading.value = true;
+    try {
+      final requestData = {
+        'selectedSymptoms': selectedSymptoms.toList(),
+        'otherSymptoms': otherSymptomsController.text.trim(),
+        'severity': selectedSeverity.value,
+        'duration': durationController.text.trim(),
+      };
+
+      final response =
+          await _apiService.post('/analyzer/evaluate', data: requestData);
+
+      if (response.success && response.data != null) {
+        Get.toNamed('/symptom-analyzer-result', arguments: response.data);
+      } else {
+        Get.snackbar('Analysis Failed', response.message,
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red.shade100);
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'An unexpected error occurred. Please try again.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade100);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  @override
+  void onClose() {
+    durationController.dispose();
+    otherSymptomsController.dispose();
+    super.onClose();
+  }
+}
+```
+
+**File:** `lib/app/modules/student/symptom_analyzer/ai_symptom_result_controller.dart`
+
+```dart
+import 'package:get/get.dart';
+import '../../../routes/app_routes.dart';
+
+class AiSymptomResultController extends GetxController {
+  final Map<String, dynamic> resultData = Get.arguments ?? {};
+
+  String get possibleCondition => resultData['possibleCondition'] ?? 'Unknown';
+  String get confidenceLevel => resultData['confidenceLevel'] ?? 'N/A';
+  String get severity => resultData['severity'] ?? 'Unknown';
+  String get urgencyMessage => resultData['urgencyMessage'] ?? '';
+  List<String> get recommendations => _parseStringList(resultData['recommendations']);
+  List<String> get homeCareGuidance => _parseStringList(resultData['homeCareGuidance']);
+
+  List<String> _parseStringList(dynamic data) {
+    if (data == null) return [];
+    if (data is List) {
+      return data.map((e) => e.toString()).toList();
+    }
+    if (data is String) {
+      return [data];
+    }
+    return [];
+  }
+  String get recommendedDoctorType =>
+      resultData['recommendedDoctorType'] ?? 'General Physician';
+
+  void bookAppointment() {
+    // Navigate to the book appointment screen and pass the recommended doctor type if needed
+    Get.toNamed(AppRoutes.bookAppointment,
+        arguments: {'doctorType': recommendedDoctorType});
+  }
+}
+```
