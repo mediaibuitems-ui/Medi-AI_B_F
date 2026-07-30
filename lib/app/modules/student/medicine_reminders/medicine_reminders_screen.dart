@@ -383,16 +383,19 @@ class _MedicineRemindersScreenState extends State<MedicineRemindersScreen> {
                           return DateFormat('hh:mm a').format(dt);
                         }).toList();
 
-                        _saveReminder(
-                          isEditing: isEditing,
-                          reminderId: existingReminder?.id.toString(),
-                          name: nameController.text,
-                          dosage: dosageController.text,
-                          frequency: 'Custom',
-                          timesList: formattedTimes,
-                          isActive: existingReminder?.isActive ?? true,
-                        );
                         Navigator.of(context).pop();
+                        
+                        Future.microtask(() {
+                          _saveReminder(
+                            isEditing: isEditing,
+                            reminderId: existingReminder?.id.toString(),
+                            name: nameController.text,
+                            dosage: dosageController.text,
+                            frequency: 'Custom',
+                            timesList: formattedTimes,
+                            isActive: existingReminder?.isActive ?? true,
+                          );
+                        });
                       } else if (currentTimes.isEmpty) {
                         AppFeedback.error(
                             'Error', 'Please add at least one time');

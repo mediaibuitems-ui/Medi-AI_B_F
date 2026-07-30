@@ -236,14 +236,21 @@ class NotificationService extends GetxService {
 
     final notificationDetails = NotificationDetails(
       android: AndroidNotificationDetails(
-        'medi_ai_reminders_v2',
+        'medi_ai_reminders_v4',
         'Medicine Reminders',
         channelDescription: 'Notifications for medicine reminders',
         importance: Importance.max,
         priority: Priority.high,
         enableVibration: true,
+        playSound: true,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
         vibrationPattern: Int64List.fromList(
             [0, 1000, 500, 1000, 500, 1000, 500, 1000, 500, 1000]),
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentSound: true,
+        presentAlert: true,
+        presentBadge: true,
       ),
     );
 
@@ -265,18 +272,20 @@ class NotificationService extends GetxService {
       if (errorText.contains('exact_alarms_not_permitted') ||
           errorText.contains('exact alarms not permitted')) {
         _logger.w(
-            'Exact alarms not permitted. Requesting permission and retrying.');
+            'Exact alarms not permitted. Requesting permission and falling back to inexact scheduling.');
         final androidImplementation = _flutterLocalNotificationsPlugin
             .resolvePlatformSpecificImplementation<
                 AndroidFlutterLocalNotificationsPlugin>();
         await _requestExactAlarmPermissionIfNeeded(androidImplementation);
+        
+        // Fallback to inexact scheduling so it at least works!
         await _flutterLocalNotificationsPlugin.zonedSchedule(
           id,
           title,
           body,
           scheduledDate,
           notificationDetails,
-          androidScheduleMode: AndroidScheduleMode.alarmClock,
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
           uiLocalNotificationDateInterpretation:
               UILocalNotificationDateInterpretation.absoluteTime,
           matchDateTimeComponents: DateTimeComponents.time,

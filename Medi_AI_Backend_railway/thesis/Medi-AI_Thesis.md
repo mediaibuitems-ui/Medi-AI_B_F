@@ -706,7 +706,7 @@ flowchart LR
     P4((P4: Manage Reminders))
     
     DB[(MySQL Database)]
-    Gemini[Gemini 1.5 Flash API]
+    Gemini[GroqCloud API - Llama 3 Model]
     Local[Hive Local Storage]
     
     User -->|Credentials| P1
