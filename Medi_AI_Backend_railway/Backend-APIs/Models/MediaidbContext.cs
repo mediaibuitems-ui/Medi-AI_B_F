@@ -18,7 +18,6 @@ public partial class MediaidbContext : IdentityDbContext<User, IdentityRole<int>
     }
 
     public virtual DbSet<Activemedicinereminder> Activemedicinereminders { get; set; }
-    public virtual DbSet<AiSymptomInterviewSession> AiSymptomInterviewSessions { get; set; }
 
     public virtual DbSet<Appointment> Appointments { get; set; }
 

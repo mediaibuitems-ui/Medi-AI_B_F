@@ -27,22 +27,7 @@ namespace Backend_APIs.Controllers
         public List<string> HomeCareGuidance { get; set; } = new();
     }
 
-    public class InterviewStartRequestDto
-    {
-        public List<string> RedFlags { get; set; } = new();
-        public int? Age { get; set; }
-        public string? BiologicalSex { get; set; }
-        public string? PregnancyStatus { get; set; }
-        public List<string> ExistingConditions { get; set; } = new();
-        public string? CurrentMedications { get; set; }
-        public string? Allergies { get; set; }
-    }
 
-    public class InterviewAnswerRequestDto
-    {
-        public Guid SessionId { get; set; }
-        public string Answer { get; set; } = string.Empty;
-    }
 
     [Route("api/analyzer")]
     [ApiController]
@@ -73,10 +58,10 @@ namespace Backend_APIs.Controllers
                 return Unauthorized("Invalid token.");
             }
 
-            var apiKey = _configuration["Groq:ApiKey"] ?? _configuration["NaraRouter:ApiKey"] ?? _configuration["Gemini:ApiKey"];
+            var apiKey = _configuration["Groq:ApiKey"];
             if (string.IsNullOrEmpty(apiKey) || apiKey.StartsWith("INSERT_") || apiKey.Contains("INSERT_"))
             {
-                return StatusCode(500, new { success = false, message = "AI API Key is not configured. Please add Groq__ApiKey to Railway environment variables." });
+                return StatusCode(500, new { success = false, message = "AI API Key is not configured. Please add Groq:ApiKey to Railway environment variables." });
             }
 
             var selectedSymptomsStr = request.Symptoms != null && request.Symptoms.Any() 
@@ -256,228 +241,7 @@ Additional Context: {request.AdditionalContext ?? "None"}";
             }
         }
 
-        [HttpPost("interview/start")]
-        [EnableRateLimiting("AnalyzerLimiter")]
-        public async Task<IActionResult> StartInterview([FromBody] InterviewStartRequestDto request)
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                              ?? User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-                return Unauthorized("Invalid token.");
 
-            var redFlagTriggered = request.RedFlags != null && request.RedFlags.Any();
-            var session = new AiSymptomInterviewSession
-            {
-                UserId = userId,
-                RedFlagAnswers = request.RedFlags != null ? string.Join(", ", request.RedFlags) : null,
-                RedFlagTriggered = redFlagTriggered,
-                Status = redFlagTriggered ? "emergency_routed" : "in_progress",
-                Age = request.Age,
-                BiologicalSex = request.BiologicalSex,
-                PregnancyStatus = request.PregnancyStatus,
-                ExistingConditions = string.Join(", ", request.ExistingConditions ?? new List<string>()),
-                CurrentMedications = request.CurrentMedications,
-                Allergies = request.Allergies,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            if (redFlagTriggered)
-            {
-                _context.AiSymptomInterviewSessions.Add(session);
-                await _context.SaveChangesAsync();
-                return Ok(new { success = true, isEmergency = true, sessionId = session.Id, message = "Emergency red flags detected." });
-            }
-
-            var apiKey = _configuration["Groq:ApiKey"] ?? _configuration["Gemini:ApiKey"];
-            if (string.IsNullOrEmpty(apiKey) || apiKey.StartsWith("INSERT_"))
-                return StatusCode(500, new { success = false, message = "AI API Key is not configured." });
-
-            string systemPrompt = GetInterviewSystemPrompt(session);
-            var messages = new List<object> { new { role = "system", content = systemPrompt } };
-
-            try
-            {
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-                var requestBody = new { model = "llama-3.1-8b-instant", messages, response_format = new { type = "json_object" } };
-
-                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
-                var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync("https://api.groq.com/openai/v1/chat/completions", content, cts.Token);
-
-                var responseString = await response.Content.ReadAsStringAsync(cts.Token);
-                if (!response.IsSuccessStatusCode)
-                    return StatusCode(500, new { success = false, message = "Failed to start interview via AI API." });
-
-                string replyContent = JsonDocument.Parse(responseString).RootElement.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString() ?? "{}";
-                replyContent = CleanJson(replyContent);
-
-                var jsonResult = JsonSerializer.Deserialize<Dictionary<string, object>>(replyContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                if (jsonResult == null || !jsonResult.ContainsKey("action") || jsonResult["action"].ToString() != "ask")
-                    return StatusCode(500, new { success = false, message = "Failed to parse initial AI question." });
-
-                string firstQuestion = jsonResult["question"].ToString();
-                
-                var transcript = new List<Dictionary<string, string>>
-                {
-                    new Dictionary<string, string> { { "question", firstQuestion }, { "answer", "" } }
-                };
-                session.Transcript = JsonSerializer.Serialize(transcript);
-
-                _context.AiSymptomInterviewSessions.Add(session);
-                await _context.SaveChangesAsync();
-
-                return Ok(new { success = true, isEmergency = false, sessionId = session.Id, question = firstQuestion });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"StartInterview Error: {ex.Message}");
-                return StatusCode(500, "An internal error occurred.");
-            }
-        }
-
-        [HttpPost("interview/answer")]
-        [EnableRateLimiting("AnalyzerLimiter")]
-        public async Task<IActionResult> AnswerInterview([FromBody] InterviewAnswerRequestDto request)
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                              ?? User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-                return Unauthorized("Invalid token.");
-
-            var session = await _context.AiSymptomInterviewSessions.FirstOrDefaultAsync(s => s.Id == request.SessionId && s.UserId == userId);
-            if (session == null || session.Status != "in_progress")
-                return BadRequest(new { success = false, message = "Invalid or completed session." });
-
-            var transcript = string.IsNullOrEmpty(session.Transcript) ? new List<Dictionary<string, string>>() 
-                : JsonSerializer.Deserialize<List<Dictionary<string, string>>>(session.Transcript);
-
-            // Fill in the answer for the most recent question
-            if (transcript.Any() && string.IsNullOrEmpty(transcript.Last()["answer"]))
-            {
-                transcript.Last()["answer"] = request.Answer;
-            }
-
-            var emergencyKeywords = new[] { "can't breathe", "cannot breathe", "chest pain", "suicidal", "kill myself", "heart attack", "stroke" };
-            if (emergencyKeywords.Any(k => request.Answer.Contains(k, StringComparison.OrdinalIgnoreCase)))
-            {
-                session.Status = "emergency_routed";
-                session.Transcript = JsonSerializer.Serialize(transcript);
-                await _context.SaveChangesAsync();
-                return Ok(new { success = true, isEmergency = true, message = "Emergency red flags detected." });
-            }
-
-            var apiKey = _configuration["Groq:ApiKey"] ?? _configuration["Gemini:ApiKey"];
-            string systemPrompt = GetInterviewSystemPrompt(session);
-            var messages = new List<object> { new { role = "system", content = systemPrompt } };
-
-            foreach (var turn in transcript)
-            {
-                messages.Add(new { role = "assistant", content = turn["question"] });
-                if (!string.IsNullOrEmpty(turn["answer"]))
-                {
-                    messages.Add(new { role = "user", content = turn["answer"] });
-                }
-            }
-
-            // Turn cap check
-            if (transcript.Count(t => !string.IsNullOrEmpty(t["answer"])) >= 10)
-            {
-                 messages.Add(new { role = "system", content = "You must now output the final analysis. Do not ask any more questions." });
-            }
-
-            try
-            {
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-                var requestBody = new { model = "llama-3.1-8b-instant", messages, response_format = new { type = "json_object" } };
-
-                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
-                var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync("https://api.groq.com/openai/v1/chat/completions", content, cts.Token);
-
-                var responseString = await response.Content.ReadAsStringAsync(cts.Token);
-                if (!response.IsSuccessStatusCode)
-                    return StatusCode(500, new { success = false, message = "Failed to communicate with AI API." });
-
-                string replyContent = JsonDocument.Parse(responseString).RootElement.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString() ?? "{}";
-                replyContent = CleanJson(replyContent);
-
-                var jsonResult = JsonSerializer.Deserialize<Dictionary<string, object>>(replyContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                
-                if (jsonResult != null && jsonResult.ContainsKey("action") && jsonResult["action"].ToString() == "complete")
-                {
-                    session.Status = "completed";
-                    session.CompletedAt = DateTime.UtcNow;
-                    var analysisJson = JsonSerializer.Serialize(jsonResult["analysis"]);
-                    
-                    // Validate basic drug constraint
-                    var commonDrugKeywords = new[] { "ibuprofen", "tylenol", "advil", "aspirin", "paracetamol", "acetaminophen", "antibiotic", "medication", "pill", "tablet" };
-                    if (commonDrugKeywords.Any(k => analysisJson.Contains(k, StringComparison.OrdinalIgnoreCase)))
-                    {
-                         _logger.LogWarning("AI response contained potential drug names. Rejecting response.");
-                         return StatusCode(500, new { success = false, message = "AI response violated safety constraints regarding medication recommendations." });
-                    }
-
-                    session.FinalAnalysis = analysisJson;
-                    session.Transcript = JsonSerializer.Serialize(transcript);
-                    await _context.SaveChangesAsync();
-                    return Ok(new { success = true, action = "complete", analysis = jsonResult["analysis"], transcript = transcript });
-                }
-                else if (jsonResult != null && jsonResult.ContainsKey("action") && jsonResult["action"].ToString() == "ask")
-                {
-                    string nextQuestion = jsonResult["question"].ToString();
-                    transcript.Add(new Dictionary<string, string> { { "question", nextQuestion }, { "answer", "" } });
-                    session.Transcript = JsonSerializer.Serialize(transcript);
-                    await _context.SaveChangesAsync();
-                    return Ok(new { success = true, action = "ask", question = nextQuestion });
-                }
-
-                return StatusCode(500, new { success = false, message = "Failed to parse AI response." });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"AnswerInterview Error: {ex.Message}");
-                return StatusCode(500, "An internal error occurred.");
-            }
-        }
-
-        private string GetInterviewSystemPrompt(AiSymptomInterviewSession session)
-        {
-            return $@"You are conducting a brief clinical intake interview, one question at a time.
-You already know the patient has no emergency red-flag symptoms (already screened).
-
-Rules:
-1. Ask exactly ONE clear, specific question per turn. No compound questions.
-2. Base each question on everything answered so far — follow up on what's relevant, don't repeat ground already covered.
-3. Ask about things a doctor would actually want to know: symptom character, triggers/relievers, related symptoms, relevant history, medications, allergies — adapt based on what's already been said.
-4. After you have enough information to give useful guidance (usually 6-10 questions), stop asking and instead output the final compiled analysis.
-5. NEVER name a specific medication, drug, or brand at any point, in questions or in the final analysis.
-6. NEVER state a diagnosis as fact — only possibilities, clearly labeled as such.
-7. If the patient's answer at any point describes something urgent (severe pain, breathing trouble, safety concerns), stop the interview immediately and output the final analysis with triageTier = ""seek_care_urgently"", clearly explaining why.
-
-Respond in STRICT JSON only, one of these two shapes:
-Continuing: {{""action"": ""ask"", ""question"": ""string""}}
-Finishing:  {{""action"": ""complete"", ""analysis"": {{ ""triageTier"": ""self_care | see_a_doctor_soon | seek_care_urgently"", ""summary"": ""..."", ""possibleCondition"": ""..."", ""confidenceLevel"": ""low | moderate | high"", ""recommendations"": [""...""], ""homeCareGuidance"": [""...""], ""whenToSeekCare"": ""..."", ""recommendedDoctorType"": ""..."" }} }}
-
-Patient Context:
-Age: {session.Age?.ToString() ?? "Not provided"}
-Biological Sex: {session.BiologicalSex ?? "Not provided"}
-Pregnancy Status: {session.PregnancyStatus ?? "N/A"}
-Existing Conditions: {(string.IsNullOrEmpty(session.ExistingConditions) ? "None" : session.ExistingConditions)}
-Current Medications: {session.CurrentMedications ?? "None"}
-Allergies: {session.Allergies ?? "None"}";
-        }
-
-        private string CleanJson(string replyContent)
-        {
-            replyContent = replyContent.Trim();
-            if (replyContent.StartsWith("```json", StringComparison.OrdinalIgnoreCase))
-                replyContent = replyContent.Substring(7);
-            else if (replyContent.StartsWith("```"))
-                replyContent = replyContent.Substring(3);
-            if (replyContent.EndsWith("```"))
-                replyContent = replyContent.Substring(0, replyContent.Length - 3);
-            return replyContent.Trim();
-        }
     }
 }
 
