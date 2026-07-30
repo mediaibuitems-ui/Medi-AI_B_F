@@ -1,5 +1,5 @@
 param(
-    [string]$projectPath = "Backend/Medi-AI_backend-main/Backend-APIs/Backend-APIs.csproj"
+    [string]$projectPath = "Medi_AI_Backend_railway/Backend-APIs/Backend-APIs.csproj"
 )
 
 $ts = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -14,7 +14,7 @@ if ($LASTEXITCODE -eq 0) {
 $workspaceRoot = (Resolve-Path ".").Path
 $todoPath = Join-Path $workspaceRoot "TODO_MANAGED.md"
 
-$header = @"\
+$header = @"
 > Last status update: $ts
 > Last build result: $status
 
@@ -27,7 +27,7 @@ if (Test-Path $todoPath) {
     Set-Content -Path $todoPath -Value $new -Encoding UTF8
     Write-Host "Updated status in $todoPath"
 } else {
-    $template = "# TODO — Project Task List`n`n" + $header + "Core tasks`n`n- [ ] Run project error check`n- [ ] Create/standardize TODO.md`n- [ ] Add status updater script`n- [ ] Verify build and update statuses`n- [ ] Commit changes`n"
+    $template = "# TODO - Project Task List`n`n" + $header + "Core tasks`n`n- [ ] Run project error check`n- [ ] Create/standardize TODO.md`n- [ ] Add status updater script`n- [ ] Verify build and update statuses`n- [ ] Commit changes`n"
     New-Item -Path $todoPath -ItemType File -Force | Out-Null
     Set-Content -Path $todoPath -Value $template -Encoding UTF8
     Write-Host "Created $todoPath with status"

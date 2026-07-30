@@ -63,11 +63,25 @@ class TodayAppointmentsScreen extends GetView<TodayAppointmentsController> {
                   ),
                 ],
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () {
+                    Get.toNamed(
+                      '/patient-detail',
+                      arguments: {
+                        'id': appointment.patientId,
+                        'appointmentId': appointment.id,
+                        'patientName': appointment.patientName,
+                      },
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -145,9 +159,11 @@ class TodayAppointmentsScreen extends GetView<TodayAppointmentsController> {
                   ],
                 ),
               ),
-            );
-          },
+            ),
+          ),
         );
+      },
+      );
       }),
     );
   }

@@ -20,7 +20,7 @@ class AiSymptomHistoryController extends GetxController {
     error.value = '';
 
     try {
-      final response = await _apiService.get('${AppConfig.baseUrl}/analyzer/history');
+      final response = await _apiService.get('/analyzer/history');
       if (response.success && response.data is List) {
         history.value = (response.data as List).map((e) => Map<String, dynamic>.from(e)).toList();
       } else {
@@ -45,6 +45,6 @@ class AiSymptomHistoryController extends GetxController {
       'recommendedDoctorType': item['recommendedDoctorType'] ?? item['RecommendedDoctorType'],
     };
 
-    Get.toNamed('/student/ai-symptom-result', arguments: mappedData);
+    Get.toNamed('/symptom-analyzer-result', arguments: mappedData);
   }
 }

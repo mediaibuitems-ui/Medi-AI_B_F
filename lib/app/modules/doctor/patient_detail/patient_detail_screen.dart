@@ -469,7 +469,7 @@ class PatientDetailScreen extends StatelessWidget {
               if (appointmentId == null) {
                 Get.snackbar(
                   'Action Unavailable',
-                  'Prescriptions can only be written during an active appointment.',
+                  'Prescriptions can only be written during an active appointment. Please open the patient details from an active appointment card (e.g. from Today\'s Appointments).',
                   snackPosition: SnackPosition.BOTTOM,
                   backgroundColor: AppTheme.error,
                   colorText: AppTheme.surface,
