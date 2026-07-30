@@ -11,18 +11,10 @@ namespace Backend_APIs.Controllers
 {
     public class SymptomAnalyzerRequestDto
     {
-        public List<string> SelectedSymptoms { get; set; } = new();
-        public string OtherSymptoms { get; set; } = string.Empty;
+        public List<string> Symptoms { get; set; } = new();
         public string Severity { get; set; } = string.Empty;
         public string Duration { get; set; } = string.Empty;
-        public int? Age { get; set; }
-        public string? BiologicalSex { get; set; }
-        public string? Onset { get; set; }
-        public List<string> RedFlags { get; set; } = new();
-        public List<string> ExistingConditions { get; set; } = new();
-        public string? CurrentMedications { get; set; }
-        public string? Allergies { get; set; }
-        public string? PregnancyStatus { get; set; }
+        public string? AdditionalContext { get; set; }
     }
 
     public class SymptomAnalyzerResponseDto
@@ -33,9 +25,6 @@ namespace Backend_APIs.Controllers
         public string UrgencyMessage { get; set; } = string.Empty;
         public List<string> Recommendations { get; set; } = new();
         public List<string> HomeCareGuidance { get; set; } = new();
-        public string RecommendedDoctorType { get; set; } = string.Empty;
-        public string TriageTier { get; set; } = string.Empty;
-        public string WhenToSeekCare { get; set; } = string.Empty;
     }
 
     public class InterviewStartRequestDto
@@ -90,43 +79,9 @@ namespace Backend_APIs.Controllers
                 return StatusCode(500, new { success = false, message = "AI API Key is not configured. Please add Groq__ApiKey to Railway environment variables." });
             }
 
-            var selectedSymptomsStr = string.Join(", ", request.SelectedSymptoms);
-
-            var emergencyKeywords = new[] { "can't breathe", "cannot breathe", "chest pain", "suicidal", "kill myself", "heart attack", "stroke" };
-            bool hasRedFlagKeywords = !string.IsNullOrEmpty(request.OtherSymptoms) && 
-                emergencyKeywords.Any(k => request.OtherSymptoms.Contains(k, StringComparison.OrdinalIgnoreCase));
-
-            if ((request.RedFlags != null && request.RedFlags.Any()) || hasRedFlagKeywords)
-            {
-                var redFlagsDetail = request.RedFlags != null ? string.Join(", ", request.RedFlags) : "";
-                if (hasRedFlagKeywords) redFlagsDetail += " [Keyword Match in Other Symptoms]";
-
-                var emergencyRecord = new AiSymptomAnalysis
-                {
-                    UserId = userId,
-                    SelectedSymptoms = selectedSymptomsStr,
-                    OtherSymptoms = request.OtherSymptoms,
-                    SeverityInput = request.Severity,
-                    Duration = request.Duration,
-                    Age = request.Age,
-                    BiologicalSex = request.BiologicalSex,
-                    Onset = request.Onset,
-                    RedFlagsTriggered = true,
-                    RedFlagsDetail = redFlagsDetail.Trim(),
-                    ExistingConditions = string.Join(", ", request.ExistingConditions ?? new List<string>()),
-                    CurrentMedications = request.CurrentMedications,
-                    Allergies = request.Allergies,
-                    PregnancyStatus = request.PregnancyStatus,
-                    Status = "emergency_routed",
-                    TriageTier = "seek_care_urgently",
-                    UrgencyMessage = "Emergency routing triggered based on reported red flags.",
-                    CreatedAt = DateTime.UtcNow
-                };
-                _context.AiSymptomAnalyses.Add(emergencyRecord);
-                await _context.SaveChangesAsync();
-
-                return Ok(new { success = true, isEmergency = true, message = "Emergency red flags detected. Please seek immediate medical attention." });
-            }
+            var selectedSymptomsStr = request.Symptoms != null && request.Symptoms.Any() 
+                ? string.Join(", ", request.Symptoms) 
+                : "None";
 
             string systemPrompt = $@"
 Act as an expert clinical triage assistant.
@@ -138,31 +93,19 @@ CRITICAL RULES:
 
 Analyze the following patient context and respond STRICTLY in the following JSON format without any markdown formatting or extra text:
 {{
-  ""triageTier"": ""[self_care | see_a_doctor_soon | seek_care_urgently]"",
   ""possibleCondition"": ""[General Malaise - phrased as a possibility, not a diagnosis]"",
   ""confidenceLevel"": ""[low | moderate | high]"",
   ""severity"": ""[Mild, Moderate, or Severe]"",
   ""urgencyMessage"": ""[Mild urgency. Home care and monitoring may help.]"",
   ""recommendations"": [""[Rest]"", ""[Monitor symptoms]""],
-  ""homeCareGuidance"": [""[Hydrate well]"", ""[Rest]""],
-  ""whenToSeekCare"": ""[Warning signs to watch for]"",
-  ""recommendedDoctorType"": ""[General Physician]""
+  ""homeCareGuidance"": [""[Hydrate well]"", ""[Rest]""]
 }}
 
 Patient Context:
-Age: {request.Age?.ToString() ?? "Not provided"}
-Biological Sex: {request.BiologicalSex ?? "Not provided"}
-Pregnancy Status: {request.PregnancyStatus ?? "N/A"}
-Existing Conditions: {(request.ExistingConditions != null && request.ExistingConditions.Any() ? string.Join(", ", request.ExistingConditions) : "None")}
-Current Medications: {request.CurrentMedications ?? "None"}
-Allergies: {request.Allergies ?? "None"}
-
-Symptoms and Current Episode:
-Selected Symptoms: {selectedSymptomsStr}
-Other Symptoms: {request.OtherSymptoms}
-Onset: {request.Onset ?? "Not provided"}
+Symptoms: {selectedSymptomsStr}
 Patient Reported Severity: {request.Severity}
-Duration: {request.Duration}";
+Duration: {request.Duration}
+Additional Context: {request.AdditionalContext ?? "None"}";
 
             try
             {
@@ -209,9 +152,9 @@ Duration: {request.Duration}";
 
                 var jsonResult = JsonSerializer.Deserialize<SymptomAnalyzerResponseDto>(replyContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                if (jsonResult == null || string.IsNullOrEmpty(jsonResult.TriageTier))
+                if (jsonResult == null || string.IsNullOrEmpty(jsonResult.PossibleCondition))
                 {
-                    return StatusCode(500, new { success = false, message = $"Failed to parse AI response or missing TriageTier. Raw output: {replyContent}" });
+                    return StatusCode(500, new { success = false, message = $"Failed to parse AI response. Raw output: {replyContent}" });
                 }
 
                 // Basic check for drug names in free text to enforce Rule 3
@@ -227,25 +170,15 @@ Duration: {request.Duration}";
                 {
                     UserId = userId,
                     SelectedSymptoms = selectedSymptomsStr,
-                    OtherSymptoms = request.OtherSymptoms,
+                    AdditionalContext = request.AdditionalContext,
                     SeverityInput = request.Severity,
                     Duration = request.Duration,
-                    Age = request.Age,
-                    BiologicalSex = request.BiologicalSex,
-                    Onset = request.Onset,
-                    ExistingConditions = string.Join(", ", request.ExistingConditions ?? new List<string>()),
-                    CurrentMedications = request.CurrentMedications,
-                    Allergies = request.Allergies,
-                    PregnancyStatus = request.PregnancyStatus,
                     PossibleCondition = jsonResult.PossibleCondition,
                     ConfidenceLevel = jsonResult.ConfidenceLevel,
                     CalculatedSeverity = jsonResult.Severity,
                     UrgencyMessage = jsonResult.UrgencyMessage,
                     Recommendations = JsonSerializer.Serialize(jsonResult.Recommendations),
                     HomeCareGuidance = JsonSerializer.Serialize(jsonResult.HomeCareGuidance),
-                    RecommendedDoctorType = jsonResult.RecommendedDoctorType,
-                    TriageTier = jsonResult.TriageTier,
-                    WhenToSeekCare = jsonResult.WhenToSeekCare,
                     Status = "analyzed",
                     CreatedAt = DateTime.UtcNow
                 };

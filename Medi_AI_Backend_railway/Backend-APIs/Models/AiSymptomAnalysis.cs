@@ -16,6 +16,8 @@ namespace Backend_APIs.Models
 
         public string? OtherSymptoms { get; set; }
 
+        public string? AdditionalContext { get; set; }
+
         [MaxLength(50)]
         public string? SeverityInput { get; set; }
 

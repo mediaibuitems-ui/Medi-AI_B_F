@@ -1,15 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shimmer/shimmer.dart';
+import '../../../../config/app_theme.dart';
 import 'ai_symptom_input_controller.dart';
-import 'package:medi_ai/config/app_theme.dart';
 
 class AiSymptomInputScreen extends GetView<AiSymptomInputController> {
   const AiSymptomInputScreen({super.key});
 
+  Color _getSeveritySemanticColor(String severity) {
+    if (severity == 'Mild') return AppTheme.success;
+    if (severity == 'Moderate') return AppTheme.warning;
+    if (severity == 'Severe') return AppTheme.error;
+    return AppTheme.primary;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Get.back(),
+        ),
         title: const Text('AI Symptom Analyzer'),
         actions: [
           IconButton(
@@ -21,141 +34,255 @@ class AiSymptomInputScreen extends GetView<AiSymptomInputController> {
         ],
       ),
       body: SafeArea(
-        child: Obx(() => Stack(
-              children: [
-                Column(
-                  children: [
-                    // Top Warning Banner
-                    Container(
-                      margin: const EdgeInsets.all(16),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.orange.shade200),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'This tool provides general guidance, not medical advice. For emergencies, call your local emergency number immediately.',
-                              style: TextStyle(color: Colors.orange.shade900, fontSize: 13),
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 100), // Space for CTA
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Disclaimer Banner
+                  Container(
+                    margin: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surface,
+                      borderRadius: BorderRadius.circular(12.0),
+                      border: Border.all(color: AppTheme.warning.withOpacity(0.3)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.textPrimary.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.warning_amber_rounded, color: AppTheme.warning),
+                        const SizedBox(width: 16.0),
+                        Expanded(
+                          child: Text(
+                            'This tool provides general guidance, not medical advice. Consult a doctor for accurate diagnosis.',
+                            style: AppTheme.bodyMedium.copyWith(color: AppTheme.textPrimary),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Section 1: Symptoms
+                  _buildSectionLabel('1. Select Your Symptoms'),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: Wrap(
+                      spacing: 8.0,
+                      runSpacing: 8.0,
+                      children: controller.commonSymptoms.map((symptom) {
+                        return Obx(() {
+                          final isSelected = controller.selectedSymptoms.contains(symptom);
+                          return InkWell(
+                            onTap: () => controller.toggleSymptom(symptom),
+                            borderRadius: BorderRadius.circular(24.0),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              curve: Curves.easeInOut,
+                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+                              decoration: BoxDecoration(
+                                color: isSelected ? AppTheme.primary.withOpacity(0.1) : AppTheme.surface,
+                                borderRadius: BorderRadius.circular(24.0),
+                                border: Border.all(
+                                  color: isSelected ? AppTheme.primary : AppTheme.border,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (isSelected) ...[
+                                    const Icon(Icons.check, size: 16, color: AppTheme.primary),
+                                    const SizedBox(width: 8.0),
+                                  ],
+                                  Text(
+                                    symptom,
+                                    style: AppTheme.bodyMedium.copyWith(
+                                      color: isSelected ? AppTheme.primary : AppTheme.textPrimary,
+                                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
+                          );
+                        });
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
+
+                  // Section 2: Severity
+                  _buildSectionLabel('2. How severe are your symptoms?'),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: Row(
+                      children: controller.severityLevels.map((severity) {
+                        return Obx(() {
+                          final isSelected = controller.selectedSeverity.value == severity;
+                          final semanticColor = _getSeveritySemanticColor(severity);
+                          return Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                              child: InkWell(
+                                onTap: () => controller.selectSeverity(severity),
+                                borderRadius: BorderRadius.circular(24.0),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  curve: Curves.easeInOut,
+                                  padding: const EdgeInsets.symmetric(vertical: 12.0),
+                                  decoration: BoxDecoration(
+                                    color: isSelected ? semanticColor.withOpacity(0.1) : AppTheme.surface,
+                                    borderRadius: BorderRadius.circular(24.0),
+                                    border: Border.all(
+                                      color: isSelected ? semanticColor : AppTheme.border,
+                                    ),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (isSelected) ...[
+                                        Icon(Icons.check, size: 16, color: semanticColor),
+                                        const SizedBox(width: 8.0),
+                                      ],
+                                      Text(
+                                        severity,
+                                        style: AppTheme.bodyMedium.copyWith(
+                                          color: isSelected ? semanticColor : AppTheme.textPrimary,
+                                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        });
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
+
+                  // Section 3: Duration
+                  _buildSectionLabel('3. How long have you had these symptoms?'),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: TextField(
+                      controller: controller.durationController,
+                      decoration: const InputDecoration(
+                        hintText: 'e.g., 3 days, since this morning',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16.0),
+
+                  // Section 4: Context
+                  _buildSectionLabel('4. Any other symptoms or context?'),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: TextField(
+                      controller: controller.additionalContextController,
+                      maxLines: 4,
+                      decoration: const InputDecoration(
+                        hintText: 'Type any additional details here...',
+                      ),
+                    ),
+                  ),
+
+                  // Error State
+                  Obx(() {
+                    if (controller.error.isNotEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Container(
+                          padding: const EdgeInsets.all(12.0),
+                          decoration: BoxDecoration(
+                            color: AppTheme.error.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8.0),
+                            border: Border.all(color: AppTheme.error),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.error_outline, color: AppTheme.error),
+                              const SizedBox(width: 12.0),
+                              Expanded(
+                                child: Text(
+                                  controller.error.value,
+                                  style: AppTheme.bodyMedium.copyWith(color: AppTheme.error),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  }),
+
+                  const SizedBox(height: 32.0),
+                ],
+              ),
+            ),
+            
+            // Primary CTA
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.all(16.0),
+                color: AppTheme.background,
+                child: Obx(() {
+                  final bool isValid = controller.selectedSymptoms.isNotEmpty;
+                  return ElevatedButton(
+                    onPressed: isValid && !controller.isLoading.value ? controller.analyzeSymptoms : null,
+                    child: const Text('Analyze Symptoms'),
+                  );
+                }),
+              ),
+            ),
+
+            // Loading Shimmer Overlay
+            Obx(() {
+              if (controller.isLoading.value) {
+                return Container(
+                  color: AppTheme.background.withOpacity(0.9),
+                  child: Shimmer.fromColors(
+                    baseColor: AppTheme.border,
+                    highlightColor: AppTheme.surface,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(height: 80, decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(12))),
+                          const SizedBox(height: 24),
+                          Container(height: 24, width: 200, color: AppTheme.surface),
+                          const SizedBox(height: 16),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: List.generate(6, (index) => Container(height: 40, width: 100, decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(20)))),
+                          ),
+                          const SizedBox(height: 32),
+                          Container(height: 24, width: 250, color: AppTheme.surface),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: List.generate(3, (index) => Expanded(child: Container(margin: const EdgeInsets.only(right: 8), height: 48, decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(24))))),
                           ),
                         ],
                       ),
                     ),
-                    Expanded(
-                      child: Stepper(
-                        type: StepperType.vertical,
-                        currentStep: controller.currentStep.value,
-                        onStepContinue: controller.nextStep,
-                        onStepCancel: controller.previousStep,
-                        controlsBuilder: (BuildContext context, ControlsDetails details) {
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 24.0),
-                            child: Row(
-                              children: <Widget>[
-                                ElevatedButton(
-                                  onPressed: details.onStepContinue,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppTheme.primary,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                  ),
-                                  child: Text(controller.currentStep.value == controller.totalSteps - 1 ? 'Analyze' : 'Continue'),
-                                ),
-                                if (controller.currentStep.value > 0) ...[
-                                  const SizedBox(width: 12),
-                                  TextButton(
-                                    onPressed: details.onStepCancel,
-                                    child: const Text('Back'),
-                                  ),
-                                ]
-                              ],
-                            ),
-                          );
-                        },
-                        steps: [
-                          _buildDemographicsStep(),
-                          _buildRedFlagsStep(),
-                          _buildContextStep(),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                if (controller.isLoading.value)
-                  Container(
-                    color: Colors.black.withOpacity(0.3),
-                    child: const Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                  ),
-              ],
-            )),
-      ),
-    );
-  }
-
-  Step _buildDemographicsStep() {
-    return Step(
-      title: const Text('Basic Information'),
-      isActive: controller.currentStep.value >= 0,
-      content: Form(
-        key: controller.formKeys[0],
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextFormField(
-              controller: controller.ageController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Age',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) return 'Required';
-                if (int.tryParse(value) == null) return 'Enter a valid number';
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            const Text('Biological Sex', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: ['Male', 'Female', 'Other'].map((sex) {
-                return Obx(() => ChoiceChip(
-                      label: Text(sex),
-                      selected: controller.biologicalSex.value.toLowerCase() == sex.toLowerCase(),
-                      onSelected: (_) => controller.biologicalSex.value = sex.toLowerCase(),
-                    ));
-              }).toList(),
-            ),
-            Obx(() {
-              if (controller.biologicalSex.value == 'female') {
-                return Padding(
-                  padding: const EdgeInsets.only(top: 16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Are you pregnant?', style: TextStyle(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        children: ['Yes', 'No', 'Not Sure'].map((opt) {
-                          return ChoiceChip(
-                            label: Text(opt),
-                            selected: controller.pregnancyStatus.value == opt,
-                            onSelected: (_) => controller.pregnancyStatus.value = opt,
-                          );
-                        }).toList(),
-                      ),
-                    ],
                   ),
                 );
               }
@@ -167,65 +294,12 @@ class AiSymptomInputScreen extends GetView<AiSymptomInputController> {
     );
   }
 
-  Step _buildRedFlagsStep() {
-    return Step(
-      title: const Text('Emergency Symptoms'),
-      subtitle: const Text('Select any that apply'),
-      isActive: controller.currentStep.value >= 1,
-      content: Form(
-        key: controller.formKeys[1],
-        child: Column(
-          children: controller.redFlagsOptions.map((flag) {
-            return Obx(() => CheckboxListTile(
-                  title: Text(flag, style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.red)),
-                  value: controller.selectedRedFlags.contains(flag),
-                  onChanged: (_) => controller.toggleRedFlag(flag),
-                  activeColor: Colors.red,
-                  controlAffinity: ListTileControlAffinity.leading,
-                  contentPadding: EdgeInsets.zero,
-                ));
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
-
-
-  Step _buildContextStep() {
-    return Step(
-      title: const Text('Medical Context'),
-      isActive: controller.currentStep.value >= 2,
-      content: Form(
-        key: controller.formKeys[2],
-        child: Column(
-          children: [
-            TextFormField(
-              controller: controller.existingConditionsController,
-              decoration: InputDecoration(
-                labelText: 'Existing Conditions (Optional)',
-                hintText: 'e.g., Asthma, Diabetes',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: controller.currentMedicationsController,
-              decoration: InputDecoration(
-                labelText: 'Current Medications (Optional)',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: controller.allergiesController,
-              decoration: InputDecoration(
-                labelText: 'Allergies (Optional)',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-          ],
-        ),
+  Widget _buildSectionLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 16.0, top: 16.0),
+      child: Text(
+        text,
+        style: AppTheme.h3,
       ),
     );
   }
