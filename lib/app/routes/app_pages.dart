@@ -27,7 +27,7 @@ import '../modules/student/symptom_analyzer/ai_symptom_result_screen.dart';
 import '../modules/student/symptom_analyzer/ai_symptom_result_binding.dart';
 import '../modules/student/symptom_analyzer/ai_symptom_history_screen.dart';
 import '../modules/student/symptom_analyzer/ai_symptom_history_binding.dart';
-import '../modules/student/symptom_analyzer/emergency_guidance_screen.dart';
+
 import '../modules/student/medicine_reminders/medicine_reminders_screen.dart';
 import '../modules/student/medicine_reminders/medicine_reminders_binding.dart';
 import '../modules/common/profile/profile_screen.dart';
@@ -164,10 +164,6 @@ class AppPages {
       name: AppRoutes.symptomAnalyzerHistory,
       page: () => const AiSymptomHistoryScreen(),
       binding: AiSymptomHistoryBinding(),
-    ),
-    GetPage(
-      name: AppRoutes.emergencyGuidance,
-      page: () => const EmergencyGuidanceScreen(),
     ),
     GetPage(
       name: AppRoutes.medicineReminders,
