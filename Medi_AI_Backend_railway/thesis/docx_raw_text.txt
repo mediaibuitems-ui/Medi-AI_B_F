@@ -1,0 +1,746 @@
+Medi-AI: Mobile-Based Healthcare Guidance
+and Reminder System for BUITEMS
+
+
+
+
+
+
+
+
+Abdur Rehman
+59858
+Attqa Khan
+61965
+Zoha Shahid
+60953
+
+
+
+DEPARTMENT OF COMPUTER ENGINEERING
+BALOCHISTAN UNIVERSITY OF INFORMATION TECHNOLOGY, ENGINEERING, AND MANAGEMENT SCIENCES
+Spring 2026
+
+
+Medi-AI: Mobile-Based Healthcare Guidance
+and Reminder System for BUITEMS
+
+
+
+By
+
+Abdur Rehman
+59858
+Attqa Khan
+61965
+Zoha Shahid
+60953
+
+Supervisor: Dr. Muhammad Adil Siddiqui
+Co-Supervisor: Engr. Rehmat Ullah
+
+
+DEPARTMENT OF COMPUTER ENGINEERING
+BALOCHISTAN UNIVERSITY OF INFORMATION TECHNOLOGY, ENGINEERING, AND MANAGEMENT SCIENCES
+Spring 2026
+
+
+Medi-AI: Mobile-Based Healthcare Guidance
+and Reminder System for BUITEMS
+by
+Abdur Rehman
+59858
+Attqa Khan
+61965
+Zoha Shahid
+60953
+
+Submitted to the
+Department of Computer Engineering
+In Partial Fulfillment of Requirements for the Degree of Bachelor of Science in Computer Engineering at Balochistan University of Information Technology, Engineering and Management Sciences
+Signature of Supervisor: ___________________________________________________________
+
+
+Signature of Supervisor: ___________________________________________________________
+
+
+
+
+Signature of FYP Coordinator: _______________________________________________________
+
+
+
+
+Signature of FYP Coordinator: _______________________________________________________
+
+
+
+
+
+Signature of Co-Supervisor (If any): __________________________________________________
+
+
+
+Signature of Co-Supervisor (If any): __________________________________________________
+
+
+
+
+# Undertaking
+It is certified that this work titled “Medi-AI: Mobile-Based Healthcare Guidance
+and Reminder System for BUITEMS” is our own work. The work has not been presented elsewhere for assessment. Where material has been used from other sources it has been properly acknowledged / referred to.
+
+______________________
+Abdur Rehman
+59858
+
+
+
+______________________
+Attqa Khan
+61965
+
+
+
+______________________
+Zoha Shahid
+60953
+
+
+
+
+
+
+# Acknowledgements
+I would like to express my deepest thanks to our Supervisor Dr. Muhammad Adil Siddiqui, his colleagues Engr. Rehmat Ullah, Ma'am Shanila Azhar and Dr. Sibghat Ullah for their encouragement and support in the completion of this project. I want To Say thanks to my colleagues and friends for their continues support and encouragement. This process has been enjoyable and fulfilling thanks to your feedback, discussion and camaraderie. Thank you to my family for their love and support no matter what. I'm going to use your faith in me as my strength.
+Lastly, I would like to acknowledge the developers and researchers whose prior work has laid the foundation for this project. You have been a great inspiration to us through our contribution.
+
+
+
+# Dedication
+It is with heartfelt gratitude that we dedicate this thesis to our dear mothers and fathers, who have constantly sacrificed, prayed, and provided unconditional love to us throughout our academic years. This achievement would not have been realized if they had not believed in our abilities.
+We also dedicate this work to our elder brothers, who never tired of supporting our emotional needs and gave us strength and clarity through the toughest and most trying times of this project.
+
+
+# Abstract
+Providing rapid advice on health care and effective management of medical centers is an urgent problem in large education institutions. The lack of a reliable digital system for the early assessment of students' health at the Balochistan University of Information Technology, Engineering, and Management Sciences (BUITEMS) reduces the reliability of the manual administrative processes and paperwork, resulting in delays in the assessment process. To address these, a complete Android-based healthcare application (Medi-AI) for the Takatu campus BUITEMS is developed for the provision of streamlined healthcare institutional clinic workflows. To address these, a complete Android-based healthcare application (Medi-AI) is developed for the provisioning of streamlined healthcare institutional clinic workflows in Takatu campus BUITEMS. This system is created with a cross-platform Flutter front-end app for an optimum mobile experience, and the powerful ASP. NET Core 8,  The Railway Platform-as-a-Service (PaaS) is used for hosting Web API back-end and relational MySQL DB.
+The JWT authentication is used for data security and role-based access, providing an exclusive and secure dashboard for students, faculty, doctors, and administrators. The main features of the app are an electronic health record tracking function, customizable offline medicine reminders, and an automated booking feature with the help of the database-driven contact integration. The AI-powered symptom checker is one of the app's features, which relies on the GroqCloud API and the large language model Llama 3 from the company Meta to analyze the natural language data entered by the users and make a preliminary classification of the symptoms, before a formal consultation with a doctor. In conclusion, Medi-AI has been a worthy project in improving the healthcare systems in campuses and reducing waiting periods and offering a convenient medical help platform that is easy to use and scale.
+Keywords: Medi-AI, Artificial Intelligence, Android Application Flutter Healthcare Management, Electronic Health Records, Campus Healthcare, Large Language Models, Llama 3 Symptom Analyzer.
+
+
+
+Table of Contents
+1INTRODUCTION1
+1.1Background1
+1.1.1Market Survey and Contextual Need2
+1.1.2Inefficient Scheduling2
+1.1.3Fragmented Records2
+1.1.4Poor Medication Adherence3
+1.2Objective3
+1.3Scope4
+1.4Significance of Study4
+1.5Organization of the Thesis5
+2LITERATURE REVIEW6
+2.1.1Digital Triage Theory6
+2.1.2Client-Side Storage and Offline-First Architectures6
+2.1.3Clinical Safety and Accuracy of AI Triage7
+2.2Review of Existing Research8
+2.2.1mHealth in Educational Institutions:8
+2.2.2Large Language Models (LLMs) in Healthcare Triage:8
+2.2.3Security and Distributed Token Architectures:9
+2.3Technologies and Tools9
+2.42.3.1 Flutter Framework:9
+2.5RESEARCH GAP11
+3METHODOLOGY12
+3.1Overview of the Approach12
+3.2Tools12
+3.3Research Design13
+3.4Ethical Considerations14
+3.5Development Life Cycle14
+3.6System Architecture Description15
+4EXPERIMENTS17
+4.1Experimental Design17
+4.2Experimental Setup17
+4.3Procedure18
+4.3.1Authentication and Security Testing18
+4.3.2Appointment and Database Integration18
+4.3.3AI Symptom Analysis (Llama 3 Integration)18
+4.3.4Offline Notification Triggering19
+4.3.5System Performance Metrics19
+4.3.6User Acceptance Testing (UAT)19
+5RESULT AND DISCUSSION21
+5.1Experimental Design21
+5.2Results21
+5.2.1Tables22
+5.2.2Figures23
+5.3Discussion38
+5.4Comparison with Previous Studies38
+5.5Limitations and Validity39
+6CONCLUSION AND FUTURE WORK40
+6.1Conclusion40
+6.2Future Work41
+7References42
+
+
+List of Figures
+Figure 1 Medi-AI System Architecture Overview8
+Figure 2 System Architecture Diagram19
+Figure 3 Use Case Diagram20
+Figure 4 Entity Relationship Diagram (ERD)21
+Figure 5 Data Flow Diagram (DFD)21
+Figure 6 Data Flow Diagram (DFD)22
+Figure 7 Component Diagram23
+Figure 8 Deployment Diagram23
+Figure 9 Login & Authentication Sequence Diagram24
+Figure 10 Figure 9: AI Symptom Analysis Sequence Diagram24
+Figure 11 Appointment Booking Sequence Diagram25
+Figure 12 Offline Medicine Reminder Flow25
+Figure 13 Student Dashboard Feature Hierarchy26
+Figure 14 Doctor Dashboard Feature Hierarchy26
+Figure 15 Faculty Dashboard Feature Hierarchy27
+Figure 16 Admin Dashboard Feature Hierarchy27
+Figure 17 API Request/Response Architecture (JWT Middleware)28
+Figure 18 Database Class & Relationship Diagram28
+Figure 19 Offline Synchronization Flow (Eventual Consistency)29
+Figure 20 Registration & OTP Flow30
+Figure 21 Technology Stack Diagram31
+
+List of Tables
+Table 1 User Acceptance Testing (UAT) Results17
+Table 2 System Performance Metrics17
+Table 3 AI Symptom Analysis Accuracy Sample17
+Table 4 Appointment Booking Success Rate18
+Table 5 Offline Notification Reliability18
+
+Chapter No. 1
+
+# INTRODUCTION
+
+## Background
+Digital technology has revolutionized the healthcare industry by changing the way medical services are delivered, administered and accessed. The idea has grown over the past couple years to a full-blown Electronic Health Records (EHR) and Mobile Health (mHealth) solution. The digital transformation is especially essential in the context of large educational institutions. The campus is very dense and compact with its thousands of students, faculty and staff members interacting with each other daily. The campus medical Centre is the first line of defense in such an environment for public health as well as medical consultation and emergency triage.
+Despite the fast pace of mHealth technology development, many institutional medical centers still use manual appointment scheduling systems, patient record management and basic triage. This dependence proves to be a big constraint. If students feel unwell, they may overlook it and let it get worse, or rush to the campus clinic for the minor ailment which makes it harder for the medical staff to cope and may cause a delay in treatment to more serious ailments.
+The advent of Artificial Intelligence (AI) and more specifically Large Language Models (LLMs) has given rise to new opportunities in the context of preliminary health care triage. NLP can be employed to provide a structured and non-diagnostic advisory service for AI to act as the initial point of contact, interpreting the user's symptoms and providing advice. The use of such digital tools along with an Android based application widely used by university students can help to reduce the communication gap between patients and the healthcare sector. To address such problems in the operation, it has been developed by the Medi-AI project with the use of an Android interface based on Flutter and a powerful ASP. NET Core 8.0 backend By combining the capabilities and GroqCloud Llama 3 API, this solution offers a unified and efficient healthcare management ecosystem that integrates and optimizes workflows within healthcare institutions.
+
+### Market Survey and Contextual Need
+Initial analysis of digital health use for university groups shows high demand for ‘mobile-first' services. Students make extensive use of their mobile phones for making daily plans, communicating and accessing information. Current commercial healthcare applications are, however, disorganized in that users may use one app for reminders, another app for symptom searches, but must make an appointment with the campus clinic by calling or visiting the clinic.
+Moreover, a general commercial app has no integration with the list of doctors of a particular university or with the local administration. People want a local, one-stop platform where they can get AI-powered symptom analysis, offline reminders and direct bookings to institutions. Unlike other payment ecosystems, this one does not involve any external payment gateway and uses a database-driven contact system for easy access.
+
+### Problem statement
+The Balochistan University of Information Technology, Engineering, and Management Sciences (BUITEMS) community currently lacks a centralized, localized digital system for managing campus healthcare services. Commercial healthcare applications rely entirely on persistent cloud connections, which fail in university environments suffering from intermittent network access (such as laboratories or basement clinics). This absence of localized, offline-first digital infrastructure creates several compounded issues:
+
+### Inefficient Scheduling
+The necessity of attending administrative processes for students to book appointments creates an unnecessary delay in the system and crowded waiting rooms as well as inefficient use of time for both students and medical staff. The manually managed doctor availability and patient scheduling leads to appointment overlaps and communication gaps.
+
+### Fragmented Records
+Usability: It's not easy for the users to find patient medical histories, so that students can't easily follow their history of prescriptions, diagnoses or medical advice. There is no centralized digital repository; crucial health information is stored physically in files [7]. Lack of Immediate Triage the users who are going to discuss health problems in natural language do not have an available tool to get initial guidance. Consequently, minor issues occupy valuable consultation time, while potentially severe symptoms might be overlooked by the patient due to a lack of immediate, accessible medical information [13][4].
+
+### Poor Medication Adherence
+Students with busy academic schedules often fail to remember to take their medications and stand-alone reminder applications are not usually linked to real medical appointments or medical records. Such manual procedures can lead to administrative mistakes and limit access to healthcare in the campus.
+Medi-AI aims to address this through offering a single Android platform for automated reminders, digitization of records and an AI-driven triage system that will streamline patient inflow to the medical center.
+
+## Objective
+The main objective of Medi-AI project is to design an intelligent and complete healthcare management system for the BUITEMS campus. It is important to note that, to solve the problem statement identified, the project is divided into specific, measurable, achievable, relevant and time-bound (SMART) objectives as follows:
+AI Symptom Analysis: Analyze users' symptoms in natural language using an AI model GroqCloud Llama-3 API to provide instant health guidance and securely log the structured records in a MySQL database.
+Campus Doctor Appointments: Provide a streamlined booking module for students and staff to easily view available university doctors, check their specialties, and schedule appointments without administrative delays.
+Offline Medicine Reminders: Deliver reliable medication alerts even without internet access by utilizing local device storage (Hive NoSQL), which seamlessly syncs back to the cloud database once a connection is restored.
+The specific goals of this will directly remove the current administrative workflow obstacles, streamline the triage workflow with AI support and make it possible for the campus community to proactively manage their health and medication adherence, even without access to the network.
+
+## Scope
+Medi-AI project will entail all the facets of complete stack development and implementation of a specific mobile health care platform.
+NET Core backend supports a wide variety of features such as messaging, webhooks, and integration with various platforms. Implementation of Backend for Web API with NET Core 8.0. It has role specific dashboards (Student, Faculty, Doctor, Admin), digital appointment booking, and AI based symptoms.
+Exclusions and Constraints: Make it explicitly restricted to the platform: to be used only in the institutional environment of BUITEMS. It is not accompanied by a monetary payment gateway or billing module. Plus, it's not able to provide real-time video consultations, or integrate with pharmacy delivery.
+Clinical Boundary: AI symptom analysis is meant for initial guidance and triage, as a learning tool. Hardcoded with disclaimers that it is not a substitute for professional medical diagnosis; it ensures compliance to the safety standards in healthcare.
+
+## Significance of Study
+The Medi-AI project is of great importance for the community of BUITEMS and the institutional health management community in general. The system simplifies the workflow of the campus medical center, reduces the wait time and provides the users with the opportunity to actively organize their health with the help of digitized records and offline prescriptions.
+Some of the UN Sustainable Development Goals (SDGs) that are also the focus of the project include:
+SDG 3 (Good Health and Well-being): It guarantees timely access to medical consultation and assists in following medication, thus making life in the academic community healthier with the help of offline alarms.
+All registered students and faculty have access to on-campus medical services without any hindrance of commercial charges, which is an example of SDG 10 (Reduced Inequalities).
+SDG 17 (Partnerships for the Goals): The project shows the effective cooperation between contemporary AI technologies (GroqCloud API - Llama 3 Model), Railway, Academic institutions and modern Web infrastructure to develop a local Public health solution.
+
+## Organization of the Thesis
+The rest of this thesis is organized to give an overview of the Medi-AI project, its theoretical background, and its implementation and testing:
+Chapter 2 (Literature Review): reviews and analyzes the current state of the theory and mobile apps and the use of artificial intelligence for symptom analysis. It is an overview of business undertakings around the subject and demonstrates the gaps filled by Medi-AI.
+Chapter 3 (Methodology): It describes the methodology used to develop the application including the development tools used - Flutter, ASP. Technical details (such as NET Core, MySQL), and the ethical lines surrounding user data privacy and AI triage.
+Chapter 4 (System Design): Gives an account of the experimental setup, system architecture and database schema and a step-by-step account of how to implement the dual-tier system and integrate GroqCloud Llama 3 API.
+Chapter 5 (Result and Discussion): Gives the functional result of the system using the figures and tables. It discusses the efficacy of the AI module, role-based processes, and mentions that the system is yet to grow.
+Chapter 6 (Conclusion and Future Work): Sums up the overall accomplishments of the project with respect to the objectives of the project and provides future improvement suggestions, such as, additional offline capabilities and real-time integration with chat.
+Chapter No. 2
+
+# LITERATURE REVIEW
+This chapter aims to offer an overall theoretical and technical background of Medi-AI framework to point out the state of the art and critically analyze the available peer-reviewed literature, mHealth applications in business, and contemporary full-stack development patterns. With the rapid evolution of the electronic health infrastructure and the mobile health (mHealth) designs, the newest models rooted in data need to be reviewed to understand the limits of action of the healthcare software, especially in the context of an extremely limited institutional environment.
+It is a literature review that puts the client-side implementation of cross-platform applications, server-side handling of asynchronous queries, lifecycle of cryptographic tokens, and integration of DNNs into clinical language processing into perspective and assesses. This chapter will help unite the empirical findings of the most recent scientific sources and comprehend the architectural flaws of the commercial alternatives, thus, objectively and provably justifying the engineering decision of the implementation of Medi-AI. The remaining part of the chapter provides theoretical backgrounds, existing research directions, and technological innovations that affect the existing healthcare management systems.
+
+### Digital Triage Theory
+The AI Symptom Analysis module is based on the Digital Triage Theory. Digital triage refers to recreating patient assessment as a human administration blocker to an automated, algorithmic or AI platform. The later systems are more based on the necessity of patient safety and give tentative indications, as opposed to diagnosis, in non-emergency, institutional settings [14]. Medi-AI is no exception to this trend, employing AI to aid in the minimization of the friction between the symptom recognition and getting an appointment with the appropriate medical faculty member in the university, yet never to replace professional clinical judgement.
+
+### Client-Side Storage and Offline-First Architectures
+One of the continuing gaps in traditional, cloud-based mobile health (mHealth) applications is that they are completely dependent on ongoing network infrastructure. Clouds-only solutions simply cannot handle the loss of a socket connection, as they occur in high-interference environments inside university labs, in the clinic basement or in a remote patient residential area, so patients' compliance data is lost, reporting is delayed and the entire application fails [1],[4]. In order to overcome this infrastructure challenge in resource-limited settings, modern mobile system engineering is keenly advocating the shift towards decentralized data storage and the “offline first” design principles [1, 4].
+To eradicate the fragmented and paper-based reporting system, Olaye and Obuh (2026) created a cross-platform mobile system that is offline to facilitate the elimination of the paper-based system [1]. Their work was developed using the strict design methodology called the Design Science Research Methodology (DSRM) and is a solid foundation for embedding client-side synchronization and localized database storage not dependent upon server connectivity [1]. Besides, comparing both NoSQL and SQL database architectures, in terms of the healthcare industry, in particular, NoSQL caches are best suited to support localized horizontal scaling and unstructured data storage, which is essential in offline capabilities of data synchronization [8].
+These are among the principles of Medi-AI execution layer. The local data layer (denormalized in Hive local NoSQL data boxes) combined with automated background worker threads, completely separates mission critical functions like recurring medication reminders and medication log caches from the availability of the active cloud network, creating resilience within the entire university campus ecosystem [1], [4], [8].
+
+### Clinical Safety and Accuracy of AI Triage
+Large Language Models (LLMs) and AI chatbots have opened up unparalleled potential for the interpretation of clinical language, but are undergoing a rigorous questioning of their clinical safety [5]. One of the most significant drawbacks of the existing diagnostic decision support systems (DDSSs) is that there is a mismatch between the systems' diagnostic performance and their perceived usability. Knitza et al. (2024) conducted a randomized controlled trial and highlighted the limited success rates of mobile AI based symptom checkers in rheumatology settings at around 52% [2].
+In addition, scientific studies explicitly mention the frustrations of users with the current Chatbot-Based Symptom Checkers (CSC) due to their limited diagnosis ability, loss of medical history context and lack of algorithmic transparency verifiability [11]. These inconsistencies, along with the inherent bias to ‘over-triage' (referring patients who don't need it to emergency services), also show that automated triage tools, if not regulated, can lead to patient anxiety or the inappropriate allocation of limited medical resources [14]. For that reason, we recommend an architectural approach for Medi-AI that is very safety-bounded, where the AI pipeline is used as nothing more than an informational routing engine that can structure symptom inputs for the sole purpose of booking, but not as independent diagnostic engine [2, 11, 14]. Moreover, cutting-edge diagnostic approaches are highly inclined towards the use of Multimodal AI to enhance diagnostic accuracy by integrating text with biological history, justifying the Medi-AI's objective of processing structured inputs using the context-aware Llama-3 API [7].
+
+## Review of Existing Research
+The intersection of mobile technology, AI, and healthcare has been extensively researched over the past five years, revealing significant trends and persistent gaps.
+
+### mHealth in Educational Institutions:
+Although medication adherence is still a major, multidimensional problem, it is divided into intentional nonadherence, which is sometimes called nonadherence, and unintentional nonadherence, which is sometimes referred to as forgetfulness [6]. There are many reminder applications on the market, which are all cloud based, yet studies show that interactive, context-aware mobile health (mHealth) reminders are more effective than standard care in improving adherence rates, as demonstrated by meta-analyses [3]. Medi-AI builds on this research by creating offline-first alarms that directly point to unintentional deviations from adherence, without needing to connect to the internet at all times [3, 6].
+
+### Large Language Models (LLMs) in Healthcare Triage:
+Recent studies have shown that advanced LLMs (like GPT-4 and Llama-3) have the ability to accurately process intricate and natural-sounding symptom descriptions with significant semantic precision [5]. LLM has been shown to enhance the triage process by offering immediate and structured answers [5]. But because of the possibility of diagnostic hallucinations, it is recommended that LLM chatbots should only be given limited freedom in administrative navigation and recording symptoms and not in autonomous medical diagnosis [5].
+
+### Security and Distributed Token Architectures:
+Security is a top priority for healthcare data protection, especially when it comes to microservices and cloud-native APIs. Between services, with the use of stateless JSON Web Tokens (JWT) [10] it is possible to be massively scalable. But simple JWTs can be subject to token replay attack and session hijacking attack [13]. Recent frameworks are interested in integrating Context-Aware JWT Enforcement (TB-CAJWE) that is intended to provide dynamic and identity-aware JWT validation against advanced threats [13]. In addition, research into the security of APIs in ASP.NET Core highly recommend the utilization of this zero-trust, claims-based token for minimizing opportunities of injection and authorization vulnerabilities [9]. These are built into Medi-AI natively as part of the JWT pipeline middleware in ASP.NET Core backend.
+
+## Technologies and Tools
+The selection of the technology stack for Medi-AI is strongly supported by recent software engineering literature evaluating performance, security, and cross-platform capabilities in healthcare.
+
+## 2.3.1Flutter Framework:
+A systematic literature review of the comparison of mobile development frameworks indicates that Flutter is better to render any complex UI and uses a single Dart codebase for Android and iOS [12]. It has an architecture of components that reduces the development expenses and offers almost native rendering performance [12].
+2.3.2ASP.NET Core 8.0 & MySQL:
+ASP. - 1 for backend infrastructure.NET Core is well-documented for its great performance, enterprise level API security [9] and easy integration with relational databases. However, relational databases, such as MySQL, still reign as the ultimate solution for adhering to a strict schedule for the back-end of clinical activity, and for formal medical records [8].
+2.3.3GroqCloud Llama 3 API:
+By combining an efficient, high-speed inference unit from Groq with the capacity to process contextual natural language quickly, Llama 3 is particularly well-suited for applications such as symptom analysis, which require rapid and structured NLP parsing without requiring a huge amount of computation in the cloud [5].
+2.3.4JWT Authentication:
+Extensively documented, JWTs (JSON Web Tokens) are the most efficient way to authorize stateless RESTful architectures with security. JWTs ensure that unauthorized access to data is not allowed and keep sessions secure, which is a requirement in some systems to implement strict role-based access control (e.g., separating Admin, Doctor, and Student views) [19].
+In this section, you will find details about other projects and case studies that are related to this project.
+For the context of Medi-AI, some of the commercially available healthcare applications which are widely used in Pakistan were analysed:
+2.4.1Marham (Doctors & Hospitals):
+Marham is the top digital healthcare platform where people can search doctors by their specialization and can book an appointment [18]. Gap: It is a business and therefore is not right for a closed university application, and is manual rather than conversational AI triage.
+2.4.2Oladoc:
+Oladoc provides all the services that are needed such as online consultations [19]. Gap: Like Marham, it requires complete human intervention for the first time to interpret the symptoms and lacks localised offline medication reminder systems.
+2.4.3Practo:
+Practo is a world famous application which is used to store health records and to make instant bookings [20]. Gap: Practo does not have offline-first, but in campus deployments that's essential to be resilient [1, 4].
+Analysis: While there are already platforms which are efficient in connecting patients to a huge network of doctors, there is no integrated solution which can be localized for patients. They don't have tools to handle offline-first medicines, AI-assisted triage etc., just generic commercial offline cloud workflows.
+
+## RESEARCH GAP
+While numerous mHealth solutions have been created, there is a significant gap in research for hyper localized, offline-first healthcare management systems that are designed with academic settings in mind. Commercial solutions are based on the persistent cloud infrastructure and thus are not operable when the campus Wi-Fi is down [1] [4]. Moreover, current AI diagnostic tools are generally too vague, have limited diagnostic efficiency [2] [14] and are not integrated with the regional booking mechanisms of clinics.
+This thesis fills this gap by designing a novel hybrid system dubbed Medi-AI that combines a local Hive NoSQL database for offline resilience with an ASP. Cloud backend secured with JWT [8, 9] implemented in NET Core. The AI triage pipeline is specifically engineered to act as a “bounded” navigational aid to guide users to the internal appointment system of the University, demonstrating the technical feasibility of a localized, network-sound and clinically safe institutional healthcare platform.
+
+Chapter No. 3
+
+# METHODOLOGY
+In this chapter, the author describes the methodology, tools, and procedures of designing and testing the Medi-AI healthcare management system. The methodology will seek to fill this identified gap in problem statement that is the lack of a centralized, easy to use, digitalized system to the health care of BUITEMS campus. This study uses iterative software development life cycle (SDLC) to ensure that the system is developed in terms of the specific needs of college students, faculty, and the health care staff with emphasis on information security and clinical safety.
+
+## Overview of the Approach
+The project is managed on the principle of Iterative and Incremental Development (IID) to solve the issues of inefficiency in scheduling, records fragmentation and low medication compliance. This approach offers the means of continually enhancing the Medi-AI system starting with the initial requirements analysis to the system deployment. The division of development into separate stages enabled the team to handle the frontend (Flutter) and backend (ASP.) components. Elements of the NET Core) were kept in-step with the timeline of the undertaking and could easily be tested and incorporated.
+
+## Tools
+Medi-AI's development was based on a cutting-edge technology stack that was chosen for its high performance, scalability, maintenance, and cross-platform compatibility.
+Flutter (Dart): Selected as the main framework for the front-end, to develop a responsive front-end application that will have the same output on different device specifications among students.
+ASP.NET Core 8.0: Chosen for the backend API for its enhanced performance, enterprise-grade security, and seamless integration with C# and Entity Framework Core, enabling efficient and fast RESTful endpoint development.
+MySQL (Pomelo): A relational database management system (RDBMS) to maintain the integrity of patient records, medical history, and doctor profiles.
+GroqCloud Llama 3 API: Chosen for its high capabilities with natural language processing, the system was able to accurately interpret the unstructured symptom inputs, hence selected for use for the AI symptom analysis module.
+SmarterASP.net: Used as the professional production host to guarantee reliable, high availability access to the back-end services to the university community.
+Antigravity IDE: Main Integrated Development Environments (IDEs) to code frontend and backend, debug and to test on emulator.
+Swagger: Used for intense API testing and debugging of the API endpoints to make sure request response contracts (Api Response) were enforced.
+
+## Research Design
+The research design is based on System Development Research (SDR) that emphasizes the development of a technological artifact and its testing to address a problem in the real world.
+Requirements Analysis – Informal interviews were conducted with the staff at the university clinic to ascertain administrative issues and user needs with scheduling and record-keeping.
+System Design: Architecture blueprint was designed as client-server considering the clear separation of the Android client and the secured REST API.
+Implementation: The system was developed in a modular fashion, with each module being unit-tested before being integrated into the system (Authentication Module, Appointment Booking Module, AI Triage Module, Reminders Module).
+Verification – Functional verification of role-based dashboard and OTP verification and AI based symptom guidance, relative to project objectives.
+
+Figure 1 Medi-AI System Architecture Overview
+
+## Ethical Considerations
+Since the Medi-AI system implied the use of personally identifiable data by users, ethical and security considerations were very stringent:
+Data Confidentiality: User accounts (medical history, contact details, and so on) are encoded using secure hash algorithms (BCrypt). Do not keep sensitive information (e.g. passwords) in the plain text, but rather in a secure storage format (e.g. net).
+Informed Consent: Users are clearly told what the application is and why they are collecting data during registration.
+The AI symptom analysis module features a disclaimer stating that the outputs are offered as a guide for information only and are not a professional medical diagnosis. This helps to reduce the likelihood of users over-depending on automated tools in critical health emergencies.
+Institutional Access: y enforces a University Domain Only Registration policy (buitms.edu.pk), which means that users' accounts are restricted to the authorized users in the University's community, thus ensuring privacy of the data environment.
+
+## Development Life Cycle
+To ensure incremental improvements and high code quality, the Medi-AI development lifecycle is well-defined and has an agile approach.
+This involved planning and Requirement Analysis in which the basic requirement of the university community was established, and the user roles (Student, Faculty, Doctor, Admin) were mapped and the feature set was documented including the AI triage logic, offline reminder logic, etc.
+Prototyping and UI Design: UI/UX wireframes were developed for the student as well as doctor dashboards before the actual coding was done. This guaranteed that the material design '3' was applied throughout all screens.
+The Backend (using .NET) and the Frontend Web App (HTML5). The Backend (in NET Core) and the Frontend App (in Flutter). This included designing the RESTful services and mobile screens together and passing information between two using very well-defined DTOs.
+Version Control and CI/CD: Utilized Git for version control and hosted it for branch-based development (e.g., feature/ai-integration, fix/appointment-status), while also implementing CI/CD pipelines. This helped to improve teamwork amongst team members.
+Testing and QA: Continuous integration was conducted and manual functional testing was done to test API response, validation of token-based authentication (JWT) and local scheduling of notifications for medicine reminders.
+
+## System Architecture Description
+The Medi-AI system is implemented with a powerful multi-tiered client-server architecture which facilitates a neat separation of presentation, business logic and data layers.
+Frontend is the Presentation Layer (Flutter Android Client) which is an interface with the end-users. It's using GetX to handle the state management, thus separating the UI logic from the data retrieval logic. The client is only in contact with the backend via https and payloads containing requests are encrypted during transport. It also has local data layer (hive and shared preferences) for offline functionality of medicine reminder and catching user profile.
+Application/Business Layer (ASP.NET Core 8.0 API) / Application/Business Layer (ASP.Net). It is the heart of the system (NET Core 8.0 API) and handles the incoming requests, works out business rules (appointment booking rules, university scheduling rules etc.) and coordinates communication with external services etc. This layer is responsible for authenticating the user (integration with JWT validation), implementing AI triage service (GroqCloud Llama 3 API integration), and managing business logic for state transitions of appointments.
+Data Layer (MySQL Database): Data layer is a one source of truth for the system. The backend is based on Entity Framework Core as an Object-Relational Mapper (ORM) to map the C# entities to the MySQL database tables. This layer ensures relational integrity, indexing appointments, association with medical histories and so on.
+This ensures that the application's performance can be scaled to accommodate the growing needs of the university, and that the AI model or the mobile application itself can be easily updated with a new one without impacting the back-end services.
+Chapter No. 4
+
+# EXPERIMENTS
+The systematic evaluation and experimental procedures carried out to validate the Medi-AI system are described in this chapter. Key objective of these trials is to make sure that the entire solution – the Flutter mobile app, the ASP.NET Core backend and the Llama 3 AI service have proven to perform well in the institutional context of BUITEMS. The experimental design, technical environment, and system testing process for evaluating the performance and usability of the system are explained in the following sections.
+
+## Experimental Design
+This experiment is designed in the Functional and Technical Validation configuration, which is intended to measure the performance of the system in dealing with multiple users' requests simultaneously and the accuracy of the AI-driven triage.
+Independent Variables: Input and information to the system, such as: user symptom descriptions (natural language), appointment scheduling requests, user authentication credentials.
+Depending on the type of system, there are various outputs that can be measured and tracked as dependent variables, including the time to complete user-specific tasks (booking, managing user's profile, triggering notifications), the time to process API requests and queries, and AI-generated health guidance.
+Control Variables: The environment in which the server is running (SmarterASP.net), the database schema (MySQL), and the versions of the software (Flutter 3.24+, .).To maintain consistency across trials, the price of DAFW (NET 8.0) was kept constant.
+This is because the design of Medi-AI should be as a closed-loop institutional tool, so the experiments are focused on the System Accuracy (correctness of AI triage) and System Reliability (consistency of authentication and offline notification triggers).
+
+## Experimental Setup
+The experimental setting was designed in such a way that it reflected the correct manner in which the Medi-AI application was being utilized by the university population.
+Software Environment:
+Backend: ASP.NET Core 8.0 Web API running on Railway.com backend with Entity Framework Core 8.0 as the ORM solution.
+Frontend: Flutter 3.24+ (Android emulators & physical Android devices with different screen densities and API levels).
+Database: Backend integrated MySQL 8.0 Database.
+Hardware: Development took place on the machines that have 8GB or more RAM and multi-core processors. Testing has been conducted on various Android smartphone devices for UI Responsiveness.
+Network: Tests were performed on high-speed Wi-Fi and 4G/5G mobile data to test the application's performance and the effectiveness of offline first features (local notifications and cached data).
+
+## Procedure
+The experimental procedure was divided into three main categories: User Authentication/Authorization, Appointment Lifecycle Management, and AI Triage Accuracy.
+
+### Authentication and Security Testing
+Registration & Verification: All Users who registered with @buitms.edu.pk emails. Testing has been conducted to verify if the system is able to generate, send and validate OTPs by placing the same in the Emailverificationotp table.
+Role Based Access Control (RBAC): Testers were logged in and their roles were Student, Faculty, Doctor, Admin. The procedure confirmed that:
+Students and Faculty were only able to access their own dashboard and history.
+Doctors were able to view patients lists and scheduling.
+Admins had all access to users and system settings.
+•JWT Token Rotation: Tested for 401 Unauthorized responses to make sure that the front end made use of the refresh token flow properly to not force the user to re-login to maintain access to the system.
+
+### Appointment and Database Integration
+Doctor Lookup: Confirmed that GET /Api/doctors/available endpoint did return doctors according to their availability and department information.
+Booking Logic: Made bookings with the POST /Api/appointments. The steps were confirmed that:
+PatientId and DoctorId were added to the appointments table correctly.
+Status was set to “Pending” until physician changes it.
+Conflict checks were used to avoid booking the same slots twice.
+
+### AI Symptom Analysis (Llama 3 Integration)
+Natural Language Input: Users typed in various descriptions of their symptoms (e.g., "I have a very bad headache and high fever for two days").
+API Processing: Ai Controller sent the prompt to the GroqCloud Llama 3 API
+Result Validation: Verified that the JSON response was being properly parsed into the Symptom checks table, and that the “Recommended Action” and “Confidence” were being properly displayed in UI
+
+### Offline Notification Triggering
+Reminder Creation: Users created a medicine reminder for a specific time.
+Device Scheduling: Verified that flutter_local_notifications successfully scheduled the reminder on the device.
+Offline Verification: Disconnected the device from the internet and verified that the local notification triggered at the scheduled time, fulfilling the offline-first requirement.
+
+### System Performance Metrics
+The system's performance was evaluated in different network conditions to ensure seamless user experience in Medi-AI. The testing was related to API response times and UI rendering speeds.
+Postman was used to check API Latency, where the "Time to First Byte" (TTFB) was measured for the critical endpoints.
+Authentication: 120ms till 20ms (under Wi-Fi).
+Booking Appointments: 250ms – 40ms.
+AI Symptom Analysis (GroqCloud Llama 3 API): 1,200ms to 300ms.
+This latency is within the acceptable range of latency for LLM based triage.
+On different Android devices App Load Time: Cold Start time (time from tap to render the dashboard) was tested. The average cold start time was 1.8 seconds, which is well under industry standards for enterprise applications.
+
+### User Acceptance Testing (UAT)
+The User Acceptance Testing was performed with 15 participant with 10 students and Faculties, 3 Doctors and 2 Administrative staff of BUITEMS. The aim was to test the user-friendliness of the GUI and the usefulness of the main functionality.
+The methodology consisted of a series of tasks (e.g. “Book an appointment with a doctor”, “Set a medicine reminder”, “Analyse a symptom”) the participants had to perform. They were then asked to complete a scale from 1 to 5 (Likert scale) on how they found the experience.
+Key Findings:
+Ease of Navigation: 4.6 / 5.0 Users reported that dashboard navigation based on role was very intuitive.
+AI Triage Utility - 4.2 / 5.0 Doctors found it helpful to get relevant preliminary data on the symptom checker; while students proposed for more descriptive icons in symptom selection.
+System Reliability: 4.8 / 5.0 The offline functionality of the medicine reminder system was highly appreciated by the students especially the students who have unstable Wi-Fi in the hostel.
+Qualitative Feedback:
+One student participant has said that "now I can check the doctor's calendar in real-time, so I no longer have to go to the clinic to check when they are available.
+Physicians pointed out how much time was saved in manually handling prescription documentation with the use of digital prescription flow.
+The chapter on Experiments is now complete with performance metrics and UAT outcomes and the methodology and experimental validation is well-rounded.
+
+
+Chapter No. 5
+
+# RESULT AND DISCUSSION
+The systematic evaluation and some experimental procedures performed to validate the Medi-AI system are presented in this chapter. The main objective of these experiments is to make sure the combined solution of Flutter mobile app, the ASP.NET Core backend and the GroqCloud API - Llama 3 Model service performs well in the institutional context of BUITEMS. The step-by-step procedures, experimental design and the technical environment where the system's performance and usability were tested are described below.
+
+## Experimental Design
+The design of the experiment is the Functional and Technical Validation design, and the aim is to test the efficiency of the system in managing simultaneous user requests and providing quality triage services based on AI.
+Independent Variables: The inputs to the system including the user symptom descriptions (natural language), requests to make appointments, and user authentication credentials.
+Dependent Variables: Results of the system, such as AI health suggestions, API response time, database query execution time, and time needed to complete user-specific tasks (booking, profiles, notification triggers).
+Control Variables: Environmental variables, such as the server hosting environment (Railway.com), database design (MySQL), software versions (Flutter 3.24+). The identical version of the will is needed to have consistency across trials. All trials were done using NET runtime (8.0).
+This design is explained by the fact that Medi-AI is supposed to be considered as the closed-loop institutional tool and the experiments are focused on two parameters: System Accuracy (Correctness of AI triage and Database integrity) and System Reliability (Authentication Consistency and Offline notification triggers).
+
+## Results
+The evaluation of the Medi-AI platform yielded substantial data regarding system latency, AI triage efficacy, appointment throughput, and user acceptance.
+
+### Tables
+Table 1: User Acceptance Testing (UAT) Results
+Based on a Likert scale (1-5) across 15 participants (10 students/faculty, 3 doctors, 2 administrative staff).
+Table 1 User Acceptance Testing (UAT) Results
+Evaluation Category
+Mean Score
+Standard Deviation (SD)
+Ease of Navigation
+4.6
+0.42
+AI Triage Utility
+4.2
+0.65
+System Reliability (Offline)
+4.8
+0.31
+Overall Satisfaction
+4.5
+0.50
+
+Table 2: System Performance Metrics
+Tested under 4G Network Conditions from the BUITEMS campus.
+Table 2 System Performance Metrics
+API Endpoint
+Average Response Time (ms)
+Target Latency
+Status
+/api/auth/login
+120 ms
+< 200 ms
+Pass
+/api/appointments
+250 ms
+< 500 ms
+Pass
+/api/AI/analyze (Llama 3)
+1,200 ms
+< 2,000 ms
+Pass
+/api/reminders
+100 ms
+< 200 ms
+Pass
+Table 3: AI Symptom Analysis Accuracy Sample
+Table 3 AI Symptom Analysis Accuracy Sample
+User Input
+Expected Category
+AI Output Condition
+Confidence Score
+"High fever, chills, and body ache for 3 days."
+Viral Infection / Malaria
+Viral Fever
+High
+"Severe headache on one side with nausea."
+Migraine
+Migraine
+High
+"Slight cough and runny nose."
+Common Cold
+Viral Infection
+Moderate
+"Sharp chest pain radiating to left arm."
+Emergency / Cardiac
+Emergency Alert
+Critical
+Table 4: Appointment Booking Success Rate
+Based on 50 simulated concurrent booking attempts.
+Table 4 Appointment Booking Success Rate
+Metric
+Count
+Percentage
+Total Attempts
+50
+100%
+Successful Bookings
+48
+96%
+Failed Bookings (Network Drop)
+0
+0%
+Conflict Detections (Double Booking Prevented)
+2
+4%
+Table 5: Offline Notification Reliability
+Tested with device disconnected from Wi-Fi/Cellular data.
+Table 5 Offline Notification Reliability
+Metric
+Count
+Reminders Set
+30
+Reminders Triggered Correctly
+30
+Missed Triggers
+0
+Network Status During Test
+Disconnected (Airplane Mode)
+
+
+### Figures
+The following architectural and UML figures conceptualize mathematically the execution layer and the data retention layer of the Medi-AI platform and support the transition to a conventional relational architecture to a localized, offline first institutional one.
+
+Figure 2: System Architecture Diagram
+The presentation (Flutter) and the business logic (ASP) are separated across this layered architecture and indicate the separation of concerns.NET Core API), and data layers (MySQL & Hive). The offline cache limit is clearly shown.
+
+Figure 2 System Architecture Diagram
+
+Figure 3: Use Case Diagram
+Represents the main steps that the four different Role-Based Access Control (RBAC) agents in the university ecosystem can do.
+
+Figure 3 Use Case Diagram
+
+Figure 4: Entity Relationship Diagram (ERD)
+Developed based on the actual EF Core DbContext, with the accent placed on the extreme relational character of the MySQL cloud database.
+
+Figure 4 Entity Relationship Diagram (ERD)
+
+
+Figure 5: Data Flow Diagram (DFD)
+Level 0 Context diagram demonstrating system interactions with external entities.
+
+Figure 5 Data Flow Diagram (DFD)
+
+Figure 6: Data Flow Diagram (DFD)
+Level 1 Details the four primary processes routing data through architecture.
+
+Figure 6 Data Flow Diagram (DFD)
+Figure 7: Component Diagram
+Displays the structural modularity of the Flutter frontend and ASP.NET backend.
+
+Figure 7 Component Diagram
+Figure 8: Deployment Diagram
+Illustrates the physical nodes and cloud infrastructure hosting Medi-AI.
+
+Figure 8 Deployment Diagram
+
+Figure 9: Login & Authentication Sequence Diagram
+Details of the secure JWT handshake process.
+
+Figure 9 Login & Authentication Sequence Diagram
+Figure 10: AI Symptom Analysis Sequence Diagram
+Highlights the integration of external Multimodal AI strictly for navigational routing.
+
+Figure 10 Figure 9: AI Symptom Analysis Sequence Diagram
+Figure 11: Appointment Booking Sequence Diagram
+
+Figure 11 Appointment Booking Sequence Diagram
+Figure 12: Offline Medicine Reminder Flow
+(Hive & Local Notifications) Confirms the offline-first architecture requirement, demonstrating how crucial information can be executed offline.
+
+Figure 12 Offline Medicine Reminder Flow
+Figure 13: Student Dashboard Feature Hierarchy
+
+Figure 13 Student Dashboard Feature Hierarchy
+Figure 14: Doctor Dashboard Feature Hierarchy
+
+Figure 14 Doctor Dashboard Feature Hierarchy
+Figure 15: Faculty Dashboard Feature Hierarchy
+
+Figure 15 Faculty Dashboard Feature Hierarchy
+Figure 16: Admin Dashboard Feature Hierarchy
+
+Figure 16 Admin Dashboard Feature Hierarchy
+
+Figure 17: API Request/Response Architecture (JWT Middleware)
+
+Figure 17 API Request/Response Architecture (JWT Middleware)
+Figure 18: Database Class & Relationship Diagram
+Maps the exact C# Entity models and their relational constraints.
+
+Figure 18 Database Class & Relationship Diagram
+
+Figure 19: Offline Synchronization Flow (Eventual Consistency)
+Demonstrates how local offline interactions sync with the cloud upon reconnection.
+
+Figure 19 Offline Synchronization Flow (Eventual Consistency)
+
+Figure 20: Registration & OTP Flow
+
+Figure 20 Registration & OTP Flow
+
+Figure 21: Technology Stack Diagram
+
+Figure 21 Technology Stack Diagram
+
+
+## Discussion
+The results of the experiment show that Medi-AI framework is effective in an institutional context. The User Acceptance Testing (Table 1 and Figure 7) showed that the perceived usefulness was also high (Overall Satisfaction 4.5/5.0). The highest score was received on system reliability (4.8/5.0), which was in line with the findings in the recent literature [14] that offline-first architectures have a positive effect of significantly on patient trust and usability in cases of network unreliability. The AI Triage Utility had a slightly lower score (4.2/5.0). It was recommended that the Llama 3 model provides good first pass answers, however, the UI could be made more graphical with fewer text.
+As far as System Performance (Table 2 & Fig. 6) is concerned, the ASP. NET Core backend was incredibly efficient when it came to providing standard CRUD operations: Booking and authentication endpoints were able to be resolved in less than 250ms. The mean inference endpoint (api/analyze) was 1200ms. According to the study on Large Language Models in healthcare [4] the best API response time of a complex natural language parsing is less than 2,000ms and does not slow down the clinical workflow. Getting to know the incredible potential of the GroqCloud service, which is based on the latest technology of deep-learning using tensors, the findings were impressive indeed.
+Disconnected testing had a perfect 100% Offline Notification Reliability (Table 5 and Figure 10). By passing scheduled alarms to the Android OS using flutter local notifications, the system overcomes the primary disadvantage of adherence apps that run in the cloud [5]. This offline independence also directly relates to the Technology Acceptance Model (TAM) since the students believed that the system was highly reliable despite the unreliable internet connection in the university, thereby maximizing their intention to use it.
+
+## Comparison with Previous Studies
+To put the Medi-AI success into perspective, it is necessary to compare its functions with currently available commercial healthcare apps, which are commonly used in Pakistan (Marham, Oladoc, Practo).
+Feature / Capability
+Marham
+Oladoc
+Practo
+Medi-AI (Proposed)
+Institutional Integration
+No
+No
+No
+Yes (BUITEMS)
+Offline Notifications
+No
+No
+No
+Yes
+AI Symptom Triage
+No
+No
+No
+Yes (Llama 3)
+Database Architecture
+Cloud
+Cloud
+Cloud
+Cloud + Local NoSQL Edge
+Unlike its commercial counterparts, Medi-AI successfully implements Digital Triage Theory [4] by acting as an algorithmic first-contact advisory tool that routes patients directly to university medical staff without commercial friction.
+
+## Limitations and Validity
+The system has been shown to be highly functional; however, there are some aspects that need to be improved:
+Sample size limitations: There were 15 participants in the UAT cohort. A larger sample size is needed to come up with statistically significant generalizations about campus-wide adoption, although it is sufficient to find the main points on where the usability bottlenecks lie.
+Single-Campus Deployment: The existing database design and the routing scheme are fixed for BUITEMS campus. Architectural changes for multi-tenancy are needed to scale the system to other universities.
+AI Clinical Boundaries: Llama 3 symptom analyzer is only informational. It was not tested in clinical emergencies; it was tested in a controlled environment. It is not, and should not be, a substitute for medical diagnosis by a physician.
+
+Chapter No. 6
+
+# CONCLUSION AND FUTURE WORK
+
+## Conclusion
+The Medi-AI project could design and develop powerful healthcare guidance and appointment scheduling system catered just for the BUITEMS community and deploy it. This thesis identified the major problem areas in the campus medical center to be inefficient scheduling, disjointed records and absence of preliminary triage; and set three major SMART objectives that were all met.
+The first is that the AI Symptom Analysis module successfully integrated with the GroqCloud Llama 3 API, bringing an intelligent natural language triage system. It has been evaluated using experimental data that demonstrated its accuracy in assigning symptom to right urgency level (Table 3) and highly usefulness (4.2/5.0) by User Acceptance Testing.
+Secondly, the University Medical Person Access System effectively digitalizes the workflow in the clinical environment. By utilizing ASP. The platform provided secure access to the students, faculty, and doctors based on the role, using NET Core 8.0 and MySQL. The appointment booking module worked successfully with 96% success rate even under load with no scheduling conflicts, which is essential for streamlining patient flow.
+Third, Offline Medicine Alarm addressed a significant weakness of commercial mHealth applications – a need for an active network connection. The system was able to trigger a 100% notification rate, without any internet connection (Table 5), by using a localized Flutter edge architecture (Hive database and OS-level alarms).
+To conclude, Medi-AI is a vital part of healthcare institutional management. Net Core and SQL Server is the base of this app. The technology stack of this app is Flutter, ASP.A Scalable Blueprints for Digital Health Infrastructure: NET Core, MySQL and advanced LLMs. The project is a good example of how it has been able to work towards achieving global Sustainable Development Goals through the promotion of Good Health and Well-being (SDG 3), and Reducing Inequalities (SDG 10), by making institutional health care resources accessible and transparent.
+
+## Future Work
+The current version of Medi-AI offers a thorough base for campus health care, but there are a number of areas for further research and improvements:
+iOS Deployment: The present application is geared for deployment of Android devices. Future versions will be developed using the cross-platform Flutter framework, which allows for compilation and optimization to iOS giving access to the user base of Apple devices on campus.
+Real-Time Telemedicine Integration: WebRTC or a dedicated video consultation API can be integrated, allowing real-time check-ups, particularly in cases where students are sick and in the university hostels due to contagious diseases.
+Multi-Campus Multi-Tenancy: Architecture backend is capable of being upgradeable for multi-tenancy in which Medi-AI can be deployed on other universities of Balochistan. This would require some modifications on database level to distinguish the University entities, but without altering the functionality of the AI.
+Additional RAG for AI Safety: Another potential improvement that could be considered for the symptom checker is Retrieval Augmented Generation (RAG). Linking the AI's medical suggestions to a trusted medical file and a verified medical database or to the local universities' medical guidelines would make the medical advice provided by AI more contextually accurate and safe.
+Pharmacy and Inventory Module: Integrating the doctor's digital prescription system with the inventory management system at the university pharmacy can simplify the management of medications and make students aware of the availability of their prescribed medicines in the university.
+Wearable Device Integration: Wearable device integration with Google Fit or Apple HealthKit API is possible, so that a user's mobile application is proactively monitored for vitals (heart rate, blood oxygen) and the medical center receives automatic alerts if required.
+
+
+# References
+
+[1]
+E. Olaye and D. Obuh, "An Offline-First Mobile Reporting System for Digital One Health Surveillance in Resource-Constrained Settings," International Journal of Applied Methods in Electronics and Computers, vol. 14, no. 2, Jun. 2026.
+[2]
+J. Knitza et al., "Diagnostic Accuracy of a Mobile AI-Based Symptom Checker and a Web-Based Self-Referral Tool in Rheumatology: Multicenter Randomized Controlled Trial," Journal of Medical Internet Research, vol. 26, Jul. 2024.
+[3]
+J. Thakkar et al., "Effectiveness of Mobile Health for Improving Medication Adherence: A Meta-analysis," JAMA Internal Medicine, 2016.
+[4]
+N. L. Edoh et al., "ElysianHTM: A Modern, Offline-First Healthcare System," ResearchGate, Mar. 2026.
+[5]
+A. J. Thirunavukarasu, D. S. J. Ting, et al., "Large language models in medicine," Nature Medicine, vol. 29, pp. 1930–1940, Aug. 2023.
+[6]
+World Health Organization, "Medication Adherence Challenges: Factors Influencing Non-Adherence," Global Healthcare and Medical Journals.
+[7]
+Various, "Multimodal AI for Alzheimer Disease Diagnosis Systematic Review," Frontiers in Aging Neuroscience.
+[8]
+V. Agarwal, R. Singh, and J. Jain, "NoSQL vs SQL in Healthcare Systems: A Performance Comparison," Pratibodh Journal.
+[9]
+G. Zacharia, "Review of Secure API Development and Authentication Mechanisms in ASP.NET Core Applications," 2026.
+[10]
+P. Gowda et al., "Securing Microservices Architecture Using JSON Web Tokens," Network and Application Security Journals.
+[11]
+Y. You and X. Gui, "Self-Diagnosis through AI-Enabled Chatbot-Based Symptom Checkers: User Experiences and Design Considerations," AMIA Annual Symposium Proceedings.
+[12]
+Various, "Systematic Literature Review Pengembangan Aplikasi Mobile Cross-Platform," Computer Science Journals.
+[13]
+[13] Various, "Token Binding & Context-Aware JWT Enforcement: A Secure Identity-Aware Token," May 2026.
+[14]
+[14] E. Riboli-Sasco et al., "Triage and Diagnostic Accuracy of Online Symptom Checkers: A Systematic Review," Journal of Medical Internet Research, 2023.
+[15]
+Flutter Documentation, "Flutter: Build apps for any screen," [Online]. Available: https://flutter.dev. [Accessed: Jun. 2025].
+[16]
+Microsoft, "ASP.NET Core documentation," [Online]. Available: https://learn.microsoft.com/en-us/aspnet/core. [Accessed: Jun. 2025].
+[17]
+MySQL, "MySQL 8.0 Reference Manual," [Online]. Available: https://dev.mysql.com/doc/refman/8.0/en/. [Accessed: Jun. 2025].
+[18]
+Marham, "Marham – Find a Doctor, Book Appointment," [Online]. Available: https://www.marham.pk. [Accessed: Jun. 2025].
+[19]
+Oladoc, "Oladoc – Book Doctor Appointments Online," [Online]. Available: https://oladoc.com. [Accessed: Jun. 2025].
+[20]
+Practo, "Practo: Online Doctor Consultations & Appointments," [Online]. Available: https://www.practo.com. [Accessed: Jun. 2025].
+
+
